@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>dB &amp; Signal Power | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --ok: #10b981;
+    --warn: #d97706;
+    --bad: #dc2626;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --ok: #34d399; --warn: #fbbf24; --bad: #f87171;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --ok: #34d399; --warn: #fbbf24; --bad: #f87171;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --ok: #10b981; --warn: #d97706; --bad: #dc2626;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  nav.site-nav {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    max-width: 1060px; margin: 0 auto; padding: 12px 16px 0; font-size: .88rem;
+  }
+  nav.site-nav .brand { font-weight: 700; margin-right: 12px; letter-spacing: .02em; }
+  nav.site-nav a { color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 999px; }
+  nav.site-nav a:hover { color: var(--accent); background: var(--surface2); }
+  nav.site-nav a.active { color: var(--accent); background: var(--surface2); font-weight: 600; }
+  nav.site-nav a.lang { margin-left: auto; border: 1px solid var(--border); font-weight: 600; }
+  nav.site-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .ctl { display: grid; grid-template-columns: 9em 1fr 9em; align-items: center; gap: 10px; padding: 5px 0; }
+  .ctl .name { font-size: .82rem; color: var(--muted); }
+  .ctl output {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .84rem; text-align: right;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .bigread {
+    display: flex; gap: 12px 30px; flex-wrap: wrap; align-items: baseline;
+    padding: 10px 14px; margin-top: 6px;
+    background: var(--surface2); border-radius: 8px;
+    font-variant-numeric: tabular-nums;
+    font-size: .9rem;
+  }
+  .bigread .v { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+  .bigread .u { font-size: .82rem; color: var(--muted); }
+
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding-top: 6px; }
+  .presets .lbl { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+  .presets button {
+    appearance: none; font-family: inherit; font-size: .84rem;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text);
+    cursor: pointer;
+  }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .presets button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  #verdict {
+    padding: 9px 12px; border-radius: 8px;
+    font-weight: 700; font-size: .92rem; margin-top: 10px;
+    background: var(--surface2);
+    border-left: 4px solid var(--muted);
+  }
+  #verdict.ok { border-left-color: var(--ok); color: var(--ok); }
+  #verdict.warn { border-left-color: var(--warn); color: var(--warn); }
+  #verdict.bad { border-left-color: var(--bad); color: var(--bad); }
+
+  .lb-read { display: flex; gap: 8px 26px; flex-wrap: wrap; padding: 8px 2px 0; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .lb-read b { font-family: ui-monospace, Consolas, monospace; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+  details.note a { color: var(--accent); }
+  details.note table { border-collapse: collapse; font-size: .84rem; margin: 4px 0 10px; }
+  details.note th, details.note td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; }
+  details.note th { background: var(--surface2); font-weight: 600; }
+  .tw { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>dB &amp; Signal Power</h1>
+    <p>Just how weak is −130 dBm? Learn the decibel — the language of signal strength — by feel</p>
+  </header>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>dB ⇔ RATIO CONVERTER</h3>
+      <div class="ctl">
+        <span class="name">dB</span>
+        <input type="range" id="dbSlider" min="-30" max="30" step="1" value="3">
+        <output id="dbOut">+3 dB</output>
+      </div>
+      <div class="bigread">
+        <span>Power ratio <span class="v" id="ratioOut">×2.0</span></span>
+        <span class="u" id="ratioNote">+3 dB is "about double" — worth memorizing</span>
+      </div>
+      <p class="cap">dB = 10 × log₁₀(power ratio). +10 dB is ×10, +3 dB is ≈×2, −3 dB is ≈half. A logarithmic tool that turns multiplication into addition.</p>
+    </div>
+    <div class="panel">
+      <h3>dBm RULER (ABSOLUTE, REFERENCED TO 1 mW)</h3>
+      <div class="ctl">
+        <span class="name">Power</span>
+        <input type="range" id="dbmSlider" min="-140" max="60" step="1" value="-130">
+        <output id="dbmOut">−130 dBm</output>
+      </div>
+      <div class="bigread">
+        <span><span class="v" id="wattOut">0.1 fW</span></span>
+        <span class="u" id="dbmNote"></span>
+      </div>
+      <canvas class="dark" id="ladder" aria-label="dBm scale with familiar signal-strength references"></canvas>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>LINK BUDGET — HOW A SATELLITE'S 25 W BECOMES −130 dBm ON THE GROUND</h3>
+    <canvas class="dark" id="budget" aria-label="Waterfall of power gains and losses from satellite to receiver"></canvas>
+    <div class="ctl" style="margin-top:8px">
+      <span class="name">RX antenna gain</span>
+      <input type="range" id="rxGain" min="-5" max="6" step="0.5" value="3">
+      <output id="rxGainOut">+3.0 dBi</output>
+    </div>
+    <div class="ctl">
+      <span class="name">Blockage / indoor loss</span>
+      <input type="range" id="blockLoss" min="0" max="40" step="1" value="0">
+      <output id="blockLossOut">0 dB</output>
+    </div>
+    <div class="presets">
+      <span class="lbl">Environment presets:</span>
+      <button data-loss="0">Open sky</button>
+      <button data-loss="8">By a window</button>
+      <button data-loss="18">Deep indoors</button>
+      <button data-loss="38">Basement / behind concrete</button>
+    </div>
+    <div class="lb-read" id="lbRead"></div>
+    <div id="verdict">—</div>
+    <p class="cap">Numbers are educational approximations. The thermal noise floor uses a 2 MHz bandwidth (C/A signal). C/N₀ is exactly the per-satellite bar you see in receiver monitors like u-center.</p>
+  </div>
+
+  <details class="note" open>
+    <summary>The dB rules — why multiplication becomes addition</summary>
+    <div class="body">
+      <p>Signal power spans 16 orders of magnitude from transmit (tens of watts) to receive (10⁻¹⁶ W). Logarithms tame that multiplicative world: define <code>dB = 10 log₁₀(ratio)</code> and "one millionth" becomes "−60 dB", three ×2 amplifier stages become "+3+3+3 = +9 dB" — <strong>every gain and loss is just addition</strong>. That's why the link-budget chart steps neatly downward.</p>
+      <p>Memorize just two facts: <strong>+10 dB = ×10, +3 dB ≈ ×2</strong>. Combine them for anything (e.g. +26 dB = 10×10×2×2 = ×400).</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>dBm, dBW, dBi, dB-Hz — the letters after dB</summary>
+    <div class="body">
+      <div class="tw">
+      <table>
+        <tr><th>Notation</th><th>Reference</th><th>Used for</th></tr>
+        <tr><td>dBm</td><td>1 mW</td><td>Absolute power. GPS RX level −130 dBm, etc.</td></tr>
+        <tr><td>dBW</td><td>1 W</td><td>Large powers. dBm − 30 = dBW</td></tr>
+        <tr><td>dBi</td><td>isotropic antenna</td><td>Antenna gain vs an "equal in all directions" radiator</td></tr>
+        <tr><td>dB-Hz</td><td>1 Hz bandwidth</td><td>C/N₀ (carrier-to-noise-density). GNSS's common quality metric</td></tr>
+        <tr><td>dB (bare)</td><td>a ratio</td><td>Gain, loss, SNR — one thing relative to another</td></tr>
+      </table>
+      </div>
+      <p>The letter after dB says what absolute reference is meant; bare dB alone is relative.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Thermal noise kTB — the floor that exists no matter what</summary>
+    <div class="body">
+      <p>Electrons jiggling with heat in any resistor generate noise power <code>N = kTB</code> (k: Boltzmann constant, T: temperature, B: bandwidth). At room temperature (290 K) that is <strong>−174 dBm/Hz</strong> — a floor set by physics. Wider bandwidth means more noise: in the C/A signal's 2 MHz, −174 + 63 = <strong>≈−111 dBm</strong>.</p>
+      <p>GPS arrives at −130 dBm, about 20 dB below that floor — <strong>a spectrum analyzer shows nothing at all</strong>. Reception works only because correlation provides ~43 dB of processing gain (see <a href="gnss-signal.html">Signal Structure</a>). Digging signals out from under the noise is the essence of GNSS reception.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>C/N₀ vs SNR — reading the receiver's bar graph</summary>
+    <div class="body">
+      <p>GNSS convention states signal quality as <strong>C/N₀ (dB-Hz)</strong> rather than SNR, because it doesn't depend on bandwidth choice: <code>SNR = C/N₀ − 10log₁₀(B)</code>. The per-satellite bars in u-center are C/N₀.</p>
+      <p>Rules of thumb: <strong>45+ dB-Hz</strong> = good open-sky reception, <strong>35–45</strong> = normal, <strong>28–35</strong> = weak (urban, window), <strong>below 28</strong> = tracking starts to drop. Crank up the indoor loss above and find that limit yourself.</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  function fitCanvas(cv, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth;
+    const h = Math.round(w * aspect);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      cv.style.height = h + "px";
+    }
+    cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  function updDb() {
+    const db = +$("dbSlider").value;
+    $("dbOut").textContent = (db > 0 ? "+" : "") + db + " dB";
+    const ratio = Math.pow(10, db / 10);
+    let rs;
+    if (ratio >= 100) rs = "×" + Math.round(ratio).toLocaleString();
+    else if (ratio >= 1) rs = "×" + ratio.toFixed(1);
+    else if (ratio >= 0.01) rs = "×" + ratio.toFixed(3);
+    else rs = "×1/" + Math.round(1 / ratio).toLocaleString();
+    $("ratioOut").textContent = rs;
+    const notes = {
+      "-30": "one thousandth", "-20": "one hundredth", "-10": "one tenth", "-3": "about half",
+      "0": "unity (no change)", "3": "+3 dB is \"about double\" — worth memorizing",
+      "10": "exactly ×10", "20": "×100", "30": "×1000",
+    };
+    $("ratioNote").textContent = notes[String(db)] || "";
+  }
+  $("dbSlider").addEventListener("input", updDb);
+
+  const LADDER = [
+    { dbm: 50, label: "100 W — broadcast / radar class" },
+    { dbm: 44, label: "25 W — GNSS satellite transmitter" },
+    { dbm: 20, label: "100 mW — WiFi / phone TX" },
+    { dbm: 0, label: "1 mW — the reference (0 dBm)" },
+    { dbm: -50, label: "strong broadcast reception" },
+    { dbm: -80, label: "phone LTE receive level" },
+    { dbm: -111, label: "thermal noise floor (2 MHz)" },
+    { dbm: -130, label: "GPS receive level (below noise!)" },
+  ];
+  const ladder = $("ladder");
+  const lctx = ladder.getContext("2d");
+
+  function fmtWatt(dbm) {
+    const w = Math.pow(10, dbm / 10) / 1000;
+    if (w >= 1) return w.toFixed(w >= 100 ? 0 : 1) + " W";
+    if (w >= 1e-3) return (w * 1e3).toFixed(1) + " mW";
+    if (w >= 1e-6) return (w * 1e6).toFixed(1) + " μW";
+    if (w >= 1e-9) return (w * 1e9).toFixed(1) + " nW";
+    if (w >= 1e-12) return (w * 1e12).toFixed(1) + " pW";
+    if (w >= 1e-15) return (w * 1e15).toFixed(1) + " fW";
+    return (w * 1e18).toFixed(2) + " aW";
+  }
+
+  function drawLadder() {
+    const { w, h } = fitCanvas(ladder, 0.62);
+    lctx.clearRect(0, 0, w, h);
+    lctx.fillStyle = "#0a1210";
+    lctx.fillRect(0, 0, w, h);
+    const padT = 10, padB = 10;
+    const Y = (dbm) => padT + (60 - dbm) / 200 * (h - padT - padB);
+    lctx.font = "10px ui-monospace, Consolas, monospace";
+    lctx.strokeStyle = "rgba(148,180,170,.3)";
+    lctx.beginPath();
+    lctx.moveTo(54, padT);
+    lctx.lineTo(54, h - padB);
+    lctx.stroke();
+    for (let d = 60; d >= -140; d -= 20) {
+      const y = Y(d);
+      lctx.strokeStyle = "rgba(148,180,170,.15)";
+      lctx.beginPath(); lctx.moveTo(48, y); lctx.lineTo(w - 8, y); lctx.stroke();
+      lctx.fillStyle = "rgba(160,190,182,.6)";
+      lctx.fillText((d > 0 ? "+" : "") + d, 8, y + 3);
+    }
+    for (const m of LADDER) {
+      const y = Y(m.dbm);
+      lctx.fillStyle = "rgba(125,223,208,.85)";
+      lctx.beginPath();
+      lctx.arc(58, y, 3, 0, Math.PI * 2);
+      lctx.fill();
+      lctx.fillStyle = "rgba(160,190,182,.85)";
+      lctx.fillText(m.label, 68, y + 3);
+    }
+    const cur = +$("dbmSlider").value;
+    const cy = Y(cur);
+    lctx.strokeStyle = "#fbbf24";
+    lctx.lineWidth = 2;
+    lctx.beginPath();
+    lctx.moveTo(46, cy);
+    lctx.lineTo(w - 8, cy);
+    lctx.stroke();
+  }
+
+  function updDbm() {
+    const dbm = +$("dbmSlider").value;
+    $("dbmOut").textContent = (dbm > 0 ? "+" : dbm < 0 ? "−" : "") + Math.abs(dbm) + " dBm";
+    $("wattOut").textContent = fmtWatt(dbm);
+    let note = "";
+    if (dbm >= 20) note = "transmitter territory";
+    else if (dbm >= -60) note = "a comfortably strong signal";
+    else if (dbm >= -111) note = "weak, but above the noise floor";
+    else note = "below thermal noise — unreceivable without correlation";
+    $("dbmNote").textContent = note;
+    drawLadder();
+  }
+  $("dbmSlider").addEventListener("input", updDbm);
+
+  const budget = $("budget");
+  const bctx = budget.getContext("2d");
+  const NOISE_FLOOR = -111;
+  const PROC_GAIN = 43;
+
+  function stages() {
+    const rxg = +$("rxGain").value;
+    const loss = +$("blockLoss").value;
+    return [
+      { label: "Satellite TX power", delta: null, abs: 44.3, note: "≈27 W" },
+      { label: "TX antenna gain", delta: +13.4 },
+      { label: "Free-space loss (20,000 km)", delta: -182.5 },
+      { label: "Atmosphere & misc.", delta: -2.5 },
+      { label: "RX antenna gain", delta: rxg },
+      { label: "Blockage / indoor loss", delta: -loss },
+    ];
+  }
+
+  function drawBudget() {
+    const { w, h } = fitCanvas(budget, 0.5);
+    bctx.clearRect(0, 0, w, h);
+    bctx.fillStyle = "#0a1210";
+    bctx.fillRect(0, 0, w, h);
+    const st = stages();
+    const padL = 46, padR = 14, padT = 14, padB = 40;
+    const DB_TOP = 70, DB_BOT = -180;
+    const Y = (dbm) => padT + (DB_TOP - dbm) / (DB_TOP - DB_BOT) * (h - padT - padB);
+    const n = st.length + 1;
+    const colW = (w - padL - padR) / n;
+    bctx.font = "10px ui-monospace, Consolas, monospace";
+
+    for (let d = 60; d >= -180; d -= 30) {
+      const y = Y(d);
+      bctx.strokeStyle = "rgba(148,180,170,.1)";
+      bctx.beginPath(); bctx.moveTo(padL, y); bctx.lineTo(w - padR, y); bctx.stroke();
+      bctx.fillStyle = "rgba(160,190,182,.55)";
+      bctx.fillText((d > 0 ? "+" : "") + d, 6, y + 3);
+    }
+    bctx.fillStyle = "rgba(160,190,182,.55)";
+    bctx.fillText("dBm", 6, padT - 2);
+
+    const ny = Y(NOISE_FLOOR);
+    bctx.strokeStyle = "rgba(248,113,113,.6)";
+    bctx.setLineDash([5, 5]);
+    bctx.beginPath(); bctx.moveTo(padL, ny); bctx.lineTo(w - padR, ny); bctx.stroke();
+    bctx.setLineDash([]);
+    bctx.fillStyle = "rgba(248,113,113,.85)";
+    bctx.fillText("thermal noise floor −111 dBm (2 MHz)", padL + 4, ny - 5);
+
+    let cum = 0;
+    let x = padL;
+    const segW = colW * 0.72;
+    st.forEach((s, i) => {
+      const prev = cum;
+      cum = s.abs !== null && s.delta === null ? s.abs : cum + s.delta;
+      const y = Y(cum);
+      if (i > 0) {
+        bctx.strokeStyle = "rgba(148,180,170,.4)";
+        bctx.beginPath();
+        bctx.moveTo(x, Y(prev));
+        bctx.lineTo(x + colW * 0.14, Y(prev));
+        bctx.lineTo(x + colW * 0.14, y);
+        bctx.stroke();
+      }
+      bctx.strokeStyle = "#34d399";
+      bctx.lineWidth = 3;
+      bctx.beginPath();
+      bctx.moveTo(x + colW * 0.14, y);
+      bctx.lineTo(x + colW * 0.14 + segW, y);
+      bctx.stroke();
+      bctx.lineWidth = 1;
+      bctx.fillStyle = s.delta === null ? "rgba(230,238,236,.9)" : (s.delta >= 0 ? "rgba(52,211,153,.9)" : "rgba(251,191,36,.9)");
+      const dl = s.delta === null ? (s.note || "") : ((s.delta >= 0 ? "+" : "") + s.delta.toFixed(1));
+      bctx.fillText(dl, x + colW * 0.16, y - 6);
+      bctx.save();
+      bctx.translate(x + colW * 0.4, h - padB + 12);
+      bctx.rotate(0.28);
+      bctx.fillStyle = "rgba(160,190,182,.8)";
+      bctx.fillText(s.label, 0, 0);
+      bctx.restore();
+      x += colW;
+    });
+
+    const received = cum;
+    const post = received + PROC_GAIN;
+    const py = Y(post);
+    bctx.strokeStyle = "#22d3ee";
+    bctx.lineWidth = 3;
+    bctx.beginPath();
+    bctx.moveTo(x + colW * 0.14, py);
+    bctx.lineTo(x + colW * 0.14 + segW, py);
+    bctx.stroke();
+    bctx.lineWidth = 1.4;
+    bctx.strokeStyle = "#22d3ee";
+    bctx.beginPath();
+    bctx.moveTo(x + colW * 0.14 + segW / 2, Y(received) - 2);
+    bctx.lineTo(x + colW * 0.14 + segW / 2, py + 4);
+    bctx.stroke();
+    bctx.beginPath();
+    bctx.moveTo(x + colW * 0.14 + segW / 2 - 4, py + 10);
+    bctx.lineTo(x + colW * 0.14 + segW / 2, py + 3);
+    bctx.lineTo(x + colW * 0.14 + segW / 2 + 4, py + 10);
+    bctx.stroke();
+    bctx.fillStyle = "rgba(34,211,238,.9)";
+    bctx.fillText("+43 despread", x + colW * 0.14, (py + Y(received)) / 2);
+    bctx.save();
+    bctx.translate(x + colW * 0.4, h - padB + 12);
+    bctx.rotate(0.28);
+    bctx.fillStyle = "rgba(34,211,238,.85)";
+    bctx.fillText("post-correlation (effective)", 0, 0);
+    bctx.restore();
+
+    return received;
+  }
+
+  function updBudget() {
+    $("rxGainOut").textContent = (+$("rxGain").value >= 0 ? "+" : "") + (+$("rxGain").value).toFixed(1) + " dBi";
+    $("blockLossOut").textContent = $("blockLoss").value + " dB";
+    const received = drawBudget();
+    const snr = received - NOISE_FLOOR;
+    const cn0 = received + 174;
+    const postSnr = snr + PROC_GAIN;
+    $("lbRead").innerHTML =
+      "Received power <b>" + received.toFixed(1) + " dBm</b>" +
+      "<span>SNR (pre-correlation) <b>" + snr.toFixed(1) + " dB</b></span>" +
+      "<span>C/N₀ <b>" + cn0.toFixed(1) + " dB-Hz</b></span>" +
+      "<span>Post-correlation SNR <b>" + postSnr.toFixed(1) + " dB</b></span>";
+    const v = $("verdict");
+    if (cn0 >= 45) { v.className = "ok"; v.textContent = "C/N₀ " + cn0.toFixed(0) + " dB-Hz — good reception (open sky)"; }
+    else if (cn0 >= 35) { v.className = "ok"; v.textContent = "C/N₀ " + cn0.toFixed(0) + " dB-Hz — workable reception"; }
+    else if (cn0 >= 28) { v.className = "warn"; v.textContent = "C/N₀ " + cn0.toFixed(0) + " dB-Hz — weak: accuracy degrades, tracking is marginal"; }
+    else { v.className = "bad"; v.textContent = "C/N₀ " + cn0.toFixed(0) + " dB-Hz — cannot track: the receiver loses this satellite"; }
+  }
+  $("rxGain").addEventListener("input", updBudget);
+  $("blockLoss").addEventListener("input", updBudget);
+  document.querySelectorAll(".presets button").forEach((b) => {
+    b.addEventListener("click", () => {
+      $("blockLoss").value = b.dataset.loss;
+      updBudget();
+    });
+  });
+
+  window.addEventListener("resize", () => { drawLadder(); updBudget(); });
+  if (window.ResizeObserver) new ResizeObserver(() => { updDbm(); updBudget(); }).observe(ladder);
+  updDb();
+  updDbm();
+  updBudget();
+})();
+</script>
+</body>
+</html>

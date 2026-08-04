@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>Wave Lab | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --wave-a: #06b6d4;
+    --wave-b: #d97706;
+    --wave-sum: #db2777;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --wave-a: #22d3ee; --wave-b: #fbbf24; --wave-sum: #f472b6;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --wave-a: #22d3ee; --wave-b: #fbbf24; --wave-sum: #f472b6;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --wave-a: #06b6d4; --wave-b: #d97706; --wave-sum: #db2777;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  nav.site-nav {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    max-width: 1060px; margin: 0 auto; padding: 12px 16px 0; font-size: .88rem;
+  }
+  nav.site-nav .brand { font-weight: 700; margin-right: 12px; letter-spacing: .02em; }
+  nav.site-nav a { color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 999px; }
+  nav.site-nav a:hover { color: var(--accent); background: var(--surface2); }
+  nav.site-nav a.active { color: var(--accent); background: var(--surface2); font-weight: 600; }
+  nav.site-nav a.lang { margin-left: auto; border: 1px solid var(--border); font-weight: 600; }
+  nav.site-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+
+  .viz-row { display: grid; grid-template-columns: 1fr 230px; gap: 16px; }
+  @media (max-width: 760px) { .viz-row { grid-template-columns: 1fr; } }
+  .scope-panel { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  canvas.scope { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .scope-bar {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 0 4px; font-size: .82rem; color: var(--muted);
+  }
+  .scope-bar .legend { display: flex; gap: 12px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 18px; height: 3px; border-radius: 2px; display: inline-block; }
+  .legend .la { background: var(--wave-a); }
+  .legend .lb { background: var(--wave-b); }
+  .legend .ls { background: var(--wave-sum); }
+
+  .phasor-panel { padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .phasor-panel h2 { margin: 0; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  canvas.phasor { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .phase-readout {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .82rem; color: var(--muted); text-align: center;
+  }
+  .phase-readout b { color: var(--text); font-weight: 600; }
+
+  .transport { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  button.play {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent); color: #fff;
+    border-radius: 8px; font-size: .9rem; font-weight: 600;
+    padding: 7px 18px; cursor: pointer; font-family: inherit;
+  }
+  button.play.paused { background: transparent; color: var(--accent); }
+  button.play:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .transport label { display: flex; align-items: center; gap: 8px; font-size: .82rem; color: var(--muted); }
+  .transport select {
+    font-family: inherit; font-size: .85rem;
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px;
+  }
+  .t-clock {
+    margin-left: auto;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .82rem; color: var(--muted);
+  }
+
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .presets .lbl { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+  .presets button {
+    appearance: none; font-family: inherit; font-size: .84rem;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text);
+    cursor: pointer;
+  }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .presets button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .waves { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .waves { grid-template-columns: 1fr; } }
+  .wave-card { border-top: 3px solid var(--wc); }
+  .wave-card.a { --wc: var(--wave-a); }
+  .wave-card.b { --wc: var(--wave-b); }
+  .wave-card header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .wave-card h2 { margin: 0; font-size: .95rem; font-weight: 700; color: var(--wc); }
+  .wave-card header label { display: flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted); cursor: pointer; }
+  .ctl { display: grid; grid-template-columns: 6.5em 1fr 5.5em; align-items: center; gap: 10px; padding: 5px 0; }
+  .ctl .name { font-size: .82rem; color: var(--muted); }
+  .ctl output {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .84rem; text-align: right;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--wc, var(--accent)); cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .eq {
+    margin-top: 8px; padding: 8px 10px;
+    background: var(--surface2); border-radius: 6px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .84rem; overflow-x: auto; white-space: nowrap;
+  }
+
+  .sum-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .sum-row label { display: flex; align-items: center; gap: 6px; font-size: .86rem; cursor: pointer; }
+  .sum-row .sumchip { color: var(--wave-sum); font-weight: 700; }
+  .sum-note { font-size: .8rem; color: var(--muted); }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Wave Lab</h1>
+    <p>y = A sin(2πft + φ) — move amplitude, frequency and phase and watch the wave change in real time</p>
+  </header>
+
+  <div class="viz-row">
+    <div class="panel scope-panel">
+      <canvas class="scope" id="scope" aria-label="Oscilloscope-style waveform display"></canvas>
+      <div class="scope-bar">
+        <div class="legend">
+          <span><i class="la"></i>Wave A</span>
+          <span><i class="lb"></i>Wave B</span>
+          <span><i class="ls"></i>Sum A+B</span>
+        </div>
+        <span>x-axis: time (now at right edge) / y-axis: amplitude</span>
+      </div>
+    </div>
+    <div class="panel phasor-panel">
+      <h2>Rotating phasor (what phase really is)</h2>
+      <canvas class="phasor" id="phasor" aria-label="Rotating vector representation of phase"></canvas>
+      <div class="phase-readout">Phase diff Δφ = <b id="dphi">0°</b></div>
+    </div>
+  </div>
+
+  <div class="panel transport">
+    <button class="play" id="playBtn" aria-pressed="true">⏸ Pause</button>
+    <label>Speed
+      <select id="speed">
+        <option value="0.1">0.1× (slow)</option>
+        <option value="0.25">0.25×</option>
+        <option value="0.5">0.5×</option>
+        <option value="1" selected>1× (real time)</option>
+      </select>
+    </label>
+    <label>Window
+      <select id="window">
+        <option value="1">1 s</option>
+        <option value="2" selected>2 s</option>
+        <option value="4">4 s</option>
+        <option value="8">8 s</option>
+      </select>
+    </label>
+    <span class="t-clock">t = <span id="clock">0.00</span> s</span>
+  </div>
+
+  <div class="panel presets">
+    <span class="lbl">Experiments:</span>
+    <button data-preset="basic">Basic 1 Hz</button>
+    <button data-preset="phase90">90° phase shift</button>
+    <button data-preset="anti">Antiphase (cancel)</button>
+    <button data-preset="beat">Beats</button>
+    <button data-preset="harmonic">3rd harmonic</button>
+  </div>
+
+  <div class="waves">
+    <section class="panel wave-card a">
+      <header>
+        <h2>Wave A</h2>
+        <label><input type="checkbox" id="aOn" checked>show</label>
+      </header>
+      <div class="ctl"><span class="name">Amplitude A</span><input type="range" id="aAmp" min="0" max="2" step="0.05" value="1"><output id="aAmpOut">1.00</output></div>
+      <div class="ctl"><span class="name">Frequency f</span><input type="range" id="aFreq" min="0.2" max="5" step="0.1" value="1"><output id="aFreqOut">1.0 Hz</output></div>
+      <div class="ctl"><span class="name">Phase φ</span><input type="range" id="aPhase" min="-180" max="180" step="5" value="0"><output id="aPhaseOut">0°</output></div>
+      <div class="eq" id="aEq"></div>
+    </section>
+
+    <section class="panel wave-card b">
+      <header>
+        <h2>Wave B</h2>
+        <label><input type="checkbox" id="bOn">show</label>
+      </header>
+      <div class="ctl"><span class="name">Amplitude A</span><input type="range" id="bAmp" min="0" max="2" step="0.05" value="1"><output id="bAmpOut">1.00</output></div>
+      <div class="ctl"><span class="name">Frequency f</span><input type="range" id="bFreq" min="0.2" max="5" step="0.1" value="1"><output id="bFreqOut">1.0 Hz</output></div>
+      <div class="ctl"><span class="name">Phase φ</span><input type="range" id="bPhase" min="-180" max="180" step="5" value="0"><output id="bPhaseOut">0°</output></div>
+      <div class="eq" id="bEq"></div>
+    </section>
+  </div>
+
+  <div class="panel sum-row">
+    <label><input type="checkbox" id="sumOn"><span class="sumchip">Show sum A+B</span></label>
+    <span class="sum-note">Two waves simply add together (principle of superposition). Turn on Wave B and try it.</span>
+  </div>
+
+  <details class="note">
+    <summary>What is phase (φ)?</summary>
+    <div class="body">
+      <p>Phase says "where in its cycle the wave is right now", expressed as an angle. One cycle = 360° (2π radians). Increasing φ shifts the waveform to the <strong>left</strong> (earlier in time). Phase turns "same shape, different timing" into a number.</p>
+      <p>Look at the rotating phasor on the right. A wave is the vertical shadow of an arrow rotating at constant speed. The arrow's angle is <code>2πft + φ</code>, and φ is the starting angle (initial phase). Phase modulation of radio waves (PSK) puts information on exactly this angle.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Superposition and interference — the "Antiphase" preset</summary>
+    <div class="body">
+      <p>When several waves share the same space, the value at each instant is a simple sum (superposition). At the same frequency, a 0° phase difference reinforces (double amplitude), while 180° (antiphase) cancels completely to zero. Noise-cancelling earphones work on this principle.</p>
+      <p>Pick the "Antiphase" preset and nudge Wave B's phase away from 180° — watch the cancellation fall apart.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Beats — adding waves of slightly different frequency</summary>
+    <div class="body">
+      <p>Add two waves of slightly different frequency (e.g. 1.0 Hz and 1.2 Hz) and the sum's amplitude slowly swells and fades. That is a "beat", and its rate equals the frequency difference <code>|fB − fA|</code> (here 0.2 Hz → a 5-second cycle). Beats underlie instrument tuning and radio frequency mixers.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Harmonics — building new shapes from sines</summary>
+    <div class="body">
+      <p>The "3rd harmonic" preset adds a wave at 3× the frequency and 1/3 the amplitude to a 1 Hz fundamental. The sum starts to look square-ish. In fact, summing infinitely many sines can build any periodic waveform — square, triangle, anything (Fourier series). Put the other way: any signal can be decomposed into sines — the single most important idea in radio and signal processing.</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  const state = {
+    a: { on: true,  amp: 1, freq: 1, phase: 0 },
+    b: { on: false, amp: 1, freq: 1, phase: 0 },
+    sum: false,
+    speed: 1,
+    windowSec: 2,
+    playing: true,
+    t: 0,
+  };
+
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) state.playing = false;
+
+  function bindWave(key) {
+    const p = state[key];
+    $(key + "On").checked = p.on;
+    $(key + "On").addEventListener("change", (e) => { p.on = e.target.checked; refresh(); });
+    $(key + "Amp").addEventListener("input", (e) => { p.amp = +e.target.value; refresh(); });
+    $(key + "Freq").addEventListener("input", (e) => { p.freq = +e.target.value; refresh(); });
+    $(key + "Phase").addEventListener("input", (e) => { p.phase = +e.target.value; refresh(); });
+  }
+  bindWave("a");
+  bindWave("b");
+
+  $("sumOn").addEventListener("change", (e) => { state.sum = e.target.checked; refresh(); });
+  $("speed").addEventListener("change", (e) => { state.speed = +e.target.value; });
+  $("window").addEventListener("change", (e) => { state.windowSec = +e.target.value; refresh(); });
+
+  const playBtn = $("playBtn");
+  function setPlaying(v) {
+    state.playing = v;
+    playBtn.textContent = v ? "⏸ Pause" : "▶ Play";
+    playBtn.classList.toggle("paused", !v);
+    playBtn.setAttribute("aria-pressed", String(v));
+  }
+  playBtn.addEventListener("click", () => setPlaying(!state.playing));
+  setPlaying(state.playing);
+
+  const presets = {
+    basic:    { a: { on: true, amp: 1,   freq: 1, phase: 0 }, b: { on: false, amp: 1,    freq: 1,   phase: 0   }, sum: false },
+    phase90:  { a: { on: true, amp: 1,   freq: 1, phase: 0 }, b: { on: true,  amp: 1,    freq: 1,   phase: 90  }, sum: false },
+    anti:     { a: { on: true, amp: 1,   freq: 1, phase: 0 }, b: { on: true,  amp: 1,    freq: 1,   phase: 180 }, sum: true  },
+    beat:     { a: { on: true, amp: 1,   freq: 1, phase: 0 }, b: { on: true,  amp: 1,    freq: 1.2, phase: 0   }, sum: true  },
+    harmonic: { a: { on: true, amp: 1.5, freq: 1, phase: 0 }, b: { on: true,  amp: 0.5,  freq: 3,   phase: 0   }, sum: true  },
+  };
+  document.querySelectorAll(".presets button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const ps = presets[btn.dataset.preset];
+      if (!ps) return;
+      Object.assign(state.a, ps.a);
+      Object.assign(state.b, ps.b);
+      state.sum = ps.sum;
+      for (const k of ["a", "b"]) {
+        $(k + "On").checked = state[k].on;
+        $(k + "Amp").value = state[k].amp;
+        $(k + "Freq").value = state[k].freq;
+        $(k + "Phase").value = state[k].phase;
+      }
+      $("sumOn").checked = state.sum;
+      if (btn.dataset.preset === "beat") {
+        $("window").value = "8";
+        state.windowSec = 8;
+      }
+      refresh();
+    });
+  });
+
+  function fmtEq(p, name) {
+    const phi = p.phase === 0 ? "" : (p.phase > 0 ? " + " + p.phase + "°" : " − " + (-p.phase) + "°");
+    return "y" + name + " = " + p.amp.toFixed(2) + " sin(2π·" + p.freq.toFixed(1) + "t" + phi + ")";
+  }
+  function refreshReadouts() {
+    $("aAmpOut").textContent = state.a.amp.toFixed(2);
+    $("aFreqOut").textContent = state.a.freq.toFixed(1) + " Hz";
+    $("aPhaseOut").textContent = state.a.phase + "°";
+    $("bAmpOut").textContent = state.b.amp.toFixed(2);
+    $("bFreqOut").textContent = state.b.freq.toFixed(1) + " Hz";
+    $("bPhaseOut").textContent = state.b.phase + "°";
+    $("aEq").textContent = fmtEq(state.a, "A");
+    $("bEq").textContent = fmtEq(state.b, "B");
+    let d = state.b.phase - state.a.phase;
+    d = ((d + 540) % 360) - 180;
+    $("dphi").textContent = (state.a.freq === state.b.freq ? d + "°" : d + "° (changing — frequencies differ)");
+  }
+
+  const scope = $("scope");
+  const phasor = $("phasor");
+  const sctx = scope.getContext("2d");
+  const pctx = phasor.getContext("2d");
+
+  const COLORS = {
+    grid: "rgba(148, 180, 170, 0.15)",
+    axis: "rgba(148, 180, 170, 0.4)",
+    label: "rgba(160, 190, 182, 0.75)",
+    a: "#22d3ee",
+    b: "#fbbf24",
+    sum: "#f472b6",
+  };
+
+  function fitCanvas(cv, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth;
+    const h = Math.round(w * aspect);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      cv.style.height = h + "px";
+    }
+    const ctx = cv.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  function yOf(p, t) {
+    return p.amp * Math.sin(2 * Math.PI * p.freq * t + p.phase * Math.PI / 180);
+  }
+
+  function drawScope() {
+    const { w, h } = fitCanvas(scope, 0.42);
+    sctx.clearRect(0, 0, w, h);
+    sctx.fillStyle = "#0a1210";
+    sctx.fillRect(0, 0, w, h);
+
+    const T = state.windowSec;
+    const t0 = state.t - T;
+    const mid = h / 2;
+
+    let peak = 0;
+    if (state.a.on) peak += state.a.amp;
+    if (state.b.on && state.sum) peak += state.b.amp;
+    else if (state.b.on) peak = Math.max(peak, state.b.amp);
+    peak = Math.max(peak, 1);
+    const yScale = (h / 2 - 14) / (peak * 1.1);
+
+    sctx.lineWidth = 1;
+    sctx.strokeStyle = COLORS.grid;
+    sctx.fillStyle = COLORS.label;
+    sctx.font = "10px ui-monospace, Consolas, monospace";
+    const ampStep = peak > 2.5 ? 1 : 0.5;
+    for (let a = -Math.ceil(peak); a <= Math.ceil(peak); a = +(a + ampStep).toFixed(2)) {
+      const y = mid - a * yScale;
+      if (y < 4 || y > h - 4) continue;
+      sctx.beginPath();
+      sctx.moveTo(0, y);
+      sctx.lineTo(w, y);
+      sctx.stroke();
+      if (a !== 0) sctx.fillText((a > 0 ? "+" : "") + a, 4, y - 3);
+    }
+
+    const step = T / 8;
+    const firstLine = Math.ceil(t0 / step) * step;
+    for (let tt = firstLine; tt <= state.t + 1e-9; tt += step) {
+      const x = ((tt - t0) / T) * w;
+      sctx.strokeStyle = COLORS.grid;
+      sctx.beginPath();
+      sctx.moveTo(x, 0);
+      sctx.lineTo(x, h);
+      sctx.stroke();
+    }
+
+    sctx.strokeStyle = COLORS.axis;
+    sctx.beginPath();
+    sctx.moveTo(0, mid);
+    sctx.lineTo(w, mid);
+    sctx.stroke();
+
+    const N = Math.min(1200, w * 2);
+    function trace(color, width, getY) {
+      sctx.strokeStyle = color;
+      sctx.lineWidth = width;
+      sctx.beginPath();
+      for (let i = 0; i <= N; i++) {
+        const t = t0 + (i / N) * T;
+        const y = mid - getY(t) * yScale;
+        if (i === 0) sctx.moveTo((i / N) * w, y);
+        else sctx.lineTo((i / N) * w, y);
+      }
+      sctx.stroke();
+    }
+    if (state.a.on) trace(COLORS.a, 2, (t) => yOf(state.a, t));
+    if (state.b.on) trace(COLORS.b, 2, (t) => yOf(state.b, t));
+    if (state.sum && state.a.on && state.b.on) {
+      trace(COLORS.sum, 2.5, (t) => yOf(state.a, t) + yOf(state.b, t));
+    }
+
+    function dot(y, color) {
+      sctx.fillStyle = color;
+      sctx.beginPath();
+      sctx.arc(w - 4, mid - y * yScale, 4, 0, Math.PI * 2);
+      sctx.fill();
+    }
+    if (state.a.on) dot(yOf(state.a, state.t), COLORS.a);
+    if (state.b.on) dot(yOf(state.b, state.t), COLORS.b);
+    if (state.sum && state.a.on && state.b.on) dot(yOf(state.a, state.t) + yOf(state.b, state.t), COLORS.sum);
+
+    sctx.fillStyle = COLORS.label;
+    sctx.fillText("← " + T.toFixed(0) + " s →", w / 2 - 24, h - 6);
+  }
+
+  function drawPhasor() {
+    const { w, h } = fitCanvas(phasor, 1);
+    pctx.clearRect(0, 0, w, h);
+    pctx.fillStyle = "#0a1210";
+    pctx.fillRect(0, 0, w, h);
+
+    const cx = w / 2, cy = h / 2;
+    const maxAmp = Math.max(state.a.on ? state.a.amp : 0, state.b.on ? state.b.amp : 0, 1);
+    const R = (Math.min(w, h) / 2 - 12) / maxAmp;
+
+    pctx.strokeStyle = COLORS.grid;
+    pctx.lineWidth = 1;
+    for (let r = 1; r <= maxAmp + 0.01; r++) {
+      pctx.beginPath();
+      pctx.arc(cx, cy, r * R, 0, Math.PI * 2);
+      pctx.stroke();
+    }
+    pctx.beginPath();
+    pctx.moveTo(cx - maxAmp * R, cy); pctx.lineTo(cx + maxAmp * R, cy);
+    pctx.moveTo(cx, cy - maxAmp * R); pctx.lineTo(cx, cy + maxAmp * R);
+    pctx.strokeStyle = COLORS.axis;
+    pctx.stroke();
+
+    function arrow(p, color) {
+      const th = 2 * Math.PI * p.freq * state.t + p.phase * Math.PI / 180;
+      const x = cx + p.amp * R * Math.cos(th);
+      const y = cy - p.amp * R * Math.sin(th);
+      pctx.strokeStyle = color;
+      pctx.globalAlpha = 0.35;
+      pctx.setLineDash([3, 3]);
+      pctx.beginPath();
+      pctx.moveTo(x, y);
+      pctx.lineTo(cx, y);
+      pctx.stroke();
+      pctx.setLineDash([]);
+      pctx.globalAlpha = 1;
+      pctx.lineWidth = 2;
+      pctx.beginPath();
+      pctx.moveTo(cx, cy);
+      pctx.lineTo(x, y);
+      pctx.stroke();
+      pctx.fillStyle = color;
+      pctx.beginPath();
+      pctx.arc(x, y, 4, 0, Math.PI * 2);
+      pctx.fill();
+      pctx.beginPath();
+      pctx.arc(cx, y, 3, 0, Math.PI * 2);
+      pctx.fill();
+    }
+    if (state.a.on) arrow(state.a, COLORS.a);
+    if (state.b.on) arrow(state.b, COLORS.b);
+
+    pctx.fillStyle = COLORS.label;
+    pctx.font = "10px ui-monospace, Consolas, monospace";
+    pctx.fillText("θ = 2πft + φ", 8, h - 8);
+  }
+
+  function refresh() {
+    refreshReadouts();
+    drawScope();
+    drawPhasor();
+    $("clock").textContent = state.t.toFixed(2);
+  }
+
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.1, (now - last) / 1000);
+    last = now;
+    if (state.playing) {
+      state.t += dt * state.speed;
+      refresh();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener("resize", refresh);
+  refresh();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

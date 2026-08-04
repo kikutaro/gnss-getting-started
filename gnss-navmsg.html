@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>航法メッセージ比較 GPS/QZSS | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  nav.site-nav {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    max-width: 1060px; margin: 0 auto; padding: 12px 16px 0; font-size: .88rem;
+  }
+  nav.site-nav .brand { font-weight: 700; margin-right: 12px; letter-spacing: .02em; }
+  nav.site-nav a { color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 999px; }
+  nav.site-nav a:hover { color: var(--accent); background: var(--surface2); }
+  nav.site-nav a.active { color: var(--accent); background: var(--surface2); font-weight: 600; }
+  nav.site-nav a.lang { margin-left: auto; border: 1px solid var(--border); font-weight: 600; }
+  nav.site-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+
+  /* selectors */
+  .selrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch; }
+  .selrow .lbl { font-size: .82rem; color: var(--muted); align-self: center; margin-right: 4px; min-width: 7.5em; }
+  .sel-btn {
+    appearance: none; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface2); color: var(--text);
+    padding: 6px 14px; cursor: pointer;
+    text-align: center; line-height: 1.3;
+  }
+  .sel-btn b { display: block; font-size: .88rem; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  .sel-btn small { display: block; font-size: .7rem; color: var(--muted); }
+  .sel-btn:hover { border-color: var(--accent); }
+  .sel-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .sel-btn.active small { color: rgba(255,255,255,.85); }
+  .sel-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sel-caption { margin: 10px 0 0; font-size: .78rem; color: var(--muted); }
+
+  /* bit grids */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  .msg-panel { padding: 10px 12px; }
+  .msg-panel h2 { margin: 0 0 8px; font-size: .92rem; font-weight: 700; }
+  .msg-panel h2 .sys-gps { color: #3b82f6; }
+  .msg-panel h2 .sys-qzs { color: #ef4444; }
+  .msg-panel h2 small { font-weight: 400; color: var(--muted); font-size: .74rem; margin-left: 8px; }
+  .bitwrap { overflow-x: auto; }
+  .bitgrid { display: flex; flex-direction: column; gap: 2px; background: var(--scope-bg); border-radius: 6px; padding: 8px; width: max-content; }
+  .brow { display: flex; align-items: center; gap: 2px; }
+  .brow .wlab {
+    width: 34px; flex: none;
+    font-size: .68rem; color: rgba(160,190,182,.8);
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .bit {
+    width: 13px; height: 16px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-family: ui-monospace, Consolas, monospace;
+    color: rgba(255,255,255,.88);
+    background: color-mix(in srgb, var(--fc) 38%, #0a1210);
+    border-radius: 2px;
+    cursor: default;
+  }
+  .bit.hl { background: var(--fc); color: #fff; outline: 1px solid #fff; z-index: 1; }
+
+  /* field info + legend */
+  #fieldInfo {
+    min-height: 3em;
+    padding: 9px 12px;
+    background: var(--surface2);
+    border-radius: 8px;
+    font-size: .85rem;
+    margin-bottom: 10px;
+  }
+  #fieldInfo b { font-family: ui-monospace, Consolas, monospace; }
+  .legend-panel h2 { margin: 0 0 8px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  ul.leg { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  ul.leg li {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: .8rem; cursor: pointer;
+    padding: 2px 6px; border-radius: 6px;
+  }
+  ul.leg li:hover, ul.leg li.hl { background: var(--surface2); }
+  ul.leg i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; background: var(--fc); }
+
+  /* diff panel */
+  .diff-panel h2 { margin: 0 0 8px; font-size: .92rem; }
+  .diff-panel ul { margin: 0 0 10px; padding-left: 1.4em; font-size: .87rem; }
+  .diff-panel ul li { margin-bottom: 4px; }
+  .diff-panel table { border-collapse: collapse; font-size: .84rem; margin: 4px 0; }
+  .diff-panel th, .diff-panel td { border: 1px solid var(--border); padding: 4px 12px; text-align: left; }
+  .diff-panel th { background: var(--surface2); font-weight: 600; }
+  .diff-panel td.num { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .diff-panel .tw { overflow-x: auto; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>航法メッセージ比較（GPS / QZSS）</h1>
+    <p>信号ごとの航法メッセージをビットまで見て比べる。フィールド配置は仕様書ベースの教材用再現（ビット値はダミー）</p>
+  </header>
+
+  <div class="panel">
+    <div class="selrow" id="fmtsel">
+      <span class="lbl">メッセージ形式:</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="selrow" id="unitsel">
+      <span class="lbl" id="unitLbl">サブフレーム:</span>
+    </div>
+    <p class="sel-caption" id="unitCaption"></p>
+  </div>
+
+  <div class="grid2">
+    <section class="panel msg-panel">
+      <h2><span class="sys-gps">GPS</span> <span id="sigGps">L1 C/A</span><small>PRN 1〜32</small></h2>
+      <div class="bitwrap"><div class="bitgrid" id="gridGps"></div></div>
+    </section>
+    <section class="panel msg-panel">
+      <h2><span class="sys-qzs">QZSS みちびき</span> <span id="sigQzs">L1 C/A</span><small>PRN 193〜202・フォーマットはGPS互換</small></h2>
+      <div class="bitwrap"><div class="bitgrid" id="gridQzs"></div></div>
+    </section>
+  </div>
+
+  <div class="panel legend-panel">
+    <div id="fieldInfo"></div>
+    <h2>フィールド凡例</h2>
+    <ul class="leg" id="legend"></ul>
+  </div>
+
+  <div class="panel diff-panel">
+    <h2>ここでのGPSとQZSSの違い</h2>
+    <div id="diffBody"></div>
+  </div>
+
+  <details class="note">
+    <summary>エフェメリスとアルマナックの違い</summary>
+    <div class="body">
+      <p><strong>エフェメリス</strong>は「その衛星自身」の高精度な軌道パラメータ（ケプラー軌道要素＋補正項）。有効期間は2〜4時間程度と短く、繰り返し放送されます。測位計算で衛星位置を求めるのに使う本命データです。</p>
+      <p><strong>アルマナック</strong>は「全衛星」の粗い軌道と状態の一覧。精度は低いけれど数週間〜数か月使え、受信機が「今どの衛星が空にいるはずか」を予測して捕捉を早めるために使います。LNAVでは全25ページを集めるのに12.5分かかる — 昔の受信機の初回測位が遅かった理由のひとつです（今はネット経由のA-GNSSで補う）。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>LNAV → CNAV → CNAV-2 という進化</summary>
+    <div class="body">
+      <p><strong>LNAV</strong>（L1 C/A、1978年〜）は30ビットワード×10＝300ビットの固定サブフレーム構造で、各ワードを6ビットのハミング符号パリティで守ります。<strong>CNAV</strong>（L2C・L5）は固定フレームを捨て、「メッセージタイプ」単位の柔軟な放送に変わり、誤り検出も強力なCRC-24に置き換わりました。軌道も「√A」でなく「基準値からの差ΔA」で送るなど、精度も向上しています。</p>
+      <p><strong>CNAV-2</strong>（L1C）はさらに進み、9ビットのTOI＋600ビットの時計・エフェメリス＋274ビットのページという長さの違う3サブフレーム構成。時刻(TOI)はBCH符号、データはLDPC符号という強力な誤り訂正で保護され、弱い電波でも復調しやすくなっています。形式を切り替えて、構造の違い（ワード＋パリティ vs メッセージ＋CRC vs 可変長サブフレーム）を見比べてください。</p>
+      <p>なお、L1 C/AのLNAVはすべての衛星が送る「共通語」であり続けており、新しい信号は上位互換の追加という関係です。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>メッセージの速度と時間感覚</summary>
+    <div class="body">
+      <p>LNAVは50 bps。300ビットのサブフレームに6秒、エフェメリス一式（SF1〜3）に18秒かかります。CNAVはL2Cで25 bps（1メッセージ12秒）、L5で50 bps（6秒）。CNAV-2は100 sps（シンボル/秒）で18秒フレームです。</p>
+      <p>どれも通信としては極端に低速ですが、これは2万km彼方から地上の雑音レベル以下の微弱電波で届けるための設計です。すべてのサブフレーム/メッセージの先頭にある時刻情報（TOW/TOI）が擬似距離測定の基準になる、GNSSの心臓部です。</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  // ---- palette ----
+  const PAL = ["#60a5fa", "#f97316", "#34d399", "#e879f9", "#fbbf24", "#22d3ee",
+               "#f87171", "#a3e635", "#c084fc", "#fb7185", "#4ade80", "#38bdf8",
+               "#facc15", "#f472b6", "#2dd4bf", "#fdba74", "#93c5fd", "#fca5a5"];
+  const C_PARITY = "#64748b";
+  const C_CRC = "#94a3b8";
+  const C_RESV = "#3f4c5a";
+
+  // ============================================================
+  // field definitions  (bit positions are 1-based, inclusive)
+  // ============================================================
+
+  // ---- LNAV: common header (words 1-2) ----
+  const LNAV_COMMON = [
+    { id: "pre",  name: "プリアンブル",     b: [[1, 8]],   d: "固定パターン 10001011。受信機がサブフレーム先頭を見つける同期マーク。" },
+    { id: "tlm",  name: "TLMメッセージ",   b: [[9, 22]],  d: "テレメトリワード。管制側の情報が入る。" },
+    { id: "isf",  name: "Integrity/予備",  b: [[23, 24]], d: "整合性フラグと予備ビット。" },
+    { id: "tow",  name: "TOW（週内時刻）", b: [[31, 47]], d: "Time of Week カウント。次のサブフレーム先頭の時刻を示す。擬似距離測定の時刻基準。" },
+    { id: "alrt", name: "アラート",        b: [[48, 48]], d: "衛星の精度が保証できないときに立つ警告フラグ。" },
+    { id: "as",   name: "A-Sフラグ",       b: [[49, 49]], d: "アンチスプーフィング（Pコード暗号化）状態。" },
+    { id: "sfid", name: "サブフレームID",  b: [[50, 52]], d: "いま流れているサブフレーム番号（1〜5）を3ビットで示す。" },
+    { id: "howt", name: "帳尻ビット",      b: [[53, 54]], d: "後続パリティが特定値になるよう調整するビット。" },
+  ];
+
+  const LNAV_SF = {
+    1: [
+      { id: "wn",    name: "週番号 WN",        b: [[61, 70]],             d: "GPS週番号（10ビット、1024週で一周）。QZSSも同じGPS週を使う。" },
+      { id: "l2c",   name: "L2コード種別",     b: [[71, 72]],             d: "L2に載っているコードの種別。" },
+      { id: "ura",   name: "URA指数",          b: [[73, 76]],             d: "User Range Accuracy。この衛星の測距精度の目安。" },
+      { id: "hlth",  name: "SVヘルス",         b: [[77, 82]],             d: "衛星の健康状態。異常時は使用禁止を示す。" },
+      { id: "iodc",  name: "IODC",             b: [[83, 84], [211, 218]], d: "時計データの発行番号（上位2＋下位8ビットに分かれて配置）。" },
+      { id: "l2p",   name: "L2 Pフラグ",       b: [[91, 91]],             d: "L2 Pコードにデータが載っているかのフラグ。" },
+      { id: "tgd",   name: "TGD（群遅延）",    b: [[197, 204]],           d: "L1/L2間の機器遅延差の補正値。1周波受信機が使う。" },
+      { id: "toc",   name: "toc（時計基準）",  b: [[219, 234]],           d: "時計補正係数の基準時刻。" },
+      { id: "af2",   name: "af2",              b: [[241, 248]],           d: "衛星時計補正の2次係数（周波数ドリフト率）。" },
+      { id: "af1",   name: "af1",              b: [[249, 264]],           d: "衛星時計補正の1次係数（周波数偏差）。" },
+      { id: "af0",   name: "af0",              b: [[271, 292]],           d: "衛星時計補正の0次係数（時刻オフセット）。原子時計でも数百ns単位でずれるため必須。" },
+    ],
+    2: [
+      { id: "iode",  name: "IODE",             b: [[61, 68]],             d: "エフェメリスの発行番号。SF3や時計データとの整合確認に使う。" },
+      { id: "crs",   name: "Crs",              b: [[69, 84]],             d: "軌道半径の正弦補正項。" },
+      { id: "dn",    name: "Δn",               b: [[91, 106]],            d: "平均運動の補正値。" },
+      { id: "m0",    name: "M0（平均近点角）", b: [[107, 114], [121, 144]], d: "基準時刻での軌道上の位置を表す角度。" },
+      { id: "cuc",   name: "Cuc",              b: [[151, 166]],           d: "緯度引数の余弦補正項。" },
+      { id: "e",     name: "e（離心率）",      b: [[167, 174], [181, 204]], d: "軌道の楕円の潰れ具合。GPSはほぼ円軌道（e≒0.01前後）、QZSSは大きい（e≒0.075）。" },
+      { id: "cus",   name: "Cus",              b: [[211, 226]],           d: "緯度引数の正弦補正項。" },
+      { id: "sqa",   name: "√A（軌道長半径）", b: [[227, 234], [241, 264]], d: "軌道長半径の平方根。軌道の大きさを決める。" },
+      { id: "toe",   name: "toe（基準時刻）",  b: [[271, 286]],           d: "エフェメリスの基準時刻。ここから離れるほど精度が落ちる。" },
+      { id: "fit",   name: "フィット区間",     b: [[287, 287]],           d: "エフェメリスの有効時間区間フラグ。" },
+      { id: "aodo",  name: "AODO",             b: [[288, 292]],           d: "NMCTデータの経過時間。" },
+    ],
+    3: [
+      { id: "cic",   name: "Cic",              b: [[61, 76]],             d: "軌道傾斜角の余弦補正項。" },
+      { id: "om0",   name: "Ω0（昇交点赤経）", b: [[77, 84], [91, 114]],  d: "軌道面が赤道を横切る点の経度方向。軌道面の向きを決める。" },
+      { id: "cis",   name: "Cis",              b: [[121, 136]],           d: "軌道傾斜角の正弦補正項。" },
+      { id: "i0",    name: "i0（軌道傾斜角）", b: [[137, 144], [151, 174]], d: "軌道面の傾き。GPSは約55°、QZSSは約41°（±で変動）。" },
+      { id: "crc3",  name: "Crc",              b: [[181, 196]],           d: "軌道半径の余弦補正項。" },
+      { id: "w",     name: "ω（近地点引数）",  b: [[197, 204], [211, 234]], d: "楕円軌道の向き（近地点の方向）。QZSSは8の字軌道の設計上、約270°付近に維持される。" },
+      { id: "omd",   name: "Ω̇（昇交点変化率）", b: [[241, 264]],          d: "軌道面がゆっくり回転する速さ。" },
+      { id: "iode3", name: "IODE",             b: [[271, 278]],           d: "SF2と同じ発行番号。一致していれば同じ世代のデータ。" },
+      { id: "idot",  name: "IDOT",             b: [[279, 292]],           d: "軌道傾斜角の変化率。" },
+    ],
+    4: [
+      { id: "did",   name: "データID",         b: [[61, 62]],             d: "データ形式の識別。" },
+      { id: "svid",  name: "ページID (SV ID)", b: [[63, 68]],             d: "SF4は25ページ巡回。このIDでページ内容（電離層・UTC・アルマナック等）が決まる。表示例はページ18（電離層・UTC）。" },
+      { id: "iona",  name: "電離層 α0〜α3",    b: [[69, 84], [91, 106]],  d: "Klobucharモデルの振幅係数。1周波受信機が電離層遅延を推定するのに使う。" },
+      { id: "ionb",  name: "電離層 β0〜β3",    b: [[107, 114], [121, 144]], d: "Klobucharモデルの周期係数。QZSSは日本周辺に最適化した値を送れる。" },
+      { id: "a1",    name: "A1（UTC）",        b: [[151, 174]],           d: "GPS時系→UTC変換の1次係数。" },
+      { id: "a0",    name: "A0（UTC）",        b: [[181, 204], [211, 218]], d: "GPS時系→UTC変換の0次係数。" },
+      { id: "tot",   name: "tot",              b: [[219, 226]],           d: "UTCパラメータの基準時刻。" },
+      { id: "wnt",   name: "WNt",              b: [[227, 234]],           d: "UTCパラメータの基準週。" },
+      { id: "dtls",  name: "ΔtLS（うるう秒）", b: [[241, 248]],           d: "GPS時刻とUTCの現在のうるう秒差（現在18秒）。" },
+      { id: "wnlsf", name: "WNLSF",            b: [[249, 256]],           d: "次のうるう秒挿入の週。" },
+      { id: "dn4",   name: "DN",               b: [[257, 264]],           d: "次のうるう秒挿入の曜日。" },
+      { id: "dtlsf", name: "ΔtLSF",            b: [[271, 278]],           d: "うるう秒挿入後の差。うるう秒の予告はここで放送される。" },
+    ],
+    5: [
+      { id: "did5",  name: "データID",         b: [[61, 62]],             d: "データ形式の識別。" },
+      { id: "svid5", name: "SV ID",            b: [[63, 68]],             d: "このページのアルマナックがどの衛星のものかを示す。SF5は25ページで24衛星分＋週情報を巡回。" },
+      { id: "e5",    name: "e（粗い離心率）",  b: [[69, 84]],             d: "アルマナック版の離心率。エフェメリスより桁数が少なく粗い。" },
+      { id: "toa",   name: "toa",              b: [[91, 98]],             d: "アルマナックの基準時刻。" },
+      { id: "di",    name: "δi（傾斜補正）",   b: [[99, 114]],            d: "基準傾斜角(54°)からの差分。QZSSでは基準が異なりIS-QZSSで独自定義。" },
+      { id: "omd5",  name: "Ω̇",               b: [[121, 136]],           d: "昇交点変化率（粗）。" },
+      { id: "h5",    name: "SVヘルス",         b: [[137, 144]],           d: "対象衛星の健康状態。" },
+      { id: "sqa5",  name: "√A（粗）",         b: [[151, 174]],           d: "軌道長半径の平方根（粗）。QZSSは静止軌道級の大きな値になる。" },
+      { id: "om05",  name: "Ω0（粗）",         b: [[181, 204]],           d: "昇交点赤経（粗）。" },
+      { id: "w5",    name: "ω（粗）",          b: [[211, 234]],           d: "近地点引数（粗）。" },
+      { id: "m05",   name: "M0（粗）",         b: [[241, 264]],           d: "平均近点角（粗）。" },
+      { id: "af05",  name: "af0（粗）",        b: [[271, 278], [290, 292]], d: "時計補正0次（粗、分割配置）。" },
+      { id: "af15",  name: "af1（粗）",        b: [[279, 289]],           d: "時計補正1次（粗）。" },
+    ],
+  };
+
+  // ---- CNAV: common header + CRC ----
+  const CNAV_COMMON = [
+    { id: "pre",  name: "プリアンブル",       b: [[1, 8]],   d: "固定パターン 10001011。メッセージ先頭の同期マーク。" },
+    { id: "prn",  name: "PRN番号",            b: [[9, 14]],  d: "送信衛星のPRN番号。QZSSはIS-QZSSの規定で自機のPRNを示す。" },
+    { id: "mtid", name: "メッセージタイプID", b: [[15, 20]], d: "このメッセージの種類（MT10=エフェメリス①など）。固定フレームがなく、タイプIDで内容を識別するのがCNAVの特徴。" },
+    { id: "tow",  name: "TOW（週内時刻）",    b: [[21, 37]], d: "メッセージ先頭の時刻。擬似距離測定の時刻基準。" },
+    { id: "alrt", name: "アラート",           b: [[38, 38]], d: "精度が保証できないときの警告フラグ。" },
+  ];
+  const CNAV_CRC = { id: "crc", name: "CRC-24", b: [[277, 300]], d: "メッセージ全体を守る24ビットのCRC。LNAVのワード単位パリティより強力な誤り検出。", color: C_CRC };
+
+  const CNAV_CLOCK = [
+    { id: "toc",  name: "toc（時計基準）", b: [[39, 49]],   d: "時計補正係数の基準時刻。" },
+    { id: "ura2", name: "URA_NED",        b: [[50, 64]],   d: "時計・軌道の精度指標（3成分）。LNAVのURAより細かい。" },
+    { id: "af0",  name: "af0",            b: [[65, 90]],   d: "衛星時計補正の0次係数。LNAVより高分解能。" },
+    { id: "af1",  name: "af1",            b: [[91, 110]],  d: "衛星時計補正の1次係数。" },
+    { id: "af2",  name: "af2",            b: [[111, 120]], d: "衛星時計補正の2次係数。" },
+  ];
+
+  const CNAV_MT = {
+    10: [
+      { id: "wn",    name: "週番号 WN",   b: [[39, 51]],   d: "週番号（13ビットに拡張。LNAVの10ビット→1024週問題を緩和）。" },
+      { id: "hlth",  name: "信号ヘルス",  b: [[52, 54]],   d: "L1/L2/L5それぞれの健康状態フラグ。" },
+      { id: "top",   name: "top",         b: [[55, 65]],   d: "予測データの生成時刻。" },
+      { id: "uraed", name: "URA_ED",      b: [[66, 70]],   d: "軌道精度の指標。" },
+      { id: "toe",   name: "toe",         b: [[71, 81]],   d: "エフェメリス基準時刻。" },
+      { id: "da",    name: "ΔA（基準との差）", b: [[82, 107]], d: "軌道長半径を「基準値からの差」で送る（LNAVの√Aより高精度）。基準値はGPSとQZSSで異なる（下の違い欄参照）。" },
+      { id: "adot",  name: "Ȧ",           b: [[108, 132]], d: "軌道長半径の変化率。LNAVにはない項目。" },
+      { id: "dn0",   name: "Δn0",         b: [[133, 149]], d: "平均運動の補正値。" },
+      { id: "dnd",   name: "Δṅ0",         b: [[150, 172]], d: "平均運動補正の変化率。LNAVにはない項目。" },
+      { id: "m0",    name: "M0",          b: [[173, 205]], d: "平均近点角（33ビット、LNAVの32ビットより高分解能）。" },
+      { id: "e",     name: "e（離心率）", b: [[206, 238]], d: "離心率。GPSはほぼ0、QZSSは約0.075。" },
+      { id: "w",     name: "ω",           b: [[239, 271]], d: "近地点引数。" },
+      { id: "isf",   name: "ISF",         b: [[272, 272]], d: "整合性ステータスフラグ。" },
+    ],
+    11: [
+      { id: "toe",  name: "toe",          b: [[39, 49]],   d: "エフェメリス基準時刻（MT10と一致していること）。" },
+      { id: "om0",  name: "Ω0",           b: [[50, 82]],   d: "昇交点赤経。" },
+      { id: "i0",   name: "i0（傾斜角）", b: [[83, 115]],  d: "軌道傾斜角。GPS約55°、QZSS約41°。" },
+      { id: "domd", name: "ΔΩ̇",          b: [[116, 132]], d: "昇交点変化率を「基準値からの差」で送る。" },
+      { id: "idot", name: "i0-dot",       b: [[133, 147]], d: "傾斜角の変化率。" },
+      { id: "cis",  name: "Cis",          b: [[148, 163]], d: "傾斜角の正弦補正項。" },
+      { id: "cic",  name: "Cic",          b: [[164, 179]], d: "傾斜角の余弦補正項。" },
+      { id: "crs",  name: "Crs",          b: [[180, 203]], d: "軌道半径の正弦補正項（24ビットに拡張）。" },
+      { id: "crc2", name: "Crc",          b: [[204, 227]], d: "軌道半径の余弦補正項（24ビットに拡張）。" },
+      { id: "cus",  name: "Cus",          b: [[228, 248]], d: "緯度引数の正弦補正項。" },
+      { id: "cuc",  name: "Cuc",          b: [[249, 269]], d: "緯度引数の余弦補正項。" },
+    ],
+    30: [
+      ...CNAV_CLOCK,
+      { id: "tgd",   name: "TGD",          b: [[121, 133]], d: "群遅延補正。" },
+      { id: "isc1",  name: "ISC_L1C/A",    b: [[134, 146]], d: "L1 C/A信号の機器間遅延補正。信号ごとの遅延差をここで吸収する。" },
+      { id: "isc2",  name: "ISC_L2C",      b: [[147, 159]], d: "L2C信号の機器間遅延補正。" },
+      { id: "isc5i", name: "ISC_L5I",      b: [[160, 172]], d: "L5 Iチャネルの機器間遅延補正。" },
+      { id: "isc5q", name: "ISC_L5Q",      b: [[173, 185]], d: "L5 Qチャネルの機器間遅延補正。" },
+      { id: "iona",  name: "電離層 α0〜α3", b: [[186, 217]], d: "Klobucharモデルの振幅係数。" },
+      { id: "ionb",  name: "電離層 β0〜β3", b: [[218, 249]], d: "Klobucharモデルの周期係数。QZSSは日本周辺向けの値。" },
+      { id: "wnop",  name: "WNop",         b: [[250, 257]], d: "予測データの基準週。" },
+    ],
+    33: [
+      ...CNAV_CLOCK,
+      { id: "a0",    name: "A0（UTC）",    b: [[121, 136]], d: "時系→UTC変換の0次係数。GPSはUTC(USNO)、QZSSはUTC(NICT)への変換。" },
+      { id: "a1",    name: "A1（UTC）",    b: [[137, 149]], d: "UTC変換の1次係数。" },
+      { id: "a2",    name: "A2（UTC）",    b: [[150, 156]], d: "UTC変換の2次係数（CNAVで追加）。" },
+      { id: "dtls",  name: "ΔtLS",         b: [[157, 164]], d: "現在のうるう秒差。" },
+      { id: "tot",   name: "tot",          b: [[165, 180]], d: "UTCパラメータ基準時刻。" },
+      { id: "wnot",  name: "WNot",         b: [[181, 193]], d: "UTCパラメータ基準週。" },
+      { id: "wnlsf", name: "WNLSF",        b: [[194, 206]], d: "次のうるう秒挿入の週。" },
+      { id: "dn",    name: "DN",           b: [[207, 210]], d: "うるう秒挿入の曜日。" },
+      { id: "dtlsf", name: "ΔtLSF",        b: [[211, 218]], d: "挿入後のうるう秒差。" },
+    ],
+    37: [
+      ...CNAV_CLOCK,
+      { id: "wna",  name: "WNa",           b: [[121, 133]], d: "アルマナック基準週。" },
+      { id: "toa",  name: "toa",           b: [[134, 141]], d: "アルマナック基準時刻。" },
+      { id: "prna", name: "対象PRN",       b: [[142, 147]], d: "このアルマナックがどの衛星のものか。" },
+      { id: "ha",   name: "信号ヘルス",    b: [[148, 150]], d: "対象衛星のL1/L2/L5ヘルス。" },
+      { id: "ea",   name: "e（粗）",       b: [[151, 161]], d: "ミディアルマナックの離心率。" },
+      { id: "dia",  name: "δi",            b: [[162, 172]], d: "基準傾斜角からの差分。" },
+      { id: "omda", name: "Ω̇",            b: [[173, 183]], d: "昇交点変化率（粗）。" },
+      { id: "sqaa", name: "√A（粗）",      b: [[184, 200]], d: "軌道長半径の平方根（粗）。" },
+      { id: "om0a", name: "Ω0（粗）",      b: [[201, 216]], d: "昇交点赤経（粗）。" },
+      { id: "wa",   name: "ω（粗）",       b: [[217, 232]], d: "近地点引数（粗）。" },
+      { id: "m0a",  name: "M0（粗）",      b: [[233, 248]], d: "平均近点角（粗）。" },
+      { id: "af0a", name: "af0（粗）",     b: [[249, 259]], d: "時計補正0次（粗）。" },
+      { id: "af1a", name: "af1（粗）",     b: [[260, 269]], d: "時計補正1次（粗）。" },
+    ],
+  };
+
+  // ---- CNAV-2 (L1C) ----
+  const CNAV2_SF = {
+    1: {
+      bits: 9,
+      fields: [
+        { id: "toi", name: "TOI（Time of Interval）", b: [[1, 9]], d: "フレーム内時刻カウント（9ビット）。BCH符号で強力に保護され、データ本体とは別枠の符号化で送られる。受信機が最初に掴む時刻の目印。" },
+      ],
+    },
+    2: {
+      bits: 600,
+      fields: [
+        { id: "wn",    name: "週番号 WN",  b: [[1, 13]],    d: "週番号（13ビット）。" },
+        { id: "itow",  name: "ITOW",       b: [[14, 21]],   d: "週内の2時間区間番号。TOIと合わせて完全な時刻になる。" },
+        { id: "top",   name: "top",        b: [[22, 32]],   d: "予測データ生成時刻。" },
+        { id: "hlth",  name: "L1Cヘルス",  b: [[33, 33]],   d: "L1C信号の健康状態。" },
+        { id: "uraed", name: "URA_ED",     b: [[34, 38]],   d: "軌道精度指標。" },
+        { id: "toe",   name: "toe",        b: [[39, 49]],   d: "エフェメリス基準時刻。" },
+        { id: "da",    name: "ΔA",         b: [[50, 75]],   d: "軌道長半径（基準値との差）。基準はGPSとQZSSで異なる。" },
+        { id: "adot",  name: "Ȧ",          b: [[76, 100]],  d: "軌道長半径の変化率。" },
+        { id: "dn0",   name: "Δn0",        b: [[101, 117]], d: "平均運動補正。" },
+        { id: "dnd",   name: "Δṅ0",        b: [[118, 140]], d: "平均運動補正の変化率。" },
+        { id: "m0",    name: "M0",         b: [[141, 173]], d: "平均近点角。" },
+        { id: "e",     name: "e（離心率）", b: [[174, 206]], d: "離心率。QZSSは約0.075。" },
+        { id: "w",     name: "ω",          b: [[207, 239]], d: "近地点引数。QZSSは約270°付近。" },
+        { id: "om0",   name: "Ω0",         b: [[240, 272]], d: "昇交点赤経。" },
+        { id: "i0",    name: "i0",         b: [[273, 305]], d: "軌道傾斜角。GPS約55°、QZSS約41°。" },
+        { id: "domd",  name: "ΔΩ̇",        b: [[306, 322]], d: "昇交点変化率（基準との差）。" },
+        { id: "idot",  name: "i0-dot",     b: [[323, 337]], d: "傾斜角変化率。" },
+        { id: "cis",   name: "Cis",        b: [[338, 353]], d: "補正項。" },
+        { id: "cic",   name: "Cic",        b: [[354, 369]], d: "補正項。" },
+        { id: "crs",   name: "Crs",        b: [[370, 393]], d: "補正項。" },
+        { id: "crc2",  name: "Crc",        b: [[394, 417]], d: "補正項。" },
+        { id: "cus",   name: "Cus",        b: [[418, 438]], d: "補正項。" },
+        { id: "cuc",   name: "Cuc",        b: [[439, 459]], d: "補正項。" },
+        { id: "ura2",  name: "URA_NED",    b: [[460, 477]], d: "時計精度指標（3成分）。" },
+        { id: "af0",   name: "af0",        b: [[478, 503]], d: "時計補正0次。" },
+        { id: "af1",   name: "af1",        b: [[504, 523]], d: "時計補正1次。" },
+        { id: "af2",   name: "af2",        b: [[524, 533]], d: "時計補正2次。" },
+        { id: "tgd",   name: "TGD",        b: [[534, 546]], d: "群遅延補正。" },
+        { id: "iscp",  name: "ISC_L1CP",   b: [[547, 559]], d: "L1Cパイロット成分の遅延補正。" },
+        { id: "iscd",  name: "ISC_L1CD",   b: [[560, 572]], d: "L1Cデータ成分の遅延補正。" },
+        { id: "isf",   name: "ISF",        b: [[573, 573]], d: "整合性フラグ。" },
+        { id: "crc",   name: "CRC-24",     b: [[577, 600]], d: "サブフレーム2全体を守るCRC。さらに全体がLDPC符号で誤り訂正される。", color: C_CRC },
+      ],
+    },
+    3: {
+      bits: 274,
+      fields: [
+        { id: "prn",  name: "PRN",            b: [[1, 8]],     d: "送信衛星のPRN番号。" },
+        { id: "page", name: "ページ番号",     b: [[9, 14]],    d: "サブフレーム3はページ制。UTC・電離層・アルマナック・地球姿勢などを順に放送する。表示例はUTC・電離層ページ。" },
+        { id: "utc",  name: "UTCパラメータ",  b: [[15, 102]],  d: "A0/A1/A2・うるう秒情報など。GPSはUTC(USNO)、QZSSはUTC(NICT)基準。" },
+        { id: "iono", name: "電離層パラメータ", b: [[103, 176]], d: "Klobucharモデル係数。QZSSは日本周辺向けの値。" },
+        { id: "crc",  name: "CRC-24",         b: [[251, 274]], d: "サブフレーム3を守るCRC。", color: C_CRC },
+      ],
+    },
+  };
+
+  // ============================================================
+  // formats / units
+  // ============================================================
+  const FORMATS = {
+    lnav: {
+      btn: "L1 C/A", btnSmall: "LNAV",
+      sig: "L1 C/A（LNAV）",
+      unitLabel: "サブフレーム:",
+      caption: "50 bps × 300ビット = 6秒/サブフレーム。SF1〜5の順に流れて1フレーム（30秒）。SF4/5は25ページ巡回でアルマナック全体は12.5分。各行は1ワード（24データ＋6パリティ）。",
+      units: [
+        { key: "1", tag: "SF1", small: "時計・衛星状態" },
+        { key: "2", tag: "SF2", small: "エフェメリス ①" },
+        { key: "3", tag: "SF3", small: "エフェメリス ②" },
+        { key: "4", tag: "SF4", small: "電離層・UTC・アルマナック" },
+        { key: "5", tag: "SF5", small: "アルマナック" },
+      ],
+      build(unit) {
+        const sf = +unit;
+        const fields = [];
+        const par = { id: "par", name: "パリティ", b: [], d: "各ワード末尾6ビットの誤り検出符号（ハミング符号）。", color: C_PARITY };
+        for (let wd = 1; wd <= 10; wd++) par.b.push([wd * 30 - 5, wd * 30]);
+        fields.push(par, ...LNAV_COMMON, ...LNAV_SF[sf]);
+        const fixed = {};
+        "10001011".split("").forEach((c, i) => { fixed[i + 1] = c; });
+        sf.toString(2).padStart(3, "0").split("").forEach((c, i) => { fixed[50 + i] = c; });
+        return { bits: 300, fields, fixed, rowLabel: "word" };
+      },
+    },
+    cnav: {
+      btn: "L2C・L5", btnSmall: "CNAV",
+      sig: "L2C / L5（CNAV）",
+      unitLabel: "メッセージタイプ:",
+      caption: "固定フレームなしのメッセージ列。1メッセージ300ビット（L2C: 25bps=12秒 / L5: 50bps=6秒）。どのタイプをいつ流すかは管制側のスケジュール次第。末尾はCRC-24。",
+      units: [
+        { key: "10", tag: "MT10", small: "エフェメリス ①" },
+        { key: "11", tag: "MT11", small: "エフェメリス ②" },
+        { key: "30", tag: "MT30", small: "時計・電離層・遅延" },
+        { key: "33", tag: "MT33", small: "時計・UTC" },
+        { key: "37", tag: "MT37", small: "時計・アルマナック" },
+      ],
+      build(unit) {
+        const fields = [...CNAV_COMMON, ...CNAV_MT[+unit], CNAV_CRC];
+        const fixed = {};
+        "10001011".split("").forEach((c, i) => { fixed[i + 1] = c; });
+        (+unit).toString(2).padStart(6, "0").split("").forEach((c, i) => { fixed[15 + i] = c; });
+        return { bits: 300, fields, fixed, rowLabel: "bit" };
+      },
+    },
+    cnav2: {
+      btn: "L1C", btnSmall: "CNAV-2",
+      sig: "L1C（CNAV-2）",
+      unitLabel: "サブフレーム:",
+      caption: "1フレーム=18秒で、長さの違う3つのサブフレームを送る: SF1 TOI（9ビット・BCH保護）→ SF2 時計＋エフェメリス（600ビット）→ SF3 ページ（274ビット、UTC・電離層・アルマナック等を巡回）。データはLDPC符号で誤り訂正。",
+      units: [
+        { key: "1", tag: "SF1", small: "TOI（時刻）9bit" },
+        { key: "2", tag: "SF2", small: "時計＋エフェメリス 600bit" },
+        { key: "3", tag: "SF3", small: "ページ（UTC・アルマナック等）274bit" },
+      ],
+      build(unit) {
+        const def = CNAV2_SF[+unit];
+        return { bits: def.bits, fields: [...def.fields], fixed: {}, rowLabel: "bit" };
+      },
+    },
+  };
+
+  const DIFFS = {
+    "lnav:1": { pts: [
+      "構造・ビット配置は完全に同一。QZSSのインタフェース仕様（IS-QZSS-PNT）はGPSのIS-GPS-200を土台にした互換設計で、受信機はGPS用の復調処理をそのまま使える。",
+      "識別はPRN番号で行う: GPSは1〜32、QZSSのL1 C/Aは193〜202。航法メッセージの中身ではなく拡散符号の番号で見分ける。",
+      "週番号（WN）はQZSSも「GPS週」をそのまま使用。独自の時刻系を持たず、GPS時刻に同期している。",
+      "URAやSVヘルスのビット定義は同じだが、運用上の意味づけはIS-QZSSに独自規定がある。",
+    ]},
+    "lnav:2": { pts: [
+      "ビット配置は同一。ただし軌道が根本的に違うので、入っている値の桁がまったく異なる。",
+      "QZSSの準天頂軌道（8の字）は「大きな離心率＋静止軌道級の高度」で作られており、e と √A にその特徴がはっきり出る。",
+    ], table: { head: ["パラメータ", "GPS（例）", "QZSS（例）", "意味"], rows: [
+      ["e 離心率", "0.010 前後", "約 0.075", "QZSSは意図的に楕円軌道にして8の字を描く"],
+      ["√A", "5153.6 √m", "約 6493.4 √m", "軌道半径 約26,560 km vs 約42,164 km（静止軌道級）"],
+      ["周回周期", "約11時間58分", "約23時間56分", "QZSSは地球の自転と同期して日本上空に留まる"],
+    ]}},
+    "lnav:3": { pts: [
+      "ビット配置は同一。SF2と同じく、値の傾向に軌道の違いが表れる。",
+      "QZSSのエフェメリス更新・有効期間の運用はIS-QZSSの規定に従う。",
+    ], table: { head: ["パラメータ", "GPS（例）", "QZSS（例）", "意味"], rows: [
+      ["i0 軌道傾斜角", "約 55°", "約 41°（±数°で変動）", "8の字の南北の振れ幅を決める"],
+      ["ω 近地点引数", "衛星ごと様々", "約 270° 付近に維持", "8の字の非対称性（日本側に長く留まる）を作る"],
+    ]}},
+    "lnav:4": { pts: [
+      "GPSのSF4は25ページ巡回で、電離層パラメータ（Klobuchar）、UTCパラメータ、SV25〜32のアルマナックなどを順に放送する。表示例はページ18（電離層・UTC）。",
+      "QZSSも同じページ構造だが、ページ割当てが独自: アルマナックはQZSS衛星のみで、GPS衛星のアルマナックは放送しない。",
+      "電離層パラメータはQZSSの見どころ: 日本・アジア太平洋地域に最適化した係数を送ることができる。",
+      "うるう秒の予告（ΔtLSF等）はどちらも放送し、値はGPS時刻系に揃う。",
+    ]},
+    "lnav:5": { pts: [
+      "GPSのSF5は25ページで、SV1〜24のアルマナック（1ページ1衛星）＋週情報を12.5分かけて一巡する。",
+      "QZSSはQZSS衛星のぶんだけアルマナックを放送する（機数が少ないため予備ページがある）。GPS衛星の位置を知りたければGPS自身のアルマナックを読む。",
+      "δi（傾斜補正）の基準値の扱いなど、細部のスケーリングにIS-QZSS独自の規定がある。",
+      "実務では: アルマナック取得は12.5分かかるため、現代の受信機はネット経由のA-GNSSで初期測位を数秒に短縮している。",
+    ]},
+    "cnav:10": { pts: [
+      "構造は同一。CNAVの目玉は軌道長半径を「基準値との差 ΔA」で送ること — そしてこの基準値そのものがGPSとQZSSで違う。",
+      "PRNフィールドの番号運用もIS-QZSSの規定に従う（QZSSはPRN 193〜）。",
+    ], table: { head: ["パラメータ", "GPS", "QZSS", "意味"], rows: [
+      ["ΔAの基準値 A_REF", "26,559,710 m", "42,164,200 m", "中軌道と静止軌道級で基準から別物。仕様書レベルで違う数少ない箇所"],
+      ["e / i0 など", "ほぼ円・55°", "0.075・41°", "LNAVと同じく軌道値の違いが乗る"],
+    ]}},
+    "cnav:11": { pts: [
+      "構造は同一。Crs/Crcなどの補正項がLNAVの16ビットから24ビットに拡張されており、QZSSの大きな軌道でも精度を保てる。",
+      "ΔΩ̇（昇交点変化率の差分）の基準値もIS-QZSSで別途規定される。",
+    ]},
+    "cnav:30": { pts: [
+      "ISC（信号間補正）はL1 C/A・L2C・L5の各信号の機器遅延差を補正する仕組みで、多周波受信の要。両システムとも同じ構造。",
+      "電離層パラメータはQZSSでは日本周辺に最適化した値を放送できる（地域システムの強み）。",
+    ]},
+    "cnav:33": { pts: [
+      "UTCパラメータの構造は同一だが、参照先が違う: GPSは米海軍天文台のUTC(USNO)、QZSSは日本のNICTが維持するUTC(NICT)への変換係数を放送する。",
+      "どちらのUTCも国際的なUTCに数ns〜数十nsで揃っているため、実用上はほぼ同じ時刻が得られる。",
+    ]},
+    "cnav:37": { pts: [
+      "ミディアルマナック（1メッセージ1衛星分）。GPSは自コンステレーションの全衛星、QZSSはQZSS衛星のみを放送する。",
+      "CNAVには他にMT12/31の縮小アルマナック（reduced almanac、1メッセージに複数衛星）もあり、LNAVより柔軟にアルマナックを配れる。",
+    ]},
+    "cnav2:1": { pts: [
+      "TOIは9ビットの時刻カウントで、両システム完全に同一。フレーム同期と時刻の初期取得を最速にするための専用設計。",
+      "TOIだけBCH符号という別の強力な符号で送られるのは、「時刻が最初に要る」というGNSS受信の本質に合わせた工夫。",
+    ]},
+    "cnav2:2": { pts: [
+      "600ビットに時計とエフェメリスがすべて入っており、このサブフレームを1つ取れば衛星位置計算に必要な情報が揃う（LNAVはSF1〜3の3つ必要）。",
+      "ΔAの基準値がGPS（26,559,710 m）とQZSS（42,164,200 m）で異なるのはCNAVと同様。軌道値の傾向差（e≒0.075、i0≒41°、ω≒270°）もそのまま。",
+      "全体がLDPC符号で誤り訂正されるため、ビル街などの弱い電波でも復調しやすい。",
+    ]},
+    "cnav2:3": { pts: [
+      "ページ制で UTC・電離層・アルマナック・地球姿勢パラメータ（EOP）などを巡回放送する。表示例はUTC・電離層のページ。",
+      "QZSSはページ割当てと内容（自衛星のアルマナック、日本周辺向け電離層、UTC(NICT)参照）に独自運用がある。",
+    ]},
+  };
+
+  // ============================================================
+  // rendering
+  // ============================================================
+  let cur = { fmt: "lnav", unit: "2" };
+  let curFields = [];
+
+  function fieldMapOf(build) {
+    const map = new Array(build.bits + 1).fill(null);
+    const fields = [];
+    let ci = 0;
+    for (const f of build.fields) {
+      const ff = { ...f, color: f.color || PAL[ci++ % PAL.length] };
+      fields.push(ff);
+      for (const [a, b] of ff.b) for (let i = a; i <= b && i <= build.bits; i++) if (!map[i]) map[i] = ff;
+    }
+    const rs = { id: "rsv", name: "予備", b: [], d: "予備・未使用領域。", color: C_RESV };
+    let a = null;
+    for (let i = 1; i <= build.bits + 1; i++) {
+      const covered = i > build.bits || map[i];
+      if (!covered && a === null) a = i;
+      if (covered && a !== null) { rs.b.push([a, i - 1]); a = null; }
+    }
+    if (rs.b.length) {
+      fields.push(rs);
+      for (const [x, y] of rs.b) for (let i = x; i <= y; i++) map[i] = rs;
+    }
+    return { map, fields };
+  }
+
+  function makeBits(build, sysSeed) {
+    let s = ((build.bits * 2654435761) ^ sysSeed ^ (cur.unit.charCodeAt(0) * 7919)) >>> 0;
+    const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+    const bits = new Array(build.bits + 1);
+    for (let i = 1; i <= build.bits; i++) {
+      bits[i] = build.fixed[i] !== undefined ? build.fixed[i] : (rnd() < 0.5 ? "0" : "1");
+    }
+    return bits;
+  }
+
+  function renderGrid(el, bits, map, build) {
+    el.innerHTML = "";
+    const rows = Math.ceil(build.bits / 30);
+    for (let r = 0; r < rows; r++) {
+      const row = document.createElement("div");
+      row.className = "brow";
+      const lab = document.createElement("span");
+      lab.className = "wlab";
+      lab.textContent = build.rowLabel === "word" ? "W" + (r + 1) : String(r * 30 + 1);
+      row.appendChild(lab);
+      for (let j = 1; j <= 30; j++) {
+        const i = r * 30 + j;
+        if (i > build.bits) break;
+        const f = map[i];
+        const cell = document.createElement("span");
+        cell.className = "bit";
+        cell.textContent = bits[i];
+        cell.dataset.f = f.id;
+        cell.style.setProperty("--fc", f.color);
+        cell.title = f.name + "（bit " + i + "）";
+        row.appendChild(cell);
+      }
+      el.appendChild(row);
+    }
+  }
+
+  function renderLegend(fields) {
+    const ul = $("legend");
+    ul.innerHTML = "";
+    for (const f of fields) {
+      const li = document.createElement("li");
+      li.dataset.f = f.id;
+      li.style.setProperty("--fc", f.color);
+      const sw = document.createElement("i");
+      li.appendChild(sw);
+      li.appendChild(document.createTextNode(f.name));
+      ul.appendChild(li);
+    }
+  }
+
+  function renderDiff() {
+    const d = DIFFS[cur.fmt + ":" + cur.unit];
+    let html = "<ul>" + d.pts.map((p) => "<li>" + p + "</li>").join("") + "</ul>";
+    if (d.table) {
+      html += '<div class="tw"><table><tr>' + d.table.head.map((hh) => "<th>" + hh + "</th>").join("") + "</tr>" +
+        d.table.rows.map((r) => "<tr>" + r.map((c, i) => '<td class="' + (i === 1 || i === 2 ? "num" : "") + '">' + c + "</td>").join("") + "</tr>").join("") +
+        "</table></div>";
+    }
+    $("diffBody").innerHTML = html;
+  }
+
+  function setInfo(f) {
+    const box = $("fieldInfo");
+    if (!f) {
+      box.innerHTML = "ビットまたは下の凡例にマウスを乗せると、そのフィールドの説明を表示します。";
+      return;
+    }
+    const rng = f.b.map(([a, b]) => (a === b ? "bit " + a : "bit " + a + "–" + b)).join(", ");
+    box.innerHTML = "<b>" + f.name + "</b>（" + rng + "）— " + f.d;
+  }
+
+  function renderAll() {
+    const F = FORMATS[cur.fmt];
+    const build = F.build(cur.unit);
+    const { map, fields } = fieldMapOf(build);
+    curFields = fields;
+    renderGrid($("gridGps"), makeBits(build, 0x47505331), map, build);
+    renderGrid($("gridQzs"), makeBits(build, 0x515a5331), map, build);
+    renderLegend(fields);
+    renderDiff();
+    setInfo(null);
+    $("sigGps").textContent = F.sig;
+    $("sigQzs").textContent = F.sig;
+    $("unitCaption").textContent = F.caption;
+    document.querySelectorAll("#unitsel .sel-btn").forEach((b) => b.classList.toggle("active", b.dataset.unit === cur.unit));
+    document.querySelectorAll("#fmtsel .sel-btn").forEach((b) => b.classList.toggle("active", b.dataset.fmt === cur.fmt));
+  }
+
+  function buildUnitButtons() {
+    const F = FORMATS[cur.fmt];
+    $("unitLbl").textContent = F.unitLabel;
+    document.querySelectorAll("#unitsel .sel-btn").forEach((b) => b.remove());
+    for (const u of F.units) {
+      const btn = document.createElement("button");
+      btn.className = "sel-btn";
+      btn.dataset.unit = u.key;
+      btn.innerHTML = "<b>" + u.tag + "</b><small>" + u.small + "</small>";
+      btn.addEventListener("click", () => { cur.unit = u.key; renderAll(); });
+      $("unitsel").appendChild(btn);
+    }
+  }
+
+  // ---- format buttons ----
+  for (const [key, F] of Object.entries(FORMATS)) {
+    const btn = document.createElement("button");
+    btn.className = "sel-btn";
+    btn.dataset.fmt = key;
+    btn.innerHTML = "<b>" + F.btn + "</b><small>" + F.btnSmall + "</small>";
+    btn.addEventListener("click", () => {
+      cur.fmt = key;
+      cur.unit = F.units[Math.min(1, F.units.length - 1)].key;   // default to the 2nd unit (ephemeris-ish)
+      buildUnitButtons();
+      renderAll();
+    });
+    $("fmtsel").appendChild(btn);
+  }
+
+  // ---- hover interactions ----
+  let hlId = null;
+  function highlight(fid, on) {
+    document.querySelectorAll('[data-f="' + fid + '"]').forEach((el) => el.classList.toggle("hl", on));
+  }
+  document.addEventListener("mouseover", (e) => {
+    const t = e.target.closest("[data-f]");
+    const fid = t ? t.dataset.f : null;
+    if (fid === hlId) return;
+    if (hlId) highlight(hlId, false);
+    hlId = fid;
+    if (fid) {
+      highlight(fid, true);
+      setInfo(curFields.find((f) => f.id === fid) || null);
+    } else {
+      setInfo(null);
+    }
+  });
+
+  buildUnitButtons();
+  renderAll();
+})();
+</script>
+</body>
+</html>

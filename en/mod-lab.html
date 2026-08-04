@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>Modulation Basics | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  nav.site-nav {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    max-width: 1060px; margin: 0 auto; padding: 12px 16px 0; font-size: .88rem;
+  }
+  nav.site-nav .brand { font-weight: 700; margin-right: 12px; letter-spacing: .02em; }
+  nav.site-nav a { color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 999px; }
+  nav.site-nav a:hover { color: var(--accent); background: var(--surface2); }
+  nav.site-nav a.active { color: var(--accent); background: var(--surface2); font-weight: 600; }
+  nav.site-nav a.lang { margin-left: auto; border: 1px solid var(--border); font-weight: 600; }
+  nav.site-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .tabs .lbl { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+  .tab-btn {
+    appearance: none; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface2); color: var(--text);
+    padding: 6px 14px; cursor: pointer; line-height: 1.3; text-align: center;
+  }
+  .tab-btn b { display: block; font-size: .88rem; }
+  .tab-btn small { display: block; font-size: .7rem; color: var(--muted); }
+  .tab-btn:hover { border-color: var(--accent); }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tab-btn.active small { color: rgba(255,255,255,.85); }
+  .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .ctl { display: grid; grid-template-columns: 10em 1fr 8em; align-items: center; gap: 10px; padding: 5px 0; }
+  .ctl .name { font-size: .82rem; color: var(--muted); }
+  .ctl output {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .84rem; text-align: right;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding-top: 6px; }
+  button.act {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent); color: #fff;
+    border-radius: 8px; font-size: .86rem; font-weight: 600;
+    padding: 6px 16px; cursor: pointer; font-family: inherit;
+  }
+  button.act.paused { background: transparent; color: var(--accent); }
+  button.act:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #modeNote {
+    padding: 9px 12px; border-radius: 8px; margin-top: 8px;
+    background: var(--surface2); font-size: .85rem;
+  }
+  #modeNote b { color: var(--accent); }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Modulation Basics (AM / FM / PSK)</h1>
+    <p>Where do you hide the information in a wave? Amplitude, frequency or phase — compare the three choices</p>
+  </header>
+
+  <div class="panel">
+    <div class="tabs">
+      <span class="lbl">Modulation:</span>
+      <button class="tab-btn" data-m="am"><b>AM</b><small>ride the amplitude</small></button>
+      <button class="tab-btn" data-m="fm"><b>FM</b><small>ride the frequency</small></button>
+      <button class="tab-btn" data-m="psk"><b>PSK</b><small>ride the phase (digital)</small></button>
+    </div>
+    <div style="height:10px"></div>
+    <canvas class="dark" id="mod" aria-label="Three-row display: message signal, carrier and modulated wave"></canvas>
+    <div class="ctl" id="ctlA">
+      <span class="name" id="pAName">Modulation depth m</span>
+      <input type="range" id="pA" min="0" max="1.5" step="0.05" value="0.8">
+      <output id="pAOut">0.80</output>
+    </div>
+    <div class="ctl" id="ctlB">
+      <span class="name" id="pBName">Message frequency</span>
+      <input type="range" id="pB" min="0.5" max="2" step="0.1" value="1">
+      <output id="pBOut">1.0 Hz</output>
+    </div>
+    <div class="btnrow">
+      <button class="act" id="playBtn" aria-pressed="true">⏸ Pause</button>
+      <span class="cap">Carrier simplified to 8 Hz (real L1 is 1.5 GHz). Top = the information / middle = carrier / bottom = the modulated radio wave</span>
+    </div>
+    <div id="modeNote"></div>
+  </div>
+
+  <details class="note" open>
+    <summary>Three modulations — three hiding places</summary>
+    <div class="body">
+      <p>A carrier <code>y = A sin(2πft + φ)</code> has only three knobs. Twist <strong>amplitude A</strong> and you get AM, <strong>frequency f</strong> gives FM, <strong>phase φ</strong> gives PM/PSK. The three sliders from the <a href="wave-lab.html">Wave Lab</a> map exactly onto the three modulation families.</p>
+      <p><strong>AM</strong> puts the information in the wave's outline (envelope), so receivers are simple (a crystal radio is one diode). But noise also rides the amplitude, so AM is noise-prone. Push the depth past 1 and the envelope folds over and distorts — try it with the slider.</p>
+      <p><strong>FM</strong> keeps amplitude constant; the information lives in the wave's density (frequency). Amplitude noise can be ignored, hence FM radio's clean sound — at the cost of more bandwidth.</p>
+      <p><strong>PSK</strong> is digital: bits switch the phase. BPSK uses 0°/180°, one bit per symbol. Watch closely — the wave snaps into reverse at bit boundaries.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Why GNSS uses PSK (BPSK)</summary>
+    <div class="body">
+      <p>(1) <strong>Constant envelope</strong>: satellite amplifiers run most efficiently at saturation, which only works when the amplitude carries no information. On a solar-powered satellite, that efficiency matters enormously.</p>
+      <p>(2) <strong>Phase = time</strong>: GNSS is fundamentally about time-of-arrival. A modulation that keeps its information in phase doubles as a timing ruler — carrier-phase positioning (RTK) grows straight out of this.</p>
+      <p>(3) <strong>It composes with spreading codes</strong>: multiplying by a ±1 PRN code IS BPSK modulation (as in <a href="gnss-signal.html">Signal Structure</a>).</p>
+      <p>Extensions: QPSK carries 2 bits/symbol (L5 uses I/Q channels this way), and BOC modulation (L1C, Galileo E1) shapes the phase flips with a sub-carrier.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Modulation and bandwidth — faster data means fatter signals</summary>
+    <div class="body">
+      <p>A modulated wave spreads into "sidebands" around the carrier: twice the message bandwidth for AM, roughly <code>2(Δf + fm)</code> for FM (Carson's rule), and roughly the symbol rate for digital schemes. <strong>The faster you send, the wider you spread</strong> — which is why spectrum is precious.</p>
+      <p>Same logic in GNSS: the C/A code occupies ~2 MHz while the 10× faster L5 code takes ~20 MHz (compare the widths on the <a href="gnss-bands.html">Frequency Band Map</a>).</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  const S = { mode: "am", pA: 0.8, pB: 1, t: 0, playing: true };
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) S.playing = false;
+
+  const FC = 8;
+  const BITS = [1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1];
+
+  const MODES = {
+    am: {
+      pA: { name: "Modulation depth m", min: 0, max: 1.5, step: 0.05, def: 0.8, fmt: (v) => v.toFixed(2) },
+      pB: { name: "Message frequency", min: 0.5, max: 2, step: 0.1, def: 1, fmt: (v) => v.toFixed(1) + " Hz" },
+      note: () => "AM: <b>y = (1 + m·msg(t)) × sin(2πf<sub>c</sub>t)</b> — the information appears in the envelope (dashed)." +
+        (S.pA > 1 ? " <b>m > 1 is overmodulation</b>: the envelope folds and demodulates distorted." : " Raising m deepens the envelope swell."),
+    },
+    fm: {
+      pA: { name: "Frequency deviation β", min: 0, max: 10, step: 0.5, def: 5, fmt: (v) => v.toFixed(1) },
+      pB: { name: "Message frequency", min: 0.5, max: 2, step: 0.1, def: 1, fmt: (v) => v.toFixed(1) + " Hz" },
+      note: () => "FM: <b>y = sin(2πf<sub>c</sub>t + β·sin(2πf<sub>m</sub>t))</b> — larger message squeezes the wave denser; smaller stretches it sparser. Amplitude never changes, so amplitude noise is ignored. β = 0 gives back the bare carrier.",
+    },
+    psk: {
+      pA: { name: "Bit rate", min: 1, max: 4, step: 0.5, def: 2, fmt: (v) => v.toFixed(1) + " bps" },
+      pB: null,
+      note: () => "BPSK: <b>bit 1 → +sin / bit 0 → −sin (180° phase flip)</b> — the waveform inverts at bit boundaries (red ▼). Amplitude and frequency stay fixed; phase alone carries the data. GNSS L1 C/A works exactly like this.",
+    },
+  };
+
+  function msgVal(t) { return Math.sin(2 * Math.PI * S.pB * t); }
+  function bitAt(t) { return BITS[Math.floor(t * S.pA) % BITS.length]; }
+
+  const cv = $("mod");
+  const ctx = cv.getContext("2d");
+  const COL = { msg: "#f472b6", car: "rgba(52,211,153,.45)", out: "#fbbf24",
+                grid: "rgba(148,180,170,.14)", label: "rgba(160,190,182,.85)", env: "rgba(244,114,182,.5)", flip: "#f87171" };
+
+  function fitCanvas(c, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = c.clientWidth;
+    const h = Math.round(w * aspect);
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+      c.width = Math.round(w * dpr);
+      c.height = Math.round(h * dpr);
+      c.style.height = h + "px";
+    }
+    c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  function trace(y0, hh, w, pad, n, fn, color, lw, dash) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw || 1.6;
+    ctx.setLineDash(dash || []);
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const x = pad + i / n * (w - pad * 2);
+      const y = y0 - fn(i / n) * hh * 0.4;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  function rowLabel(txt, y, color) {
+    ctx.fillStyle = color;
+    ctx.font = "11px sans-serif";
+    ctx.fillText(txt, 10, y);
+  }
+
+  const WIN = 4;
+
+  function draw() {
+    const { w, h } = fitCanvas(cv, 0.5);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#0a1210";
+    ctx.fillRect(0, 0, w, h);
+    const pad = 14;
+    const rowH = (h - 20) / 3;
+    const yy = [rowH * 0.6, rowH * 1.6, rowH * 2.6];
+    const t0 = S.t;
+    const T = (u) => t0 + u * WIN;
+
+    for (const y0 of yy) {
+      ctx.strokeStyle = COL.grid;
+      ctx.beginPath();
+      ctx.moveTo(pad, y0);
+      ctx.lineTo(w - pad, y0);
+      ctx.stroke();
+    }
+
+    if (S.mode === "am") {
+      rowLabel("Message msg(t)", 14, COL.msg);
+      trace(yy[0], rowH, w, pad, 400, (u) => msgVal(T(u)), COL.msg, 2);
+      rowLabel("Carrier", rowH + 14, "#34d399");
+      trace(yy[1], rowH, w, pad, 900, (u) => Math.sin(2 * Math.PI * FC * T(u)), COL.car, 1.4);
+      rowLabel("AM wave (dashed = envelope)", rowH * 2 + 14, COL.out);
+      trace(yy[2], rowH, w, pad, 1400, (u) => (1 + S.pA * msgVal(T(u))) / 2 * Math.sin(2 * Math.PI * FC * T(u)), COL.out, 1.5);
+      trace(yy[2], rowH, w, pad, 400, (u) => (1 + S.pA * msgVal(T(u))) / 2, COL.env, 1.2, [4, 4]);
+      trace(yy[2], rowH, w, pad, 400, (u) => -(1 + S.pA * msgVal(T(u))) / 2, COL.env, 1.2, [4, 4]);
+    } else if (S.mode === "fm") {
+      rowLabel("Message msg(t)", 14, COL.msg);
+      trace(yy[0], rowH, w, pad, 400, (u) => msgVal(T(u)), COL.msg, 2);
+      rowLabel("Carrier (unmodulated)", rowH + 14, "#34d399");
+      trace(yy[1], rowH, w, pad, 900, (u) => Math.sin(2 * Math.PI * FC * T(u)), COL.car, 1.4);
+      rowLabel("FM wave (dense when message is high, sparse when low)", rowH * 2 + 14, COL.out);
+      trace(yy[2], rowH, w, pad, 2000, (u) => Math.sin(2 * Math.PI * FC * T(u) + S.pA * Math.sin(2 * Math.PI * S.pB * T(u))), COL.out, 1.5);
+    } else {
+      rowLabel("Bit stream (" + S.pA.toFixed(1) + " bps)", 14, COL.msg);
+      trace(yy[0], rowH, w, pad, 800, (u) => bitAt(T(u)) * 2 - 1, COL.msg, 2);
+      rowLabel("Carrier", rowH + 14, "#34d399");
+      trace(yy[1], rowH, w, pad, 900, (u) => Math.sin(2 * Math.PI * FC * T(u)), COL.car, 1.4);
+      rowLabel("BPSK wave (phase reverses at bit boundaries)", rowH * 2 + 14, COL.out);
+      trace(yy[2], rowH, w, pad, 1600, (u) => (bitAt(T(u)) * 2 - 1) * Math.sin(2 * Math.PI * FC * T(u)), COL.out, 1.5);
+      ctx.fillStyle = COL.flip;
+      const bitT = 1 / S.pA;
+      const first = Math.ceil(t0 / bitT) * bitT;
+      for (let bt = first; bt < t0 + WIN; bt += bitT) {
+        const prev = BITS[(Math.floor(bt * S.pA) - 1 + BITS.length * 8) % BITS.length];
+        const curB = BITS[Math.floor(bt * S.pA) % BITS.length];
+        if (prev === curB) continue;
+        const x = pad + (bt - t0) / WIN * (w - pad * 2);
+        ctx.beginPath();
+        ctx.moveTo(x - 4, yy[2] - rowH * 0.46);
+        ctx.lineTo(x + 4, yy[2] - rowH * 0.46);
+        ctx.lineTo(x, yy[2] - rowH * 0.46 + 7);
+        ctx.fill();
+      }
+    }
+  }
+
+  function applyMode(m) {
+    S.mode = m;
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.m === m));
+    const cfg = MODES[m];
+    $("pAName").textContent = cfg.pA.name;
+    const a = $("pA");
+    a.min = cfg.pA.min; a.max = cfg.pA.max; a.step = cfg.pA.step; a.value = cfg.pA.def;
+    S.pA = cfg.pA.def;
+    $("pAOut").textContent = cfg.pA.fmt(S.pA);
+    if (cfg.pB) {
+      $("ctlB").style.display = "";
+      $("pBName").textContent = cfg.pB.name;
+      const b = $("pB");
+      b.min = cfg.pB.min; b.max = cfg.pB.max; b.step = cfg.pB.step; b.value = cfg.pB.def;
+      S.pB = cfg.pB.def;
+      $("pBOut").textContent = cfg.pB.fmt(S.pB);
+    } else {
+      $("ctlB").style.display = "none";
+    }
+    $("modeNote").innerHTML = cfg.note();
+    draw();
+  }
+  document.querySelectorAll(".tab-btn").forEach((b) => b.addEventListener("click", () => applyMode(b.dataset.m)));
+  $("pA").addEventListener("input", (e) => {
+    S.pA = +e.target.value;
+    $("pAOut").textContent = MODES[S.mode].pA.fmt(S.pA);
+    $("modeNote").innerHTML = MODES[S.mode].note();
+    draw();
+  });
+  $("pB").addEventListener("input", (e) => {
+    S.pB = +e.target.value;
+    $("pBOut").textContent = MODES[S.mode].pB.fmt(S.pB);
+    draw();
+  });
+  $("playBtn").addEventListener("click", () => {
+    S.playing = !S.playing;
+    $("playBtn").textContent = S.playing ? "⏸ Pause" : "▶ Play";
+    $("playBtn").classList.toggle("paused", !S.playing);
+    $("playBtn").setAttribute("aria-pressed", String(S.playing));
+  });
+
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.1, (now - last) / 1000);
+    last = now;
+    if (S.playing) {
+      S.t += dt * 0.35;
+      draw();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener("resize", draw);
+  if (window.ResizeObserver) new ResizeObserver(draw).observe(cv);
+  applyMode("am");
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

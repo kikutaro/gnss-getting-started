@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>Navigation Messages GPS/QZSS | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  nav.site-nav {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    max-width: 1060px; margin: 0 auto; padding: 12px 16px 0; font-size: .88rem;
+  }
+  nav.site-nav .brand { font-weight: 700; margin-right: 12px; letter-spacing: .02em; }
+  nav.site-nav a { color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 999px; }
+  nav.site-nav a:hover { color: var(--accent); background: var(--surface2); }
+  nav.site-nav a.active { color: var(--accent); background: var(--surface2); font-weight: 600; }
+  nav.site-nav a.lang { margin-left: auto; border: 1px solid var(--border); font-weight: 600; }
+  nav.site-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+
+  .selrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch; }
+  .selrow .lbl { font-size: .82rem; color: var(--muted); align-self: center; margin-right: 4px; min-width: 8.5em; }
+  .sel-btn {
+    appearance: none; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface2); color: var(--text);
+    padding: 6px 14px; cursor: pointer;
+    text-align: center; line-height: 1.3;
+  }
+  .sel-btn b { display: block; font-size: .88rem; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  .sel-btn small { display: block; font-size: .7rem; color: var(--muted); }
+  .sel-btn:hover { border-color: var(--accent); }
+  .sel-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .sel-btn.active small { color: rgba(255,255,255,.85); }
+  .sel-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sel-caption { margin: 10px 0 0; font-size: .78rem; color: var(--muted); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  .msg-panel { padding: 10px 12px; }
+  .msg-panel h2 { margin: 0 0 8px; font-size: .92rem; font-weight: 700; }
+  .msg-panel h2 .sys-gps { color: #3b82f6; }
+  .msg-panel h2 .sys-qzs { color: #ef4444; }
+  .msg-panel h2 small { font-weight: 400; color: var(--muted); font-size: .74rem; margin-left: 8px; }
+  .bitwrap { overflow-x: auto; }
+  .bitgrid { display: flex; flex-direction: column; gap: 2px; background: var(--scope-bg); border-radius: 6px; padding: 8px; width: max-content; }
+  .brow { display: flex; align-items: center; gap: 2px; }
+  .brow .wlab {
+    width: 34px; flex: none;
+    font-size: .68rem; color: rgba(160,190,182,.8);
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .bit {
+    width: 13px; height: 16px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-family: ui-monospace, Consolas, monospace;
+    color: rgba(255,255,255,.88);
+    background: color-mix(in srgb, var(--fc) 38%, #0a1210);
+    border-radius: 2px;
+    cursor: default;
+  }
+  .bit.hl { background: var(--fc); color: #fff; outline: 1px solid #fff; z-index: 1; }
+
+  #fieldInfo {
+    min-height: 3em;
+    padding: 9px 12px;
+    background: var(--surface2);
+    border-radius: 8px;
+    font-size: .85rem;
+    margin-bottom: 10px;
+  }
+  #fieldInfo b { font-family: ui-monospace, Consolas, monospace; }
+  .legend-panel h2 { margin: 0 0 8px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  ul.leg { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  ul.leg li {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: .8rem; cursor: pointer;
+    padding: 2px 6px; border-radius: 6px;
+  }
+  ul.leg li:hover, ul.leg li.hl { background: var(--surface2); }
+  ul.leg i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; background: var(--fc); }
+
+  .diff-panel h2 { margin: 0 0 8px; font-size: .92rem; }
+  .diff-panel ul { margin: 0 0 10px; padding-left: 1.4em; font-size: .87rem; }
+  .diff-panel ul li { margin-bottom: 4px; }
+  .diff-panel table { border-collapse: collapse; font-size: .84rem; margin: 4px 0; }
+  .diff-panel th, .diff-panel td { border: 1px solid var(--border); padding: 4px 12px; text-align: left; }
+  .diff-panel th { background: var(--surface2); font-weight: 600; }
+  .diff-panel td.num { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .diff-panel .tw { overflow-x: auto; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Navigation Messages (GPS / QZSS)</h1>
+    <p>Compare navigation messages down to the bit level. Field layouts follow the ICDs; bit values are dummies for teaching</p>
+  </header>
+
+  <div class="panel">
+    <div class="selrow" id="fmtsel">
+      <span class="lbl">Message format:</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="selrow" id="unitsel">
+      <span class="lbl" id="unitLbl">Subframe:</span>
+    </div>
+    <p class="sel-caption" id="unitCaption"></p>
+  </div>
+
+  <div class="grid2">
+    <section class="panel msg-panel">
+      <h2><span class="sys-gps">GPS</span> <span id="sigGps">L1 C/A</span><small>PRN 1–32</small></h2>
+      <div class="bitwrap"><div class="bitgrid" id="gridGps"></div></div>
+    </section>
+    <section class="panel msg-panel">
+      <h2><span class="sys-qzs">QZSS Michibiki</span> <span id="sigQzs">L1 C/A</span><small>PRN 193–202, GPS-compatible format</small></h2>
+      <div class="bitwrap"><div class="bitgrid" id="gridQzs"></div></div>
+    </section>
+  </div>
+
+  <div class="panel legend-panel">
+    <div id="fieldInfo"></div>
+    <h2>FIELD LEGEND</h2>
+    <ul class="leg" id="legend"></ul>
+  </div>
+
+  <div class="panel diff-panel">
+    <h2>GPS vs QZSS here</h2>
+    <div id="diffBody"></div>
+  </div>
+
+  <details class="note">
+    <summary>Ephemeris vs almanac</summary>
+    <div class="body">
+      <p>The <strong>ephemeris</strong> is that satellite's own precise orbit (Keplerian elements + corrections). It is valid only 2–4 hours and rebroadcast constantly — the primary data for computing satellite position in a fix.</p>
+      <p>The <strong>almanac</strong> is a coarse list of every satellite's orbit and health. Low precision but usable for weeks to months, it lets a receiver predict which satellites should be overhead and speeds up acquisition. Collecting all 25 LNAV pages takes 12.5 minutes — one reason old receivers took forever for a first fix (today A-GNSS fills in over the network).</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>The evolution: LNAV → CNAV → CNAV-2</summary>
+    <div class="body">
+      <p><strong>LNAV</strong> (L1 C/A, since 1978) uses fixed 300-bit subframes of ten 30-bit words, each guarded by 6-bit Hamming parity. <strong>CNAV</strong> (L2C/L5) drops the fixed frame for flexible "message types" and upgrades error detection to CRC-24. Orbits are sent as a delta from a reference (ΔA) instead of √A, improving precision.</p>
+      <p><strong>CNAV-2</strong> (L1C) goes further: three different-length subframes — a 9-bit TOI, 600 bits of clock+ephemeris and a 274-bit page — protected by BCH and LDPC codes for weak-signal reception. Switch formats above to compare words+parity vs message+CRC vs variable-length subframes.</p>
+      <p>Note that L1 C/A LNAV remains the lingua franca every satellite still speaks; newer signals are additive upgrades.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Data rates and a sense of time</summary>
+    <div class="body">
+      <p>LNAV runs at 50 bps: 6 s per 300-bit subframe, 18 s for a full ephemeris (SF1–3). CNAV is 25 bps on L2C (12 s per message) and 50 bps on L5 (6 s). CNAV-2 uses 100 sps and an 18 s frame.</p>
+      <p>These are absurdly slow links — by design, so the signal survives arriving 20,000 km later below the noise floor. And the time mark at the head of every subframe/message (TOW/TOI) is the reference for pseudorange measurement: the heart of GNSS.</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  const PAL = ["#60a5fa", "#f97316", "#34d399", "#e879f9", "#fbbf24", "#22d3ee",
+               "#f87171", "#a3e635", "#c084fc", "#fb7185", "#4ade80", "#38bdf8",
+               "#facc15", "#f472b6", "#2dd4bf", "#fdba74", "#93c5fd", "#fca5a5"];
+  const C_PARITY = "#64748b";
+  const C_CRC = "#94a3b8";
+  const C_RESV = "#3f4c5a";
+
+  const LNAV_COMMON = [
+    { id: "pre",  name: "Preamble",        b: [[1, 8]],   d: "Fixed pattern 10001011 — the sync mark the receiver uses to find the subframe start." },
+    { id: "tlm",  name: "TLM message",     b: [[9, 22]],  d: "Telemetry word carrying control-segment information." },
+    { id: "isf",  name: "Integrity/spare", b: [[23, 24]], d: "Integrity flag and spare bits." },
+    { id: "tow",  name: "TOW (time of week)", b: [[31, 47]], d: "Time-of-week count marking the next subframe boundary — the time reference for pseudorange measurement." },
+    { id: "alrt", name: "Alert",           b: [[48, 48]], d: "Warning flag raised when accuracy is not guaranteed." },
+    { id: "as",   name: "A-S flag",        b: [[49, 49]], d: "Anti-spoofing (P-code encryption) status." },
+    { id: "sfid", name: "Subframe ID",     b: [[50, 52]], d: "Which subframe (1–5) is being broadcast, in 3 bits." },
+    { id: "howt", name: "Solve bits",      b: [[53, 54]], d: "Bits chosen so the following parity comes out right." },
+  ];
+
+  const LNAV_SF = {
+    1: [
+      { id: "wn",    name: "Week number WN",  b: [[61, 70]],             d: "GPS week (10 bits, wraps every 1024 weeks). QZSS uses the same GPS week." },
+      { id: "l2c",   name: "Code on L2",      b: [[71, 72]],             d: "Which code rides on L2." },
+      { id: "ura",   name: "URA index",       b: [[73, 76]],             d: "User Range Accuracy — a quality figure for this satellite's ranging." },
+      { id: "hlth",  name: "SV health",       b: [[77, 82]],             d: "Satellite health; signals unusable states." },
+      { id: "iodc",  name: "IODC",            b: [[83, 84], [211, 218]], d: "Issue number of the clock data (2 MSBs + 8 LSBs, split)." },
+      { id: "l2p",   name: "L2 P flag",       b: [[91, 91]],             d: "Whether data is present on L2 P-code." },
+      { id: "tgd",   name: "TGD (group delay)", b: [[197, 204]],         d: "L1/L2 equipment delay difference, used by single-frequency receivers." },
+      { id: "toc",   name: "toc (clock epoch)", b: [[219, 234]],         d: "Reference time of the clock coefficients." },
+      { id: "af2",   name: "af2",             b: [[241, 248]],           d: "Clock correction, 2nd order (frequency drift rate)." },
+      { id: "af1",   name: "af1",             b: [[249, 264]],           d: "Clock correction, 1st order (frequency offset)." },
+      { id: "af0",   name: "af0",             b: [[271, 292]],           d: "Clock correction, 0th order (time offset). Even atomic clocks drift by hundreds of ns." },
+    ],
+    2: [
+      { id: "iode",  name: "IODE",            b: [[61, 68]],             d: "Ephemeris issue number; must match SF3 and the clock data." },
+      { id: "crs",   name: "Crs",             b: [[69, 84]],             d: "Sine correction to orbital radius." },
+      { id: "dn",    name: "Δn",              b: [[91, 106]],            d: "Mean motion correction." },
+      { id: "m0",    name: "M0 (mean anomaly)", b: [[107, 114], [121, 144]], d: "Angle giving the satellite's position along the orbit at the epoch." },
+      { id: "cuc",   name: "Cuc",             b: [[151, 166]],           d: "Cosine correction to argument of latitude." },
+      { id: "e",     name: "e (eccentricity)", b: [[167, 174], [181, 204]], d: "How squashed the ellipse is. GPS is nearly circular (e≈0.01); QZSS is large (e≈0.075)." },
+      { id: "cus",   name: "Cus",             b: [[211, 226]],           d: "Sine correction to argument of latitude." },
+      { id: "sqa",   name: "√A (semi-major axis)", b: [[227, 234], [241, 264]], d: "Square root of the semi-major axis — the orbit's size." },
+      { id: "toe",   name: "toe (epoch)",     b: [[271, 286]],           d: "Ephemeris reference time; accuracy decays away from it." },
+      { id: "fit",   name: "Fit interval",    b: [[287, 287]],           d: "Ephemeris validity interval flag." },
+      { id: "aodo",  name: "AODO",            b: [[288, 292]],           d: "Age of NMCT data." },
+    ],
+    3: [
+      { id: "cic",   name: "Cic",             b: [[61, 76]],             d: "Cosine correction to inclination." },
+      { id: "om0",   name: "Ω0 (RAAN)",       b: [[77, 84], [91, 114]],  d: "Right ascension of ascending node — orients the orbital plane." },
+      { id: "cis",   name: "Cis",             b: [[121, 136]],           d: "Sine correction to inclination." },
+      { id: "i0",    name: "i0 (inclination)", b: [[137, 144], [151, 174]], d: "Tilt of the orbital plane. GPS ≈55°, QZSS ≈41° (varies)." },
+      { id: "crc3",  name: "Crc",             b: [[181, 196]],           d: "Cosine correction to orbital radius." },
+      { id: "w",     name: "ω (arg. of perigee)", b: [[197, 204], [211, 234]], d: "Orientation of the ellipse. QZSS keeps ω≈270° to shape its figure-8." },
+      { id: "omd",   name: "Ω̇ (RAAN rate)",  b: [[241, 264]],           d: "Slow rotation rate of the orbital plane." },
+      { id: "iode3", name: "IODE",            b: [[271, 278]],           d: "Same issue number as SF2 — matching means same data generation." },
+      { id: "idot",  name: "IDOT",            b: [[279, 292]],           d: "Rate of change of inclination." },
+    ],
+    4: [
+      { id: "did",   name: "Data ID",         b: [[61, 62]],             d: "Data format identifier." },
+      { id: "svid",  name: "Page ID (SV ID)", b: [[63, 68]],             d: "SF4 cycles through 25 pages; this ID selects the content. Shown: page 18 (ionosphere/UTC)." },
+      { id: "iona",  name: "Iono α0–α3",      b: [[69, 84], [91, 106]],  d: "Klobuchar model amplitude terms, used by single-frequency receivers to estimate ionospheric delay." },
+      { id: "ionb",  name: "Iono β0–β3",      b: [[107, 114], [121, 144]], d: "Klobuchar model period terms. QZSS can broadcast values tuned for the Japan region." },
+      { id: "a1",    name: "A1 (UTC)",        b: [[151, 174]],           d: "First-order GPS-time-to-UTC coefficient." },
+      { id: "a0",    name: "A0 (UTC)",        b: [[181, 204], [211, 218]], d: "Zeroth-order GPS-time-to-UTC coefficient." },
+      { id: "tot",   name: "tot",             b: [[219, 226]],           d: "Reference time of the UTC parameters." },
+      { id: "wnt",   name: "WNt",             b: [[227, 234]],           d: "Reference week of the UTC parameters." },
+      { id: "dtls",  name: "ΔtLS (leap sec)", b: [[241, 248]],           d: "Current leap-second offset between GPS time and UTC (currently 18 s)." },
+      { id: "wnlsf", name: "WNLSF",           b: [[249, 256]],           d: "Week of the next leap-second event." },
+      { id: "dn4",   name: "DN",              b: [[257, 264]],           d: "Day of the next leap-second event." },
+      { id: "dtlsf", name: "ΔtLSF",           b: [[271, 278]],           d: "Offset after the event — leap seconds are announced here." },
+    ],
+    5: [
+      { id: "did5",  name: "Data ID",         b: [[61, 62]],             d: "Data format identifier." },
+      { id: "svid5", name: "SV ID",           b: [[63, 68]],             d: "Which satellite this almanac page describes. SF5 cycles 25 pages: 24 satellites + week info." },
+      { id: "e5",    name: "e (coarse)",      b: [[69, 84]],             d: "Almanac eccentricity — fewer bits, coarser than ephemeris." },
+      { id: "toa",   name: "toa",             b: [[91, 98]],             d: "Almanac reference time." },
+      { id: "di",    name: "δi (incl. offset)", b: [[99, 114]],          d: "Offset from the 54° reference inclination. QZSS defines its own reference in IS-QZSS." },
+      { id: "omd5",  name: "Ω̇",              b: [[121, 136]],           d: "RAAN rate (coarse)." },
+      { id: "h5",    name: "SV health",       b: [[137, 144]],           d: "Health of the target satellite." },
+      { id: "sqa5",  name: "√A (coarse)",     b: [[151, 174]],           d: "Semi-major axis (coarse). Huge for QZSS's GEO-class orbit." },
+      { id: "om05",  name: "Ω0 (coarse)",     b: [[181, 204]],           d: "RAAN (coarse)." },
+      { id: "w5",    name: "ω (coarse)",      b: [[211, 234]],           d: "Argument of perigee (coarse)." },
+      { id: "m05",   name: "M0 (coarse)",     b: [[241, 264]],           d: "Mean anomaly (coarse)." },
+      { id: "af05",  name: "af0 (coarse)",    b: [[271, 278], [290, 292]], d: "Clock offset (coarse, split layout)." },
+      { id: "af15",  name: "af1 (coarse)",    b: [[279, 289]],           d: "Clock drift (coarse)." },
+    ],
+  };
+
+  const CNAV_COMMON = [
+    { id: "pre",  name: "Preamble",     b: [[1, 8]],   d: "Fixed pattern 10001011 — message sync mark." },
+    { id: "prn",  name: "PRN number",   b: [[9, 14]],  d: "Transmitting satellite's PRN. QZSS numbering follows IS-QZSS." },
+    { id: "mtid", name: "Message type ID", b: [[15, 20]], d: "What this message is (MT10 = ephemeris ① etc.). No fixed frame — the type ID identifies content: CNAV's hallmark." },
+    { id: "tow",  name: "TOW",          b: [[21, 37]], d: "Message start time — the pseudorange time reference." },
+    { id: "alrt", name: "Alert",        b: [[38, 38]], d: "Accuracy warning flag." },
+  ];
+  const CNAV_CRC = { id: "crc", name: "CRC-24", b: [[277, 300]], d: "24-bit CRC guarding the whole message — stronger than LNAV's per-word parity.", color: C_CRC };
+
+  const CNAV_CLOCK = [
+    { id: "toc",  name: "toc (clock epoch)", b: [[39, 49]],   d: "Reference time of the clock coefficients." },
+    { id: "ura2", name: "URA_NED",           b: [[50, 64]],   d: "Clock/orbit accuracy figure (3 components) — finer than LNAV's URA." },
+    { id: "af0",  name: "af0",               b: [[65, 90]],   d: "Clock correction, 0th order. Higher resolution than LNAV." },
+    { id: "af1",  name: "af1",               b: [[91, 110]],  d: "Clock correction, 1st order." },
+    { id: "af2",  name: "af2",               b: [[111, 120]], d: "Clock correction, 2nd order." },
+  ];
+
+  const CNAV_MT = {
+    10: [
+      { id: "wn",    name: "Week number WN", b: [[39, 51]],   d: "Week number, extended to 13 bits (eases LNAV's 1024-week rollover)." },
+      { id: "hlth",  name: "Signal health",  b: [[52, 54]],   d: "Health flags for L1/L2/L5 individually." },
+      { id: "top",   name: "top",            b: [[55, 65]],   d: "Time of prediction-data generation." },
+      { id: "uraed", name: "URA_ED",         b: [[66, 70]],   d: "Orbit accuracy figure." },
+      { id: "toe",   name: "toe",            b: [[71, 81]],   d: "Ephemeris reference time." },
+      { id: "da",    name: "ΔA (delta from ref.)", b: [[82, 107]], d: "Semi-major axis sent as a delta from a reference value (more precise than LNAV's √A). The reference itself differs between GPS and QZSS — see below." },
+      { id: "adot",  name: "Ȧ",              b: [[108, 132]], d: "Rate of change of the semi-major axis. Not present in LNAV." },
+      { id: "dn0",   name: "Δn0",            b: [[133, 149]], d: "Mean motion correction." },
+      { id: "dnd",   name: "Δṅ0",            b: [[150, 172]], d: "Rate of the mean-motion correction. Not in LNAV." },
+      { id: "m0",    name: "M0",             b: [[173, 205]], d: "Mean anomaly (33 bits — higher resolution than LNAV's 32)." },
+      { id: "e",     name: "e (eccentricity)", b: [[206, 238]], d: "Eccentricity. Near 0 for GPS, ~0.075 for QZSS." },
+      { id: "w",     name: "ω",              b: [[239, 271]], d: "Argument of perigee." },
+      { id: "isf",   name: "ISF",            b: [[272, 272]], d: "Integrity status flag." },
+    ],
+    11: [
+      { id: "toe",  name: "toe",             b: [[39, 49]],   d: "Ephemeris reference time (must match MT10)." },
+      { id: "om0",  name: "Ω0",              b: [[50, 82]],   d: "RAAN." },
+      { id: "i0",   name: "i0 (inclination)", b: [[83, 115]], d: "Inclination. GPS ≈55°, QZSS ≈41°." },
+      { id: "domd", name: "ΔΩ̇",             b: [[116, 132]], d: "RAAN rate as a delta from a reference." },
+      { id: "idot", name: "i0-dot",          b: [[133, 147]], d: "Inclination rate." },
+      { id: "cis",  name: "Cis",             b: [[148, 163]], d: "Inclination sine correction." },
+      { id: "cic",  name: "Cic",             b: [[164, 179]], d: "Inclination cosine correction." },
+      { id: "crs",  name: "Crs",             b: [[180, 203]], d: "Radius sine correction (extended to 24 bits)." },
+      { id: "crc2", name: "Crc",             b: [[204, 227]], d: "Radius cosine correction (extended to 24 bits)." },
+      { id: "cus",  name: "Cus",             b: [[228, 248]], d: "Latitude-argument sine correction." },
+      { id: "cuc",  name: "Cuc",             b: [[249, 269]], d: "Latitude-argument cosine correction." },
+    ],
+    30: [
+      ...CNAV_CLOCK,
+      { id: "tgd",   name: "TGD",            b: [[121, 133]], d: "Group delay correction." },
+      { id: "isc1",  name: "ISC_L1C/A",      b: [[134, 146]], d: "Inter-signal correction for L1 C/A — per-signal delay differences absorbed here." },
+      { id: "isc2",  name: "ISC_L2C",        b: [[147, 159]], d: "Inter-signal correction for L2C." },
+      { id: "isc5i", name: "ISC_L5I",        b: [[160, 172]], d: "Inter-signal correction for the L5 I channel." },
+      { id: "isc5q", name: "ISC_L5Q",        b: [[173, 185]], d: "Inter-signal correction for the L5 Q channel." },
+      { id: "iona",  name: "Iono α0–α3",     b: [[186, 217]], d: "Klobuchar amplitude terms." },
+      { id: "ionb",  name: "Iono β0–β3",     b: [[218, 249]], d: "Klobuchar period terms. Japan-optimized values on QZSS." },
+      { id: "wnop",  name: "WNop",           b: [[250, 257]], d: "Reference week of prediction data." },
+    ],
+    33: [
+      ...CNAV_CLOCK,
+      { id: "a0",    name: "A0 (UTC)",       b: [[121, 136]], d: "UTC conversion, 0th order. GPS converts to UTC(USNO); QZSS to UTC(NICT)." },
+      { id: "a1",    name: "A1 (UTC)",       b: [[137, 149]], d: "UTC conversion, 1st order." },
+      { id: "a2",    name: "A2 (UTC)",       b: [[150, 156]], d: "UTC conversion, 2nd order (new in CNAV)." },
+      { id: "dtls",  name: "ΔtLS",           b: [[157, 164]], d: "Current leap-second offset." },
+      { id: "tot",   name: "tot",            b: [[165, 180]], d: "UTC parameter reference time." },
+      { id: "wnot",  name: "WNot",           b: [[181, 193]], d: "UTC parameter reference week." },
+      { id: "wnlsf", name: "WNLSF",          b: [[194, 206]], d: "Week of next leap second." },
+      { id: "dn",    name: "DN",             b: [[207, 210]], d: "Day of next leap second." },
+      { id: "dtlsf", name: "ΔtLSF",          b: [[211, 218]], d: "Offset after the leap second." },
+    ],
+    37: [
+      ...CNAV_CLOCK,
+      { id: "wna",  name: "WNa",             b: [[121, 133]], d: "Almanac reference week." },
+      { id: "toa",  name: "toa",             b: [[134, 141]], d: "Almanac reference time." },
+      { id: "prna", name: "Target PRN",      b: [[142, 147]], d: "Which satellite this almanac describes." },
+      { id: "ha",   name: "Signal health",   b: [[148, 150]], d: "L1/L2/L5 health of the target satellite." },
+      { id: "ea",   name: "e (coarse)",      b: [[151, 161]], d: "Midi-almanac eccentricity." },
+      { id: "dia",  name: "δi",              b: [[162, 172]], d: "Inclination offset from reference." },
+      { id: "omda", name: "Ω̇",              b: [[173, 183]], d: "RAAN rate (coarse)." },
+      { id: "sqaa", name: "√A (coarse)",     b: [[184, 200]], d: "Semi-major axis (coarse)." },
+      { id: "om0a", name: "Ω0 (coarse)",     b: [[201, 216]], d: "RAAN (coarse)." },
+      { id: "wa",   name: "ω (coarse)",      b: [[217, 232]], d: "Argument of perigee (coarse)." },
+      { id: "m0a",  name: "M0 (coarse)",     b: [[233, 248]], d: "Mean anomaly (coarse)." },
+      { id: "af0a", name: "af0 (coarse)",    b: [[249, 259]], d: "Clock offset (coarse)." },
+      { id: "af1a", name: "af1 (coarse)",    b: [[260, 269]], d: "Clock drift (coarse)." },
+    ],
+  };
+
+  const CNAV2_SF = {
+    1: {
+      bits: 9,
+      fields: [
+        { id: "toi", name: "TOI (Time of Interval)", b: [[1, 9]], d: "9-bit time count within the frame, heavily protected by a BCH code and sent separately from the data. The first thing a receiver grabs — because time comes first in GNSS." },
+      ],
+    },
+    2: {
+      bits: 600,
+      fields: [
+        { id: "wn",    name: "Week number WN", b: [[1, 13]],    d: "Week number (13 bits)." },
+        { id: "itow",  name: "ITOW",       b: [[14, 21]],   d: "2-hour interval number in the week; with TOI it forms complete time." },
+        { id: "top",   name: "top",        b: [[22, 32]],   d: "Prediction-data generation time." },
+        { id: "hlth",  name: "L1C health", b: [[33, 33]],   d: "L1C signal health." },
+        { id: "uraed", name: "URA_ED",     b: [[34, 38]],   d: "Orbit accuracy figure." },
+        { id: "toe",   name: "toe",        b: [[39, 49]],   d: "Ephemeris reference time." },
+        { id: "da",    name: "ΔA",         b: [[50, 75]],   d: "Semi-major axis as delta from reference; the reference differs GPS vs QZSS." },
+        { id: "adot",  name: "Ȧ",          b: [[76, 100]],  d: "Semi-major-axis rate." },
+        { id: "dn0",   name: "Δn0",        b: [[101, 117]], d: "Mean motion correction." },
+        { id: "dnd",   name: "Δṅ0",        b: [[118, 140]], d: "Mean-motion correction rate." },
+        { id: "m0",    name: "M0",         b: [[141, 173]], d: "Mean anomaly." },
+        { id: "e",     name: "e (eccentricity)", b: [[174, 206]], d: "Eccentricity; ~0.075 for QZSS." },
+        { id: "w",     name: "ω",          b: [[207, 239]], d: "Argument of perigee; ~270° for QZSS." },
+        { id: "om0",   name: "Ω0",         b: [[240, 272]], d: "RAAN." },
+        { id: "i0",    name: "i0",         b: [[273, 305]], d: "Inclination: GPS ≈55°, QZSS ≈41°." },
+        { id: "domd",  name: "ΔΩ̇",        b: [[306, 322]], d: "RAAN rate (delta from reference)." },
+        { id: "idot",  name: "i0-dot",     b: [[323, 337]], d: "Inclination rate." },
+        { id: "cis",   name: "Cis",        b: [[338, 353]], d: "Correction term." },
+        { id: "cic",   name: "Cic",        b: [[354, 369]], d: "Correction term." },
+        { id: "crs",   name: "Crs",        b: [[370, 393]], d: "Correction term." },
+        { id: "crc2",  name: "Crc",        b: [[394, 417]], d: "Correction term." },
+        { id: "cus",   name: "Cus",        b: [[418, 438]], d: "Correction term." },
+        { id: "cuc",   name: "Cuc",        b: [[439, 459]], d: "Correction term." },
+        { id: "ura2",  name: "URA_NED",    b: [[460, 477]], d: "Clock accuracy figure (3 components)." },
+        { id: "af0",   name: "af0",        b: [[478, 503]], d: "Clock correction, 0th order." },
+        { id: "af1",   name: "af1",        b: [[504, 523]], d: "Clock correction, 1st order." },
+        { id: "af2",   name: "af2",        b: [[524, 533]], d: "Clock correction, 2nd order." },
+        { id: "tgd",   name: "TGD",        b: [[534, 546]], d: "Group delay correction." },
+        { id: "iscp",  name: "ISC_L1CP",   b: [[547, 559]], d: "Delay correction for the L1C pilot component." },
+        { id: "iscd",  name: "ISC_L1CD",   b: [[560, 572]], d: "Delay correction for the L1C data component." },
+        { id: "isf",   name: "ISF",        b: [[573, 573]], d: "Integrity flag." },
+        { id: "crc",   name: "CRC-24",     b: [[577, 600]], d: "CRC over subframe 2; the whole thing is additionally LDPC-encoded.", color: C_CRC },
+      ],
+    },
+    3: {
+      bits: 274,
+      fields: [
+        { id: "prn",  name: "PRN",             b: [[1, 8]],     d: "Transmitting satellite's PRN." },
+        { id: "page", name: "Page number",     b: [[9, 14]],    d: "Subframe 3 is paged: UTC, ionosphere, almanac, Earth-orientation etc. Shown: the UTC/ionosphere page." },
+        { id: "utc",  name: "UTC parameters",  b: [[15, 102]],  d: "A0/A1/A2, leap-second info etc. GPS refers to UTC(USNO); QZSS to UTC(NICT)." },
+        { id: "iono", name: "Iono parameters", b: [[103, 176]], d: "Klobuchar coefficients; Japan-area values on QZSS." },
+        { id: "crc",  name: "CRC-24",          b: [[251, 274]], d: "CRC guarding subframe 3.", color: C_CRC },
+      ],
+    },
+  };
+
+  const FORMATS = {
+    lnav: {
+      btn: "L1 C/A", btnSmall: "LNAV",
+      sig: "L1 C/A (LNAV)",
+      unitLabel: "Subframe:",
+      caption: "50 bps × 300 bits = 6 s per subframe. SF1–5 in order make one 30 s frame. SF4/5 cycle 25 pages, so the full almanac takes 12.5 min. Each row is one word (24 data + 6 parity bits).",
+      units: [
+        { key: "1", tag: "SF1", small: "Clock & SV status" },
+        { key: "2", tag: "SF2", small: "Ephemeris ①" },
+        { key: "3", tag: "SF3", small: "Ephemeris ②" },
+        { key: "4", tag: "SF4", small: "Iono / UTC / almanac" },
+        { key: "5", tag: "SF5", small: "Almanac" },
+      ],
+      build(unit) {
+        const sf = +unit;
+        const fields = [];
+        const par = { id: "par", name: "Parity", b: [], d: "6-bit Hamming parity ending each word — protects the 50 bps stream from bit errors.", color: C_PARITY };
+        for (let wd = 1; wd <= 10; wd++) par.b.push([wd * 30 - 5, wd * 30]);
+        fields.push(par, ...LNAV_COMMON, ...LNAV_SF[sf]);
+        const fixed = {};
+        "10001011".split("").forEach((c, i) => { fixed[i + 1] = c; });
+        sf.toString(2).padStart(3, "0").split("").forEach((c, i) => { fixed[50 + i] = c; });
+        return { bits: 300, fields, fixed, rowLabel: "word" };
+      },
+    },
+    cnav: {
+      btn: "L2C・L5", btnSmall: "CNAV",
+      sig: "L2C / L5 (CNAV)",
+      unitLabel: "Message type:",
+      caption: "A stream of messages with no fixed frame. 300 bits per message (L2C: 25 bps = 12 s / L5: 50 bps = 6 s). Which type airs when is up to the control segment's schedule. Ends in CRC-24.",
+      units: [
+        { key: "10", tag: "MT10", small: "Ephemeris ①" },
+        { key: "11", tag: "MT11", small: "Ephemeris ②" },
+        { key: "30", tag: "MT30", small: "Clock / iono / delays" },
+        { key: "33", tag: "MT33", small: "Clock / UTC" },
+        { key: "37", tag: "MT37", small: "Clock / almanac" },
+      ],
+      build(unit) {
+        const fields = [...CNAV_COMMON, ...CNAV_MT[+unit], CNAV_CRC];
+        const fixed = {};
+        "10001011".split("").forEach((c, i) => { fixed[i + 1] = c; });
+        (+unit).toString(2).padStart(6, "0").split("").forEach((c, i) => { fixed[15 + i] = c; });
+        return { bits: 300, fields, fixed, rowLabel: "bit" };
+      },
+    },
+    cnav2: {
+      btn: "L1C", btnSmall: "CNAV-2",
+      sig: "L1C (CNAV-2)",
+      unitLabel: "Subframe:",
+      caption: "One 18 s frame carries three different-length subframes: SF1 TOI (9 bits, BCH-protected) → SF2 clock + ephemeris (600 bits) → SF3 page (274 bits, cycling UTC / iono / almanac etc.). Data is LDPC error-corrected.",
+      units: [
+        { key: "1", tag: "SF1", small: "TOI (time) 9 bit" },
+        { key: "2", tag: "SF2", small: "Clock + ephemeris 600 bit" },
+        { key: "3", tag: "SF3", small: "Pages (UTC / almanac…) 274 bit" },
+      ],
+      build(unit) {
+        const def = CNAV2_SF[+unit];
+        return { bits: def.bits, fields: [...def.fields], fixed: {}, rowLabel: "bit" };
+      },
+    },
+  };
+
+  const DIFFS = {
+    "lnav:1": { pts: [
+      "Structure and bit layout are identical. QZSS's ICD (IS-QZSS-PNT) is built on GPS's IS-GPS-200, so receivers reuse the same demodulation as-is.",
+      "Identification is by PRN: GPS uses 1–32; QZSS L1 C/A uses 193–202. You tell them apart by spreading code, not message content.",
+      "The week number (WN) is the same GPS week on QZSS — it keeps no independent timescale and stays synced to GPS time.",
+      "URA and SV-health bit definitions match, but the operational meaning has QZSS-specific rules in IS-QZSS.",
+    ]},
+    "lnav:2": { pts: [
+      "Bit layout identical — but the orbits differ fundamentally, so the values inside are in another league.",
+      "QZSS's quasi-zenith figure-8 is engineered from 'large eccentricity + GEO-class altitude', and it shows clearly in e and √A.",
+    ], table: { head: ["Parameter", "GPS (typ.)", "QZSS (typ.)", "Meaning"], rows: [
+      ["e eccentricity", "~0.010", "~0.075", "QZSS is deliberately elliptical to draw its figure-8"],
+      ["√A", "5153.6 √m", "~6493.4 √m", "Orbit radius ~26,560 km vs ~42,164 km (GEO-class)"],
+      ["Orbital period", "~11 h 58 m", "~23 h 56 m", "QZSS syncs with Earth's rotation to loiter over Japan"],
+    ]}},
+    "lnav:3": { pts: [
+      "Bit layout identical; as with SF2, the orbit shows up in the values.",
+      "QZSS ephemeris update/validity operations follow IS-QZSS rules.",
+    ], table: { head: ["Parameter", "GPS (typ.)", "QZSS (typ.)", "Meaning"], rows: [
+      ["i0 inclination", "~55°", "~41° (±a few°)", "Sets the north–south swing of the figure-8"],
+      ["ω arg. of perigee", "varies per SV", "kept near 270°", "Creates the asymmetry that lingers over Japan"],
+    ]}},
+    "lnav:4": { pts: [
+      "GPS SF4 cycles 25 pages: Klobuchar ionosphere, UTC parameters, almanac for SV25–32, etc. Shown here: page 18 (iono/UTC).",
+      "QZSS keeps the page structure but assigns pages its own way: almanac only for QZSS satellites, none for GPS satellites.",
+      "The ionosphere parameters are a QZSS highlight: coefficients can be optimized for Japan/Asia-Pacific — its regional-service character.",
+      "Both broadcast leap-second announcements (ΔtLSF etc.), aligned to GPS time.",
+    ]},
+    "lnav:5": { pts: [
+      "GPS SF5 has 25 pages: almanac for SV1–24 (one per page) + week info, one full cycle every 12.5 minutes.",
+      "QZSS broadcasts almanac only for QZSS satellites (few satellites → spare pages). For GPS positions, read GPS's own almanac.",
+      "Details like the δi reference value have QZSS-specific scaling rules.",
+      "In practice: since the almanac takes 12.5 min, modern receivers use A-GNSS over the network to fix in seconds.",
+    ]},
+    "cnav:10": { pts: [
+      "Same structure. CNAV's signature move: sending the semi-major axis as a delta ΔA from a reference — and that reference itself differs between GPS and QZSS.",
+      "PRN field numbering follows IS-QZSS on QZSS (PRN 193+).",
+    ], table: { head: ["Parameter", "GPS", "QZSS", "Meaning"], rows: [
+      ["ΔA reference A_REF", "26,559,710 m", "42,164,200 m", "MEO vs GEO-class: different by specification — a rare spec-level divergence"],
+      ["e / i0 etc.", "near-circular, 55°", "0.075, 41°", "Orbit-value differences as in LNAV"],
+    ]}},
+    "cnav:11": { pts: [
+      "Same structure. Correction terms like Crs/Crc grow from LNAV's 16 bits to 24, preserving precision even for QZSS's big orbit.",
+      "The ΔΩ̇ reference value is also defined separately in IS-QZSS.",
+    ]},
+    "cnav:30": { pts: [
+      "ISC (inter-signal corrections) absorb per-signal hardware delays across L1 C/A, L2C and L5 — essential for multi-frequency work. Same structure on both systems.",
+      "Ionosphere parameters on QZSS can be optimized for the Japan region (a regional-system advantage).",
+    ]},
+    "cnav:33": { pts: [
+      "The UTC parameter structure is identical, but the reference differs: GPS broadcasts conversion to UTC(USNO) (US Naval Observatory); QZSS to UTC(NICT), maintained in Japan.",
+      "Both UTCs track international UTC within ns-level, so in practice you get the same time.",
+    ]},
+    "cnav:37": { pts: [
+      "Midi almanac (one satellite per message). GPS covers its own constellation; QZSS broadcasts QZSS satellites only.",
+      "CNAV also has MT12/31 reduced almanacs (several satellites per message) — more flexible almanac delivery than LNAV.",
+    ]},
+    "cnav2:1": { pts: [
+      "The 9-bit TOI is completely identical on both systems — a dedicated design for fastest-possible frame sync and time acquisition.",
+      "TOI alone rides a separate strong BCH code, matching GNSS's essence: time comes first.",
+    ]},
+    "cnav2:2": { pts: [
+      "600 bits carry clock AND ephemeris together — one subframe suffices for satellite position (LNAV needs SF1–3).",
+      "The ΔA reference differs (GPS 26,559,710 m vs QZSS 42,164,200 m) as in CNAV; orbit-value trends (e≈0.075, i0≈41°, ω≈270°) carry over.",
+      "The whole subframe is LDPC-coded, easing demodulation of weak signals in city canyons.",
+    ]},
+    "cnav2:3": { pts: [
+      "Paged broadcast of UTC, ionosphere, almanac, Earth-orientation parameters (EOP) and more. Shown: the UTC/iono page.",
+      "QZSS applies its own page assignments and contents (own-satellite almanac, Japan-area iono, UTC(NICT) reference).",
+    ]},
+  };
+
+  let cur = { fmt: "lnav", unit: "2" };
+  let curFields = [];
+
+  function fieldMapOf(build) {
+    const map = new Array(build.bits + 1).fill(null);
+    const fields = [];
+    let ci = 0;
+    for (const f of build.fields) {
+      const ff = { ...f, color: f.color || PAL[ci++ % PAL.length] };
+      fields.push(ff);
+      for (const [a, b] of ff.b) for (let i = a; i <= b && i <= build.bits; i++) if (!map[i]) map[i] = ff;
+    }
+    const rs = { id: "rsv", name: "Reserved", b: [], d: "Reserved / unused region.", color: C_RESV };
+    let a = null;
+    for (let i = 1; i <= build.bits + 1; i++) {
+      const covered = i > build.bits || map[i];
+      if (!covered && a === null) a = i;
+      if (covered && a !== null) { rs.b.push([a, i - 1]); a = null; }
+    }
+    if (rs.b.length) {
+      fields.push(rs);
+      for (const [x, y] of rs.b) for (let i = x; i <= y; i++) map[i] = rs;
+    }
+    return { map, fields };
+  }
+
+  function makeBits(build, sysSeed) {
+    let s = ((build.bits * 2654435761) ^ sysSeed ^ (cur.unit.charCodeAt(0) * 7919)) >>> 0;
+    const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+    const bits = new Array(build.bits + 1);
+    for (let i = 1; i <= build.bits; i++) {
+      bits[i] = build.fixed[i] !== undefined ? build.fixed[i] : (rnd() < 0.5 ? "0" : "1");
+    }
+    return bits;
+  }
+
+  function renderGrid(el, bits, map, build) {
+    el.innerHTML = "";
+    const rows = Math.ceil(build.bits / 30);
+    for (let r = 0; r < rows; r++) {
+      const row = document.createElement("div");
+      row.className = "brow";
+      const lab = document.createElement("span");
+      lab.className = "wlab";
+      lab.textContent = build.rowLabel === "word" ? "W" + (r + 1) : String(r * 30 + 1);
+      row.appendChild(lab);
+      for (let j = 1; j <= 30; j++) {
+        const i = r * 30 + j;
+        if (i > build.bits) break;
+        const f = map[i];
+        const cell = document.createElement("span");
+        cell.className = "bit";
+        cell.textContent = bits[i];
+        cell.dataset.f = f.id;
+        cell.style.setProperty("--fc", f.color);
+        cell.title = f.name + " (bit " + i + ")";
+        row.appendChild(cell);
+      }
+      el.appendChild(row);
+    }
+  }
+
+  function renderLegend(fields) {
+    const ul = $("legend");
+    ul.innerHTML = "";
+    for (const f of fields) {
+      const li = document.createElement("li");
+      li.dataset.f = f.id;
+      li.style.setProperty("--fc", f.color);
+      const sw = document.createElement("i");
+      li.appendChild(sw);
+      li.appendChild(document.createTextNode(f.name));
+      ul.appendChild(li);
+    }
+  }
+
+  function renderDiff() {
+    const d = DIFFS[cur.fmt + ":" + cur.unit];
+    let html = "<ul>" + d.pts.map((p) => "<li>" + p + "</li>").join("") + "</ul>";
+    if (d.table) {
+      html += '<div class="tw"><table><tr>' + d.table.head.map((hh) => "<th>" + hh + "</th>").join("") + "</tr>" +
+        d.table.rows.map((r) => "<tr>" + r.map((c, i) => '<td class="' + (i === 1 || i === 2 ? "num" : "") + '">' + c + "</td>").join("") + "</tr>").join("") +
+        "</table></div>";
+    }
+    $("diffBody").innerHTML = html;
+  }
+
+  function setInfo(f) {
+    const box = $("fieldInfo");
+    if (!f) {
+      box.innerHTML = "Hover a bit or a legend entry to see the field's description. Each LNAV row is one word (30 bits = 24 data + 6 parity).";
+      return;
+    }
+    const rng = f.b.map(([a, b]) => (a === b ? "bit " + a : "bit " + a + "–" + b)).join(", ");
+    box.innerHTML = "<b>" + f.name + "</b> (" + rng + ") — " + f.d;
+  }
+
+  function renderAll() {
+    const F = FORMATS[cur.fmt];
+    const build = F.build(cur.unit);
+    const { map, fields } = fieldMapOf(build);
+    curFields = fields;
+    renderGrid($("gridGps"), makeBits(build, 0x47505331), map, build);
+    renderGrid($("gridQzs"), makeBits(build, 0x515a5331), map, build);
+    renderLegend(fields);
+    renderDiff();
+    setInfo(null);
+    $("sigGps").textContent = F.sig;
+    $("sigQzs").textContent = F.sig;
+    $("unitCaption").textContent = F.caption;
+    document.querySelectorAll("#unitsel .sel-btn").forEach((b) => b.classList.toggle("active", b.dataset.unit === cur.unit));
+    document.querySelectorAll("#fmtsel .sel-btn").forEach((b) => b.classList.toggle("active", b.dataset.fmt === cur.fmt));
+  }
+
+  function buildUnitButtons() {
+    const F = FORMATS[cur.fmt];
+    $("unitLbl").textContent = F.unitLabel;
+    document.querySelectorAll("#unitsel .sel-btn").forEach((b) => b.remove());
+    for (const u of F.units) {
+      const btn = document.createElement("button");
+      btn.className = "sel-btn";
+      btn.dataset.unit = u.key;
+      btn.innerHTML = "<b>" + u.tag + "</b><small>" + u.small + "</small>";
+      btn.addEventListener("click", () => { cur.unit = u.key; renderAll(); });
+      $("unitsel").appendChild(btn);
+    }
+  }
+
+  for (const [key, F] of Object.entries(FORMATS)) {
+    const btn = document.createElement("button");
+    btn.className = "sel-btn";
+    btn.dataset.fmt = key;
+    btn.innerHTML = "<b>" + F.btn + "</b><small>" + F.btnSmall + "</small>";
+    btn.addEventListener("click", () => {
+      cur.fmt = key;
+      cur.unit = F.units[Math.min(1, F.units.length - 1)].key;
+      buildUnitButtons();
+      renderAll();
+    });
+    $("fmtsel").appendChild(btn);
+  }
+
+  let hlId = null;
+  function highlight(fid, on) {
+    document.querySelectorAll('[data-f="' + fid + '"]').forEach((el) => el.classList.toggle("hl", on));
+  }
+  document.addEventListener("mouseover", (e) => {
+    const t = e.target.closest("[data-f]");
+    const fid = t ? t.dataset.f : null;
+    if (fid === hlId) return;
+    if (hlId) highlight(hlId, false);
+    hlId = fid;
+    if (fid) {
+      highlight(fid, true);
+      setInfo(curFields.find((f) => f.id === fid) || null);
+    } else {
+      setInfo(null);
+    }
+  });
+
+  buildUnitButtons();
+  renderAll();
+})();
+</script>
+</body>
+</html>

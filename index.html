@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GNSS Getting Started</title>
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 24px 64px; }
+  header.hero { margin-bottom: 26px; }
+  header.hero h1 { margin: 0 0 8px; font-size: 1.6rem; letter-spacing: .02em; }
+  header.hero p { margin: 0; color: var(--muted); font-size: .92rem; max-width: 44em; }
+
+  section.step { margin-bottom: 26px; }
+  section.step > h2 {
+    display: flex; align-items: baseline; gap: 10px;
+    margin: 0 0 12px;
+    font-size: 1.05rem;
+  }
+  section.step > h2 .tag {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 1px 10px;
+    flex: none;
+  }
+  ol.path { list-style: none; margin: 0; padding: 0; }
+  ol.path li { position: relative; padding: 2px 0 16px 46px; }
+  ol.path li .no {
+    position: absolute; left: 0; top: 4px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: .78rem; font-weight: 700;
+  }
+  ol.path li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 14px; top: 38px; bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  ol.path a.t {
+    font-size: .98rem;
+    font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+  }
+  ol.path a.t:hover { color: var(--accent); }
+  ol.path a.t:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  ol.path p { margin: 2px 0 0; color: var(--muted); font-size: .85rem; max-width: 42em; }
+
+  .soon {
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    color: var(--muted);
+    font-size: .84rem;
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <h1>GNSS Getting Started</h1>
+    <p>波の基礎からGNSS受信機の中身まで、スライダーを動かして学ぶインタラクティブ教材集。左のメニュー（スマホは左上の☰）を上から順にたどるのがおすすめの学習ルートです。</p>
+  </header>
+
+  <section class="step">
+    <h2><span class="tag">STEP 1</span>基礎 — 電波と測位の道具箱をそろえる</h2>
+    <ol class="path">
+      <li>
+        <span class="no">01</span>
+        <a class="t" href="wave-lab.html">波の基礎</a>
+        <p>y = A sin(2πft + φ)。振幅・周波数・位相をスライダーで動かし、重ね合わせ・うなり・高調波を観察。すべての出発点。</p>
+      </li>
+      <li>
+        <span class="no">02</span>
+        <a class="t" href="time-lab.html">時間と時計</a>
+        <p>1μs = 300m。時計の誤差が距離の誤差になる世界を、時計ドリフトレースと相対論の話で体感。GNSSは時計のシステム。</p>
+      </li>
+      <li>
+        <span class="no">03</span>
+        <a class="t" href="db-lab.html">dBと信号強度</a>
+        <p>−130dBmってどのくらい？ dB変換器とリンクバジェットで、雑音の下の信号を受信する仕組みを学ぶ。</p>
+      </li>
+      <li>
+        <span class="no">04</span>
+        <a class="t" href="mod-lab.html">変調の基礎（AM/FM/PSK）</a>
+        <p>情報を波のどこに乗せるか。3方式をアニメーションで見比べ、GNSSがBPSKを選んだ理由まで。</p>
+      </li>
+      <li>
+        <span class="no">05</span>
+        <a class="t" href="coord-lab.html">座標と高さの基礎</a>
+        <p>楕円体・ジオイド・標高の関係（GPSの高さが地図とズレる理由）、緯度の正体、ECEF座標。測位結果を正しく読む準備。</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="step">
+    <h2><span class="tag">STEP 2</span>GNSSのしくみ — 衛星からPCまで</h2>
+    <ol class="path">
+      <li>
+        <span class="no">06</span>
+        <a class="t" href="gnss-sim.html">GNSS衛星信号シミュレーター</a>
+        <p>空から降る衛星電波（GPS+QZSS）。衛星数・ビルの遮蔽・マルチパス、L1/L2/L5/L6の違いを動かして学ぶ。</p>
+      </li>
+      <li>
+        <span class="no">07</span>
+        <a class="t" href="gnss-bands.html">周波数帯マップ</a>
+        <p>各国GNSSの周波数帯をひとつの軸で比較。共用周波数と独自バンドが一目でわかる。</p>
+      </li>
+      <li>
+        <span class="no">08</span>
+        <a class="t" href="gnss-signal.html">L1 C/A信号の構造</a>
+        <p>搬送波 × PRNコード × 航法メッセージ。3層の波形ズームとブロック図で、スペクトラム拡散とBPSKの意味を知る。</p>
+      </li>
+      <li>
+        <span class="no">09</span>
+        <a class="t" href="gnss-navmsg.html">航法メッセージ</a>
+        <p>LNAV/CNAV/CNAV-2をビット単位で表示。時計・エフェメリス・アルマナックをGPSとQZSSで並べて比較。</p>
+      </li>
+      <li>
+        <span class="no">10</span>
+        <a class="t" href="gnss-obs.html">擬似距離とドップラー</a>
+        <p>コード相関で遅延を自分で見つけ、時計誤差が「擬似」距離を生む様子と、通過衛星のドップラーS字カーブを体験。</p>
+      </li>
+      <li>
+        <span class="no">11</span>
+        <a class="t" href="gnss-rx.html">受信の流れ — 衛星からPCまで</a>
+        <p>アンテナ・LNA・GNSSモジュール内部（捕捉・追尾・復号・補正・PVT）からNMEA出力まで、データの旅の総まとめ。</p>
+      </li>
+    </ol>
+  </section>
+
+  <p class="soon">追加予定: フーリエ変換、アンテナと伝搬 など。リクエスト歓迎。</p>
+</main>
+</body>
+</html>

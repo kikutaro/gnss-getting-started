@@ -1,0 +1,94 @@
+/* GNSS Getting Started — shared sidebar navigation (load with <script defer>) */
+(function () {
+  var PAGES = [
+    { ja: "index.html",         en: "index.html",       tja: "ホーム",             ten: "Home",                  grp: 0 },
+    { ja: "wave-lab.html",   en: "wave-lab.html",    tja: "波の基礎",           ten: "Wave Basics",           grp: 1 },
+    { ja: "time-lab.html",      en: "time-lab.html",    tja: "時間と時計",         ten: "Time & Clocks",         grp: 1 },
+    { ja: "db-lab.html",        en: "db-lab.html",      tja: "dBと信号強度",       ten: "dB & Signal Power",     grp: 1 },
+    { ja: "mod-lab.html",       en: "mod-lab.html",     tja: "変調の基礎",         ten: "Modulation",            grp: 1 },
+    { ja: "coord-lab.html",     en: "coord-lab.html",   tja: "座標と高さ",         ten: "Coordinates & Height",  grp: 1 },
+    { ja: "gnss-sim.html",      en: "gnss-sim.html",    tja: "GNSS衛星信号",       ten: "GNSS Signals",          grp: 2 },
+    { ja: "gnss-bands.html",    en: "gnss-bands.html",  tja: "周波数帯マップ",     ten: "Frequency Bands",       grp: 2 },
+    { ja: "gnss-signal.html",   en: "gnss-signal.html", tja: "信号の構造",         ten: "Signal Structure",      grp: 2 },
+    { ja: "gnss-navmsg.html",   en: "gnss-navmsg.html", tja: "航法メッセージ",     ten: "Nav Messages",          grp: 2 },
+    { ja: "gnss-obs.html",      en: "gnss-obs.html",    tja: "擬似距離・ドップラー", ten: "Pseudorange & Doppler", grp: 2 },
+    { ja: "gnss-rx.html",       en: "gnss-rx.html",     tja: "受信の流れ",         ten: "Receive Chain",         grp: 2 },
+  ];
+  var GRPS = {
+    ja: ["", "STEP 1 · 基礎", "STEP 2 · GNSSのしくみ"],
+    en: ["", "STEP 1 · BASICS", "STEP 2 · HOW GNSS WORKS"],
+  };
+  var BRAND = "GNSS Getting Started";
+
+  var isEn = /\/en\//.test(location.pathname);
+  var file = decodeURIComponent((location.pathname.split("/").pop() || "index.html")) || "index.html";
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text) e.textContent = text;
+    return e;
+  }
+
+  function build() {
+    var aside = el("aside", "sidenav");
+    var brand = el("div", "brand");
+    var bl = el("a", null, BRAND);
+    bl.href = "index.html";
+    brand.appendChild(bl);
+    aside.appendChild(brand);
+
+    var num = 0;
+    var lastGrp = -1;
+    var current = null;
+    PAGES.forEach(function (p) {
+      var href = isEn ? p.en : p.ja;
+      var label = isEn ? p.ten : p.tja;
+      if (p.grp !== lastGrp && p.grp > 0) {
+        aside.appendChild(el("div", "grp", GRPS[isEn ? "en" : "ja"][p.grp]));
+      }
+      lastGrp = p.grp;
+      var a = el("a", "mi" + (p.grp === 0 ? " home" : ""));
+      a.href = encodeURI(href);
+      if (p.grp > 0) num++;
+      a.appendChild(el("span", "no", p.grp > 0 ? String(num).padStart(2, "0") : ""));
+      a.appendChild(document.createTextNode(label));
+      if (href === file) { a.classList.add("active"); current = p; }
+      aside.appendChild(a);
+    });
+
+    var lang = el("a", "lang", isEn ? "日本語" : "English");
+    var cur = current || PAGES[0];
+    lang.href = isEn ? encodeURI("../" + cur.ja) : encodeURI("en/" + cur.en);
+    aside.appendChild(lang);
+
+    var topbar = el("div", "topbar");
+    var btn = el("button", null, "☰");
+    btn.setAttribute("aria-label", isEn ? "Open menu" : "メニューを開く");
+    btn.setAttribute("aria-expanded", "false");
+    topbar.appendChild(btn);
+    topbar.appendChild(el("span", null, BRAND));
+
+    var scrim = el("div", "scrim");
+
+    document.body.insertBefore(scrim, document.body.firstChild);
+    document.body.insertBefore(topbar, document.body.firstChild);
+    document.body.insertBefore(aside, document.body.firstChild);
+
+    function setOpen(v) {
+      document.body.classList.toggle("nav-open", v);
+      btn.setAttribute("aria-expanded", String(v));
+    }
+    btn.addEventListener("click", function () { setOpen(!document.body.classList.contains("nav-open")); });
+    scrim.addEventListener("click", function () { setOpen(false); });
+    aside.addEventListener("click", function (e) {
+      if (e.target.closest("a")) setOpen(false);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") setOpen(false);
+    });
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", build);
+  else build();
+})();

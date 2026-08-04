@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GNSS Getting Started</title>
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 24px 64px; }
+  header.hero { margin-bottom: 26px; }
+  header.hero h1 { margin: 0 0 8px; font-size: 1.6rem; letter-spacing: .02em; }
+  header.hero p { margin: 0; color: var(--muted); font-size: .92rem; max-width: 46em; }
+
+  section.step { margin-bottom: 26px; }
+  section.step > h2 {
+    display: flex; align-items: baseline; gap: 10px;
+    margin: 0 0 12px;
+    font-size: 1.05rem;
+  }
+  section.step > h2 .tag {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 1px 10px;
+    flex: none;
+  }
+  ol.path { list-style: none; margin: 0; padding: 0; }
+  ol.path li { position: relative; padding: 2px 0 16px 46px; }
+  ol.path li .no {
+    position: absolute; left: 0; top: 4px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: .78rem; font-weight: 700;
+  }
+  ol.path li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 14px; top: 38px; bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  ol.path a.t {
+    font-size: .98rem;
+    font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+  }
+  ol.path a.t:hover { color: var(--accent); }
+  ol.path a.t:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  ol.path p { margin: 2px 0 0; color: var(--muted); font-size: .85rem; max-width: 44em; }
+
+  .soon {
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    color: var(--muted);
+    font-size: .84rem;
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <h1>GNSS Getting Started</h1>
+    <p>Interactive lessons from wave basics to the inside of a GNSS receiver. Follow the menu on the left (☰ on mobile) from top to bottom — that's the recommended learning route.</p>
+  </header>
+
+  <section class="step">
+    <h2><span class="tag">STEP 1</span>Basics — building your radio &amp; positioning toolbox</h2>
+    <ol class="path">
+      <li>
+        <span class="no">01</span>
+        <a class="t" href="wave-lab.html">Wave Basics</a>
+        <p>y = A sin(2πft + φ). Move amplitude, frequency and phase with sliders; watch superposition, beats and harmonics. Where everything starts.</p>
+      </li>
+      <li>
+        <span class="no">02</span>
+        <a class="t" href="time-lab.html">Time &amp; Clocks</a>
+        <p>1 µs = 300 m. Feel the world where clock error is distance error — clock drift race, relativity in GPS. GNSS is a system of clocks.</p>
+      </li>
+      <li>
+        <span class="no">03</span>
+        <a class="t" href="db-lab.html">dB &amp; Signal Power</a>
+        <p>How weak is −130 dBm? A dB converter and a link budget show how a signal below the noise floor gets received.</p>
+      </li>
+      <li>
+        <span class="no">04</span>
+        <a class="t" href="mod-lab.html">Modulation Basics (AM/FM/PSK)</a>
+        <p>Where does information ride the wave? Compare the three schemes in animation, and see why GNSS chose BPSK.</p>
+      </li>
+      <li>
+        <span class="no">05</span>
+        <a class="t" href="coord-lab.html">Coordinates &amp; Height Basics</a>
+        <p>Ellipsoid, geoid and elevation (why GPS altitude disagrees with maps), what latitude really is, and ECEF — get ready to read positions correctly.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="step">
+    <h2><span class="tag">STEP 2</span>How GNSS works — from satellite to PC</h2>
+    <ol class="path">
+      <li>
+        <span class="no">06</span>
+        <a class="t" href="gnss-sim.html">GNSS Signal Simulator</a>
+        <p>Satellite radio raining from the sky (GPS + QZSS). Play with satellite count, building blockage, multipath and the L1/L2/L5/L6 bands.</p>
+      </li>
+      <li>
+        <span class="no">07</span>
+        <a class="t" href="gnss-bands.html">Frequency Band Map</a>
+        <p>Every GNSS's bands on one frequency axis — shared frequencies and system-specific bands at a glance.</p>
+      </li>
+      <li>
+        <span class="no">08</span>
+        <a class="t" href="gnss-signal.html">L1 C/A Signal Structure</a>
+        <p>Carrier × PRN code × navigation message. A 3-level waveform zoom and block diagram explain spreading and BPSK.</p>
+      </li>
+      <li>
+        <span class="no">09</span>
+        <a class="t" href="gnss-navmsg.html">Navigation Messages</a>
+        <p>LNAV/CNAV/CNAV-2 bit by bit — clock, ephemeris and almanac, with GPS and QZSS side by side.</p>
+      </li>
+      <li>
+        <span class="no">10</span>
+        <a class="t" href="gnss-obs.html">Pseudorange &amp; Doppler</a>
+        <p>Find the delay yourself with code correlation, see how clock bias makes ranges "pseudo", and watch the Doppler S-curve.</p>
+      </li>
+      <li>
+        <span class="no">11</span>
+        <a class="t" href="gnss-rx.html">Receive Chain — Satellite to PC</a>
+        <p>Antenna, LNA, inside the GNSS module (acquisition, tracking, decoding, corrections, PVT) to NMEA output — the grand tour.</p>
+      </li>
+    </ol>
+  </section>
+
+  <p class="soon">Coming: Fourier transform, antennas &amp; propagation, and more. Requests welcome.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>GNSS Signal Simulator | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --sig-los: #10b981;
+    --sig-mp: #d97706;
+    --sig-nlos: #dc2626;
+    --sig-blk: #6b7280;
+    --sig-l6: #7c3aed;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --sig-los: #34d399; --sig-mp: #fbbf24; --sig-nlos: #f87171; --sig-blk: #9ca3af; --sig-l6: #a78bfa;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --sig-los: #34d399; --sig-mp: #fbbf24; --sig-nlos: #f87171; --sig-blk: #9ca3af; --sig-l6: #a78bfa;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --sig-los: #10b981; --sig-mp: #d97706; --sig-nlos: #dc2626; --sig-blk: #6b7280; --sig-l6: #7c3aed;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  nav.site-nav {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    max-width: 1060px; margin: 0 auto; padding: 12px 16px 0; font-size: .88rem;
+  }
+  nav.site-nav .brand { font-weight: 700; margin-right: 12px; letter-spacing: .02em; }
+  nav.site-nav a { color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 999px; }
+  nav.site-nav a:hover { color: var(--accent); background: var(--surface2); }
+  nav.site-nav a.active { color: var(--accent); background: var(--surface2); font-weight: 600; }
+  nav.site-nav a.lang { margin-left: auto; border: 1px solid var(--border); font-weight: 600; }
+  nav.site-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .sky-panel { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  canvas.sky { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .sky-bar {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 0 4px; font-size: .82rem; color: var(--muted);
+  }
+  .sky-bar .legend { display: flex; gap: 12px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 18px; height: 3px; border-radius: 2px; display: inline-block; }
+  .legend .l-los { background: var(--sig-los); }
+  .legend .l-mp { background: var(--sig-mp); }
+  .legend .l-blk { background: var(--sig-blk); }
+  .legend .l-l6 { background: var(--sig-l6); }
+
+  .bandsel { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .bandsel .lbl { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+  .band-btn {
+    appearance: none; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: .88rem; font-weight: 600;
+    padding: 6px 16px; border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text);
+    cursor: pointer;
+  }
+  .band-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .band-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .band-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .band-info { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+  .status-panel h2, .ctrl-panel h2 {
+    margin: 0 0 10px;
+    font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em;
+  }
+  #verdict {
+    padding: 9px 12px; border-radius: 8px;
+    font-weight: 700; font-size: .92rem; margin-bottom: 10px;
+    background: var(--surface2);
+    border-left: 4px solid var(--sig-blk);
+  }
+  #verdict.ok { border-left-color: var(--sig-los); color: var(--sig-los); }
+  #verdict.warn { border-left-color: var(--sig-mp); color: var(--sig-mp); }
+  #verdict.bad { border-left-color: var(--sig-nlos); color: var(--sig-nlos); }
+  #verdict.info { border-left-color: var(--sig-l6); color: var(--sig-l6); }
+  ul.svlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+  ul.svlist li { display: flex; align-items: center; gap: 8px; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  ul.svlist li.dim { opacity: .55; }
+  ul.svlist .chip { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--sv-c, var(--sig-blk)); }
+  ul.svlist .sv { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; width: 3.2em; }
+  ul.svlist .extra { margin-left: auto; color: var(--muted); font-family: ui-monospace, Consolas, monospace; font-size: .8rem; text-align: right; }
+
+  .ctl { display: grid; grid-template-columns: 8em 1fr 5.5em; align-items: center; gap: 10px; padding: 5px 0; }
+  .ctl .name { font-size: .82rem; color: var(--muted); }
+  .ctl output {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .84rem; text-align: right;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .checks { display: flex; gap: 18px; flex-wrap: wrap; padding: 8px 0 2px; }
+  .checks label { display: flex; align-items: center; gap: 6px; font-size: .84rem; cursor: pointer; }
+  .movesel { display: flex; align-items: center; gap: 8px; font-size: .82rem; color: var(--muted); padding: 5px 0; }
+  .movesel select {
+    font-family: inherit; font-size: .85rem;
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px;
+  }
+  button.play {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent); color: #fff;
+    border-radius: 8px; font-size: .9rem; font-weight: 600;
+    padding: 7px 18px; cursor: pointer; font-family: inherit;
+  }
+  button.play.paused { background: transparent; color: var(--accent); }
+  button.play:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .presets .lbl { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+  .presets button {
+    appearance: none; font-family: inherit; font-size: .84rem;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text);
+    cursor: pointer;
+  }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .presets button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+  details.note table { border-collapse: collapse; margin: 4px 0 10px; font-size: .84rem; }
+  details.note th, details.note td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; }
+  details.note th { background: var(--surface2); font-weight: 600; }
+  details.note .tw { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>GNSS Signal Simulator</h1>
+    <p>GPS + QZSS (Michibiki) signals received at one point. Watch how frequency band, satellite count, blockage and reflections change things</p>
+  </header>
+
+  <div class="panel sky-panel">
+    <canvas class="sky" id="sky" aria-label="Cross-section view of satellites, receiver and signal paths"></canvas>
+    <div class="sky-bar">
+      <div class="legend">
+        <span><i class="l-los"></i>Direct (LOS)</span>
+        <span><i class="l-mp"></i>Reflection (multipath)</span>
+        <span><i class="l-l6"></i>L6 correction data</span>
+        <span><i class="l-blk"></i>Blocked</span>
+      </div>
+      <span>Cross-section, not to scale (real satellites orbit at ~20,000–36,000 km)</span>
+    </div>
+  </div>
+
+  <div class="panel bandsel">
+    <span class="lbl">Frequency band:</span>
+    <button class="band-btn active" data-band="L1">L1</button>
+    <button class="band-btn" data-band="L2">L2</button>
+    <button class="band-btn" data-band="L5">L5</button>
+    <button class="band-btn" data-band="L6">L6</button>
+    <span class="band-info" id="bandInfo"></span>
+  </div>
+
+  <div class="panel presets">
+    <span class="lbl">Scenarios:</span>
+    <button data-preset="open">Open sky</button>
+    <button data-preset="city">City (multipath)</button>
+    <button data-preset="canyon">Urban canyon</button>
+    <button data-preset="few">Too few satellites</button>
+  </div>
+
+  <div class="grid2">
+    <section class="panel status-panel">
+      <h2>RECEPTION STATUS</h2>
+      <div id="verdict">—</div>
+      <ul class="svlist" id="svList"></ul>
+    </section>
+
+    <section class="panel ctrl-panel">
+      <h2>CONTROLS</h2>
+      <div class="ctl"><span class="name">GPS satellites</span><input type="range" id="nGps" min="1" max="6" step="1" value="5"><output id="nGpsOut">5</output></div>
+      <div class="ctl"><span class="name">QZSS satellites</span><input type="range" id="nQzs" min="0" max="2" step="1" value="1"><output id="nQzsOut">1</output></div>
+      <div class="ctl"><span class="name">Buildings</span><input type="range" id="nBld" min="0" max="4" step="1" value="2"><output id="nBldOut">2</output></div>
+      <div class="ctl"><span class="name">Building height</span><input type="range" id="bldH" min="20" max="150" step="5" value="70"><output id="bldHOut">70 m</output></div>
+      <div class="movesel">
+        <label>Satellite motion
+          <select id="satSpeed">
+            <option value="0">Stopped</option>
+            <option value="1.5" selected>Slow</option>
+            <option value="5">Fast</option>
+          </select>
+        </label>
+        <button class="play" id="playBtn" aria-pressed="true" style="margin-left:auto">⏸ Pause</button>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="showWf" checked>Show wavefronts</label>
+        <label><input type="checkbox" id="showRefl" checked>Show reflections</label>
+      </div>
+    </section>
+  </div>
+
+  <details class="note">
+    <summary>The frequency bands (L1 / L2 / L5 / L6)</summary>
+    <div class="body">
+      <div class="tw">
+      <table>
+        <tr><th>Band</th><th>Center freq.</th><th>Main role</th><th>Transmitted by</th></tr>
+        <tr><td>L1</td><td>1575.42 MHz</td><td>The basic positioning signal (C/A code); every receiver supports it</td><td>All GPS + QZSS</td></tr>
+        <tr><td>L2</td><td>1227.60 MHz</td><td>Second frequency; combined with L1 to cancel ionospheric error (L2C)</td><td>Newer GPS + QZSS</td></tr>
+        <tr><td>L5</td><td>1176.45 MHz</td><td>Wideband, high accuracy, multipath-resistant next-gen signal</td><td>GPS Block IIF+ and QZSS</td></tr>
+        <tr><td>L6</td><td>1278.75 MHz</td><td>Centimeter-level correction data (CLAS); not a ranging signal</td><td>QZSS only</td></tr>
+      </table>
+      </div>
+      <p><strong>Why multiple frequencies?</strong> Radio waves are delayed by the ionosphere, and the delay depends on frequency. Measure the same satellite on two frequencies (L1+L2 or L1+L5) and the difference reveals the ionospheric delay itself, which can then be cancelled — the main reason dual-frequency receivers are so accurate.</p>
+      <p><strong>Why L5 resists multipath:</strong> ranging signals are chip streams, and a receiver can separate a direct wave from a reflection when their arrival difference exceeds one chip. L1 C/A chips are ~293 m long; L5 chips are 10× faster, ~29 m. So on L5, any reflection that traveled 29+ m farther is simply rejected. Switch from L1 to L5 and watch ⚠ satellites turn into "reflection rejected ✓".</p>
+      <p><strong>Trade-off:</strong> L1 has the most satellites; L5 is still rolling out. Switching bands reveals "unsupported" satellites and a smaller usable count.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>QZSS (Michibiki) — quasi-zenith orbit and L6/CLAS</summary>
+    <div class="body">
+      <p>QZSS is Japan's GNSS. It transmits GPS-compatible signals (L1/L2/L5) plus its own L6 band carrying CLAS (Centimeter Level Augmentation Service) corrections. L6 is a broadcast channel for corrections, not a ranging signal — the simulator treats it differently when selected.</p>
+      <p>Its signature feature is the <strong>quasi-zenith orbit</strong>: a figure-8 that keeps a satellite almost directly above Japan for hours. In the view, J01/J02 sway slowly near the zenith and are rarely blocked even in an urban canyon. Try changing the QZSS count in the Urban canyon scenario.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>How GNSS works — measuring arrival time</summary>
+    <div class="body">
+      <p>GNSS satellites continuously broadcast their position and precise time. The receiver computes "travel time × speed of light" for each satellite (the pseudorange) and combines several to solve its own position. Light travels ~300,000 km/s — a 1 µs timing error is a 300 m range error.</p>
+      <p>There are four unknowns: position (x, y, z) plus the receiver clock error, so at least four satellites are needed. Try the "Too few satellites" scenario and the verdict turns to "cannot fix".</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Multipath and urban canyons</summary>
+    <div class="body">
+      <p>Signals bounced off buildings (orange paths) travel a <strong>longer way</strong>. Since the receiver converts time to distance, catching a reflection inflates the measured range — a positioning error. The <code>+X m</code> figures are that extra path length. The worst case is when the direct wave is blocked and <strong>only</strong> the reflection arrives (NLOS): the receiver locks onto a badly wrong distance.</p>
+      <p>Between tall buildings (urban canyon) fewer satellites are visible and multipath multiplies — the main reason phone navigation drifts downtown. Counter-measures: elevation masking, choke-ring antennas, wideband signals like L5, more constellations, and augmentation (RTK, CLAS).</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  const RX = { x: 0, y: 2 };
+  const HALF_W = 420;
+  const DOME_RX = 400;
+  const ELEV_MIN = 8, ELEV_SPAN = 164;
+  const BLD_SLOTS = [
+    { dx: 55,   w: 34, hf: 1.0  },
+    { dx: -85,  w: 30, hf: 0.85 },
+    { dx: 125,  w: 38, hf: 1.25 },
+    { dx: -160, w: 32, hf: 0.7  },
+  ];
+
+  const BANDS = {
+    L1: { f: "1575.42 MHz", chip: 293,  ranging: true,  info: "C/A code 1.023 Mcps / chip ≈ 293 m — transmitted by every satellite" },
+    L2: { f: "1227.60 MHz", chip: 293,  ranging: true,  info: "L2C 1.023 Mcps / chip ≈ 293 m — newer satellites only" },
+    L5: { f: "1176.45 MHz", chip: 29.3, ranging: true,  info: "10.23 Mcps wideband / chip ≈ 29 m — strong against multipath" },
+    L6: { f: "1278.75 MHz", chip: null, ranging: false, info: "QZSS CLAS correction data — not a ranging signal (QZSS only)" },
+  };
+
+  const GPS_SATS = [
+    { name: "G01", gen: "Block IIR",   bands: ["L1"] },
+    { name: "G02", gen: "Block IIF",   bands: ["L1", "L2", "L5"] },
+    { name: "G03", gen: "Block IIR-M", bands: ["L1", "L2"] },
+    { name: "G04", gen: "Block III",   bands: ["L1", "L2", "L5"] },
+    { name: "G05", gen: "Block IIF",   bands: ["L1", "L2", "L5"] },
+    { name: "G06", gen: "Block IIR",   bands: ["L1"] },
+  ];
+  const QZS_SATS = [
+    { name: "J01", gen: "QZSS", bands: ["L1", "L2", "L5", "L6"] },
+    { name: "J02", gen: "QZSS", bands: ["L1", "L2", "L5", "L6"] },
+  ];
+
+  const state = {
+    nGps: 5, nQzs: 1, nBld: 2, bldH: 70,
+    band: "L1",
+    satSpeed: 1.5,
+    showWf: true, showRefl: true,
+    playing: true, t: 0,
+  };
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) state.playing = false;
+
+  function bindRange(id, key, fmt) {
+    $(id).addEventListener("input", (e) => {
+      state[key] = +e.target.value;
+      $(id + "Out").textContent = fmt(state[key]);
+    });
+  }
+  bindRange("nGps", "nGps", (v) => String(v));
+  bindRange("nQzs", "nQzs", (v) => String(v));
+  bindRange("nBld", "nBld", (v) => String(v));
+  bindRange("bldH", "bldH", (v) => v + " m");
+  $("satSpeed").addEventListener("change", (e) => { state.satSpeed = +e.target.value; });
+  $("showWf").addEventListener("change", (e) => { state.showWf = e.target.checked; });
+  $("showRefl").addEventListener("change", (e) => { state.showRefl = e.target.checked; });
+
+  const bandBtns = document.querySelectorAll(".band-btn");
+  function setBand(b) {
+    state.band = b;
+    bandBtns.forEach((x) => x.classList.toggle("active", x.dataset.band === b));
+    $("bandInfo").textContent = BANDS[b].f + " — " + BANDS[b].info;
+  }
+  bandBtns.forEach((btn) => btn.addEventListener("click", () => setBand(btn.dataset.band)));
+  setBand("L1");
+
+  const playBtn = $("playBtn");
+  function setPlaying(v) {
+    state.playing = v;
+    playBtn.textContent = v ? "⏸ Pause" : "▶ Play";
+    playBtn.classList.toggle("paused", !v);
+    playBtn.setAttribute("aria-pressed", String(v));
+  }
+  playBtn.addEventListener("click", () => setPlaying(!state.playing));
+  setPlaying(state.playing);
+
+  const presets = {
+    open:   { nGps: 6, nQzs: 1, nBld: 0, bldH: 70  },
+    city:   { nGps: 5, nQzs: 1, nBld: 2, bldH: 70  },
+    canyon: { nGps: 6, nQzs: 2, nBld: 4, bldH: 130 },
+    few:    { nGps: 3, nQzs: 0, nBld: 0, bldH: 70  },
+  };
+  document.querySelectorAll(".presets button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const ps = presets[btn.dataset.preset];
+      if (!ps) return;
+      Object.assign(state, ps);
+      $("nGps").value = state.nGps; $("nGpsOut").textContent = String(state.nGps);
+      $("nQzs").value = state.nQzs; $("nQzsOut").textContent = String(state.nQzs);
+      $("nBld").value = state.nBld; $("nBldOut").textContent = String(state.nBld);
+      $("bldH").value = state.bldH; $("bldHOut").textContent = state.bldH + " m";
+    });
+  });
+
+  function buildings() {
+    return BLD_SLOTS.slice(0, state.nBld).map((s) => ({
+      x: s.dx < 0 ? s.dx - s.w : s.dx,
+      w: s.w,
+      h: state.bldH * s.hf,
+    }));
+  }
+
+  function segSegT(ax, ay, bx, by, cx, cy, dx, dy) {
+    const den = (bx - ax) * (dy - cy) - (by - ay) * (dx - cx);
+    if (Math.abs(den) < 1e-12) return null;
+    const t = ((cx - ax) * (dy - cy) - (cy - ay) * (dx - cx)) / den;
+    const u = ((cx - ax) * (by - ay) - (cy - ay) * (bx - ax)) / den;
+    return (t > 1e-9 && t < 1 - 1e-9 && u >= 0 && u <= 1) ? t : null;
+  }
+
+  function rectHitT(ax, ay, bx, by, r) {
+    const edges = [
+      [r.x, 0, r.x, r.h],
+      [r.x + r.w, 0, r.x + r.w, r.h],
+      [r.x, r.h, r.x + r.w, r.h],
+    ];
+    let best = null;
+    for (const e of edges) {
+      const t = segSegT(ax, ay, bx, by, e[0], e[1], e[2], e[3]);
+      if (t !== null && (best === null || t < best)) best = t;
+    }
+    return best;
+  }
+
+  function firstHit(ax, ay, bx, by, blds, skip) {
+    let best = null;
+    for (const b of blds) {
+      if (b === skip) continue;
+      const t = rectHitT(ax, ay, bx, by, b);
+      if (t !== null && (best === null || t < best.t)) best = { t, b };
+    }
+    return best;
+  }
+
+  const dist = (ax, ay, bx, by) => Math.hypot(bx - ax, by - ay);
+
+  function satPos(theta, domeRy) {
+    const rad = theta * Math.PI / 180;
+    return { x: -DOME_RX * Math.cos(rad), y: domeRy * Math.sin(rad) };
+  }
+
+  function gpsAngle(i) {
+    const base = ELEV_MIN + (i * 47.3) % ELEV_SPAN;
+    const a = (base - ELEV_MIN + state.satSpeed * state.t) % ELEV_SPAN;
+    return ELEV_MIN + ((a % ELEV_SPAN) + ELEV_SPAN) % ELEV_SPAN;
+  }
+
+  function qzsAngle(j) {
+    return 90 + 24 * Math.sin(0.06 * state.satSpeed * state.t + 0.9 + j * 2.2);
+  }
+
+  function roster() {
+    return GPS_SATS.slice(0, state.nGps).map((m, i) => ({ ...m, kind: "gps", idx: i }))
+      .concat(QZS_SATS.slice(0, state.nQzs).map((m, j) => ({ ...m, kind: "qzs", idx: j })));
+  }
+
+  function classify(S, blds) {
+    const losHit = firstHit(S.x, S.y, RX.x, RX.y, blds, null);
+    const dDirect = dist(S.x, S.y, RX.x, RX.y);
+    const refl = [];
+    if (state.showRefl) {
+      for (const b of blds) {
+        let wx = null;
+        if (b.x > RX.x && S.x < b.x) wx = b.x;
+        else if (b.x + b.w < RX.x && S.x > b.x + b.w) wx = b.x + b.w;
+        if (wx === null) continue;
+        const mx = 2 * wx - S.x;
+        const den = mx - RX.x;
+        if (Math.abs(den) < 1e-9) continue;
+        const tt = (wx - RX.x) / den;
+        if (tt <= 0 || tt >= 1) continue;
+        const py = RX.y + tt * (S.y - RX.y);
+        if (py < 0.5 || py > b.h) continue;
+        if (firstHit(S.x, S.y, wx, py, blds, b)) continue;
+        if (firstHit(wx, py, RX.x, RX.y, blds, b)) continue;
+        refl.push({ px: wx, py, extra: dist(S.x, S.y, wx, py) + dist(wx, py, RX.x, RX.y) - dDirect });
+      }
+      refl.sort((p, q) => p.extra - q.extra);
+    }
+    return { los: !losHit, losHit, refl, dDirect };
+  }
+
+  const sky = $("sky");
+  const ctx = sky.getContext("2d");
+  const C = {
+    bg: "#0a1210", ground: "#11231b", groundLine: "#2e5c48",
+    star: "rgba(190, 215, 205, 0.5)", dome: "rgba(148, 180, 170, 0.12)",
+    bld: "#243240", bldEdge: "#3c4f60", win: "rgba(140, 180, 210, 0.16)",
+    los: "#34d399", mp: "#fbbf24", l6: "#a78bfa", blk: "rgba(156, 163, 175, 0.4)",
+    label: "rgba(160, 190, 182, 0.85)", sat: "#cbd5e1", wf: "rgba(90, 200, 170, 0.25)",
+  };
+
+  function fitCanvas(cv, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth;
+    const h = Math.round(w * aspect);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      cv.style.height = h + "px";
+    }
+    cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  let lastStatusHtml = "", lastVerdict = "";
+
+  function draw() {
+    const { w, h } = fitCanvas(sky, 0.52);
+    const s = (w / 2) / HALF_W;
+    const groundY = h - 34;
+    const X = (xw) => w / 2 + xw * s;
+    const Y = (yw) => groundY - yw * s;
+    const domeRy = (groundY - 24) / s;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.fillStyle = C.star;
+    for (let i = 0; i < 60; i++) {
+      const sx = ((i * 733) % 977) / 977 * w;
+      const sy = ((i * 359) % 613) / 613 * (groundY - 20);
+      ctx.fillRect(sx, sy, 1.4, 1.4);
+    }
+
+    ctx.strokeStyle = C.dome;
+    ctx.beginPath();
+    ctx.ellipse(X(0), Y(0), DOME_RX * s, domeRy * s, 0, Math.PI, 2 * Math.PI);
+    ctx.stroke();
+
+    ctx.fillStyle = C.ground;
+    ctx.fillRect(0, groundY, w, h - groundY);
+    ctx.strokeStyle = C.groundLine;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, groundY);
+    ctx.lineTo(w, groundY);
+    ctx.stroke();
+
+    const blds = buildings();
+    const band = BANDS[state.band];
+
+    const results = [];
+    for (const sat of roster()) {
+      const theta = sat.kind === "gps" ? gpsAngle(sat.idx) : qzsAngle(sat.idx);
+      const S = satPos(theta, domeRy);
+      const r = classify(S, blds);
+      r.S = S;
+      r.sat = sat;
+      r.tx = sat.bands.includes(state.band);
+      r.elev = Math.round(Math.atan2(S.y - RX.y, Math.abs(S.x - RX.x)) * 180 / Math.PI);
+      results.push(r);
+    }
+
+    if (state.showWf) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, w, groundY);
+      ctx.clip();
+      ctx.lineWidth = 1;
+      for (const r of results) {
+        if (!r.tx) continue;
+        const maxR = dist(r.S.x, r.S.y, RX.x, RX.y) * s;
+        for (let k = 0; k < 3; k++) {
+          const rr = ((state.t * 60 + k * (maxR / 3 / s)) * s) % maxR;
+          ctx.strokeStyle = C.wf;
+          ctx.globalAlpha = 0.5 * (1 - rr / maxR) + 0.08;
+          ctx.beginPath();
+          ctx.arc(X(r.S.x), Y(r.S.y), rr, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
+    const dashFlow = -(state.t * 46) % 14;
+    const losColor = band.ranging ? C.los : C.l6;
+    for (const r of results) {
+      if (!r.tx) continue;
+      const sx = X(r.S.x), sy = Y(r.S.y);
+      if (r.los) {
+        ctx.strokeStyle = losColor;
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([7, 7]);
+        ctx.lineDashOffset = dashFlow;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(X(RX.x), Y(RX.y));
+        ctx.stroke();
+      } else {
+        const hit = r.losHit;
+        const hx = r.S.x + hit.t * (RX.x - r.S.x);
+        const hy = r.S.y + hit.t * (RX.y - r.S.y);
+        ctx.strokeStyle = C.blk;
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 6]);
+        ctx.lineDashOffset = 0;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(X(hx), Y(hy));
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.strokeStyle = C.blk;
+        ctx.lineWidth = 2;
+        const cxp = X(hx), cyp = Y(hy);
+        ctx.beginPath();
+        ctx.moveTo(cxp - 4, cyp - 4); ctx.lineTo(cxp + 4, cyp + 4);
+        ctx.moveTo(cxp + 4, cyp - 4); ctx.lineTo(cxp - 4, cyp + 4);
+        ctx.stroke();
+      }
+      if (band.ranging) {
+        for (const rf of r.refl.slice(0, 2)) {
+          const rejected = r.los && band.chip !== null && rf.extra >= band.chip;
+          ctx.strokeStyle = C.mp;
+          ctx.globalAlpha = rejected ? 0.28 : 1;
+          ctx.lineWidth = 1.6;
+          ctx.setLineDash([5, 8]);
+          ctx.lineDashOffset = dashFlow;
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(X(rf.px), Y(rf.py));
+          ctx.lineTo(X(RX.x), Y(RX.y));
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = C.mp;
+          ctx.beginPath();
+          ctx.arc(X(rf.px), Y(rf.py), 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+      ctx.setLineDash([]);
+    }
+
+    for (const b of blds) {
+      const bx = X(b.x), bw = b.w * s, bh = b.h * s;
+      ctx.fillStyle = C.bld;
+      ctx.fillRect(bx, groundY - bh, bw, bh);
+      ctx.strokeStyle = C.bldEdge;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bx, groundY - bh, bw, bh);
+      ctx.fillStyle = C.win;
+      const cols = Math.max(2, Math.floor(bw / 10));
+      const rows = Math.max(2, Math.floor(bh / 12));
+      for (let cxi = 0; cxi < cols; cxi++) {
+        for (let ryi = 0; ryi < rows; ryi++) {
+          ctx.fillRect(bx + 3 + cxi * (bw - 6) / cols, groundY - bh + 4 + ryi * (bh - 8) / rows, (bw - 6) / cols - 2.5, (bh - 8) / rows - 3.5);
+        }
+      }
+    }
+
+    ctx.font = "10px ui-monospace, Consolas, monospace";
+    for (const r of results) {
+      const sx = X(r.S.x), sy = Y(r.S.y);
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.globalAlpha = r.tx ? 1 : 0.35;
+      if (r.sat.kind === "qzs") {
+        ctx.fillStyle = "#eab308";
+        ctx.fillRect(-14, -3, 9, 6);
+        ctx.fillRect(5, -3, 9, 6);
+        ctx.fillStyle = "#f1f5f9";
+        ctx.fillRect(-5, -5, 10, 10);
+        ctx.fillStyle = "#ef4444";
+        ctx.beginPath();
+        ctx.arc(0, 0, 2.6, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = "#3b82f6";
+        ctx.fillRect(-14, -3, 9, 6);
+        ctx.fillRect(5, -3, 9, 6);
+        ctx.fillStyle = C.sat;
+        ctx.fillRect(-5, -5, 10, 10);
+      }
+      ctx.restore();
+      ctx.globalAlpha = r.tx ? 1 : 0.45;
+      ctx.fillStyle = C.label;
+      ctx.fillText(r.sat.name, sx - 10, sy - 10);
+      ctx.globalAlpha = 1;
+    }
+
+    const rxp = X(RX.x), ryp = Y(0);
+    ctx.strokeStyle = "#e2e8f0";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(rxp, ryp);
+    ctx.lineTo(rxp, ryp - 10);
+    ctx.stroke();
+    ctx.fillStyle = "#e2e8f0";
+    ctx.beginPath();
+    ctx.arc(rxp, ryp - 13, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = C.label;
+    ctx.fillText("Receiver", rxp - 20, ryp + 14);
+
+    updateStatus(results, band);
+  }
+
+  function updateStatus(results, band) {
+    let received = 0, mpCount = 0, nlosCount = 0, l6Count = 0;
+    const items = results.map((r) => {
+      let color, text, extra = "", dim = "";
+      if (!r.tx) {
+        color = "var(--sig-blk)"; dim = ' class="dim"';
+        text = "No " + state.band + " (" + r.sat.gen + ")";
+      } else if (!band.ranging) {
+        if (r.los) { color = "var(--sig-l6)"; text = "Receiving CLAS corrections"; l6Count++; }
+        else { color = "var(--sig-blk)"; text = "Blocked ✕"; }
+      } else {
+        const corrupting = r.refl.filter((rf) => rf.extra < band.chip);
+        const hasRefl = r.refl.length > 0;
+        if (r.los && corrupting.length) {
+          color = "var(--sig-mp)"; text = "Direct + reflection ⚠"; extra = "+" + Math.round(corrupting[0].extra) + " m";
+          received++; mpCount++;
+        } else if (r.los && hasRefl) {
+          color = "var(--sig-los)"; text = "Direct ✓ (reflection rejected)"; extra = "+" + Math.round(r.refl[0].extra) + " m→cut";
+          received++;
+        } else if (r.los) {
+          color = "var(--sig-los)"; text = "Direct only ✓";
+          received++;
+        } else if (hasRefl) {
+          color = "var(--sig-nlos)"; text = "Reflection only (NLOS) ⚠ large error"; extra = "+" + Math.round(r.refl[0].extra) + " m";
+          received++; nlosCount++;
+        } else {
+          color = "var(--sig-blk)"; text = "Blocked ✕";
+        }
+      }
+      return "<li" + dim + ' style="--sv-c:' + color + '"><span class="chip"></span><span class="sv">' + r.sat.name + "</span>" +
+        "<span>" + text + '</span><span class="extra">elev ' + Math.max(r.elev, 0) + "°" + (extra ? " / " + extra : "") + "</span></li>";
+    });
+    const html = items.join("");
+    if (html !== lastStatusHtml) { $("svList").innerHTML = html; lastStatusHtml = html; }
+
+    const v = $("verdict");
+    let cls, msg;
+    if (!band.ranging) {
+      if (l6Count > 0) { cls = "info"; msg = "[L6] Receiving CLAS corrections (QZSS × " + l6Count + ") — cm-level fixes need L1/L5 ranging alongside"; }
+      else { cls = "bad"; msg = "[L6] Nothing received — only QZSS transmits L6. Check QZSS count and blockage"; }
+    } else if (received < 4) {
+      cls = "bad"; msg = "[" + state.band + "] No fix — only " + received + " satellites received (4+ needed)";
+    } else if (nlosCount > 0) {
+      cls = "bad"; msg = "[" + state.band + "] Fix possible but large errors likely — " + nlosCount + " NLOS satellites (of " + received + " received)";
+    } else if (mpCount > 0) {
+      cls = "warn"; msg = "[" + state.band + "] Fix possible (multipath caution) — " + received + " received / " + mpCount + " with reflections";
+    } else {
+      cls = "ok"; msg = "[" + state.band + "] Good fix — " + received + " clean satellites";
+    }
+    const key = cls + msg;
+    if (key !== lastVerdict) { v.className = cls; v.textContent = msg; lastVerdict = key; }
+  }
+
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.1, (now - last) / 1000);
+    last = now;
+    if (state.playing) state.t += dt;
+    draw();
+    requestAnimationFrame(loop);
+  }
+  window.addEventListener("resize", draw);
+  draw();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

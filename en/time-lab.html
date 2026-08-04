@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>Time &amp; Clocks | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  nav.site-nav {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    max-width: 1060px; margin: 0 auto; padding: 12px 16px 0; font-size: .88rem;
+  }
+  nav.site-nav .brand { font-weight: 700; margin-right: 12px; letter-spacing: .02em; }
+  nav.site-nav a { color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 999px; }
+  nav.site-nav a:hover { color: var(--accent); background: var(--surface2); }
+  nav.site-nav a.active { color: var(--accent); background: var(--surface2); font-weight: 600; }
+  nav.site-nav a.lang { margin-left: auto; border: 1px solid var(--border); font-weight: 600; }
+  nav.site-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+
+  .ctl { display: grid; grid-template-columns: 9em 1fr 11em; align-items: center; gap: 10px; padding: 5px 0; }
+  .ctl .name { font-size: .82rem; color: var(--muted); }
+  .ctl output {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .84rem; text-align: right;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .bigread {
+    display: flex; gap: 12px 30px; flex-wrap: wrap; align-items: baseline;
+    padding: 10px 14px; margin-top: 6px;
+    background: var(--surface2); border-radius: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .bigread .v { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 1.25rem; font-weight: 700; color: var(--accent); }
+  .bigread .u { font-size: .82rem; color: var(--muted); }
+
+  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding-top: 8px; }
+  .btnrow label { display: flex; align-items: center; gap: 6px; font-size: .84rem; color: var(--muted); }
+  .btnrow select {
+    font-family: inherit; font-size: .85rem;
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px;
+  }
+  button.act {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent); color: #fff;
+    border-radius: 8px; font-size: .86rem; font-weight: 600;
+    padding: 6px 16px; cursor: pointer; font-family: inherit;
+  }
+  button.act.ghost { background: transparent; color: var(--accent); }
+  button.act:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  table.clocks { border-collapse: collapse; font-size: .84rem; width: 100%; margin-top: 8px; }
+  table.clocks th, table.clocks td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; }
+  table.clocks th { background: var(--surface2); font-weight: 600; }
+  table.clocks td.num { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; text-align: right; }
+  table.clocks .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+  .tw { overflow-x: auto; }
+
+  .tzrow { display: flex; gap: 14px; flex-wrap: wrap; }
+  .tz {
+    flex: 1 1 200px;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    text-align: center;
+  }
+  .tz .name { font-size: .8rem; color: var(--muted); font-weight: 600; letter-spacing: .06em; }
+  .tz .time { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .tz .off { font-size: .76rem; color: var(--muted); }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Time &amp; Clocks</h1>
+    <p>GNSS is a system of clocks — get a feel for a world where time errors become distance errors</p>
+  </header>
+
+  <div class="panel">
+    <h3>TIME ERROR → DISTANCE ERROR RULER (× SPEED OF LIGHT)</h3>
+    <div class="ctl">
+      <span class="name">Clock error Δt</span>
+      <input type="range" id="dtSlider" min="0" max="7" step="0.01" value="4">
+      <output id="dtOut">1.00 μs</output>
+    </div>
+    <div class="bigread">
+      <span><span class="v" id="distOut">300 m</span> <span class="u">of range error</span></span>
+      <span class="u" id="distNote"></span>
+    </div>
+    <canvas class="dark" id="ruler" aria-label="Logarithmic ruler mapping time error to distance error"></canvas>
+    <p class="cap">Light travels ~30 cm per nanosecond, ~300 m per microsecond, ~300 km per millisecond. In GNSS, clock precision IS position precision. Centimeter positioning (RTK) lives in the 0.1 ns phase-measurement world.</p>
+  </div>
+
+  <div class="panel">
+    <h3>CLOCK DRIFT RACE — HOW FAR DO SYNCED CLOCKS WANDER?</h3>
+    <canvas class="dark" id="race" aria-label="Accumulated error over time for various clock types"></canvas>
+    <div class="btnrow">
+      <button class="act" id="racePlay" aria-pressed="true">⏸ Pause</button>
+      <button class="act ghost" id="raceReset">↺ Reset</button>
+      <label>Speed
+        <select id="raceSpeed">
+          <option value="60">1 s = 1 min</option>
+          <option value="3600" selected>1 s = 1 hour</option>
+          <option value="86400">1 s = 1 day</option>
+        </select>
+      </label>
+      <span class="cap">Elapsed: <b id="raceT">0</b></span>
+    </div>
+    <div class="tw"><table class="clocks" id="clockTable"></table></div>
+    <p class="cap">Stabilities are representative values (real clocks wander with temperature etc., not in straight lines). "Relativity" is the drift a GPS satellite clock WOULD have if uncorrected — about 38 μs/day, or ~11 km/day of range error. GPS would be useless within a day without Einstein.</p>
+  </div>
+
+  <div class="panel">
+    <h3>THREE TIMESCALES — WHAT TIME IS IT? (BASED ON YOUR PC CLOCK)</h3>
+    <div class="tzrow">
+      <div class="tz">
+        <div class="name">UTC</div>
+        <div class="time" id="tzUtc">--:--:--</div>
+        <div class="off">Everyday civil time; leap seconds keep it aligned with Earth's rotation</div>
+      </div>
+      <div class="tz">
+        <div class="name">GPS time</div>
+        <div class="time" id="tzGps">--:--:--</div>
+        <div class="off">UTC + 18 s (continuous, no leap seconds; epoch 1980-01-06)</div>
+      </div>
+      <div class="tz">
+        <div class="name">TAI (atomic time)</div>
+        <div class="time" id="tzTai">--:--:--</div>
+        <div class="off">UTC + 37 s (pure atomic-clock time)</div>
+      </div>
+    </div>
+    <p class="cap">GPS time never inserts leap seconds, so the offset to UTC (currently 18 s) is broadcast in the navigation message (ΔtLS). Receivers use it to display UTC.</p>
+  </div>
+
+  <details class="note" open>
+    <summary>The definition of "one second" and how atomic clocks work</summary>
+    <div class="body">
+      <p>Today's second is defined by atoms, not astronomy: <strong>the time for 9,192,631,770 oscillations of cesium-133</strong>. An atomic transition frequency is the ultimate ruler — identical no matter who measures it, where. An atomic clock continuously disciplines a crystal oscillator against that resonance, reaching stabilities of 10⁻¹³–10⁻¹⁵ (one second in millions of years).</p>
+      <p>GNSS satellites carry several cesium/rubidium clocks. Still imperfect — so their drift coefficients (af0/af1/af2) are broadcast in the <a href="gnss-navmsg.html">navigation message</a>, monitored and uploaded daily by the control segment.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Relativity and GPS — 11 km/day wrong without it</summary>
+    <div class="body">
+      <p>Two relativistic effects act on a GPS satellite clock. <strong>Special relativity</strong>: moving at 3.9 km/s, it ticks slower than ground clocks (≈−7 μs/day). <strong>General relativity</strong>: at 20,000 km altitude gravity is weaker, so it ticks faster (≈+45 μs/day). Net: <strong>+38 μs/day</strong> — about 11 km of range error per day.</p>
+      <p>So GPS clocks are deliberately tuned before launch: the 10.23 MHz reference is set ~0.00455 Hz low, so that in orbit relativity brings it to exactly 10.23 MHz as seen from the ground. The most famous everyday application of relativity there is.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>GPS time, UTC and leap seconds</summary>
+    <div class="body">
+      <p>UTC is atomic time (TAI) with <strong>leap seconds</strong> inserted to track Earth's wobbly rotation. GPS time starts at Jan 6, 1980 and never adds leap seconds. It began 19 s behind TAI, so always <code>TAI − GPS = 19 s</code>; accumulated leap seconds make <code>GPS − UTC = 18 s</code> today.</p>
+      <p>Upcoming leap seconds are announced in the navigation message (LNAV SF4's ΔtLS/ΔtLSF; CNAV MT33). Incidentally, leap seconds are internationally agreed to be abolished by 2035 due to operational headaches.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Why a cheap receiver clock is fine (recap)</summary>
+    <div class="body">
+      <p>As the race shows, a receiver TCXO drifts about a microsecond — 300 m — per second. Positioning still works because the clock error is <strong>common to every satellite's pseudorange</strong>, so it is solved as a fourth unknown alongside position. The receiver gets away with a cheap crystal, and as a bonus <strong>ends up knowing time as accurately as an atomic clock</strong> — which is why GNSS also serves as timing infrastructure for cell networks, power grids and financial timestamps.</p>
+      <p>More on the <a href="gnss-obs.html">Pseudorange &amp; Doppler</a> page.</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const C = 299792458;
+
+  function fitCanvas(cv, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth;
+    const h = Math.round(w * aspect);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      cv.style.height = h + "px";
+    }
+    cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  function fmtTime(sec) {
+    const a = Math.abs(sec);
+    if (a < 1e-6) return (sec * 1e9).toFixed(2) + " ns";
+    if (a < 1e-3) return (sec * 1e6).toFixed(2) + " μs";
+    if (a < 1) return (sec * 1e3).toFixed(2) + " ms";
+    return sec.toFixed(2) + " s";
+  }
+  function fmtDist(m) {
+    const a = Math.abs(m);
+    if (a < 1) return (m * 100).toFixed(1) + " cm";
+    if (a < 1000) return m.toFixed(1) + " m";
+    return (m / 1000).toFixed(1) + " km";
+  }
+  function fmtElapsed(sec) {
+    if (sec < 60) return Math.round(sec) + " s";
+    if (sec < 3600) return (sec / 60).toFixed(1) + " min";
+    if (sec < 86400) return (sec / 3600).toFixed(1) + " h";
+    return (sec / 86400).toFixed(1) + " days";
+  }
+
+  const ruler = $("ruler");
+  const rctx = ruler.getContext("2d");
+  const MARKS = [
+    { ns: 0.1, label: "0.1ns / 3cm", note: "RTK & carrier-phase territory" },
+    { ns: 1, label: "1ns / 30cm", note: "high-end code positioning" },
+    { ns: 1000, label: "1μs / 300m", note: "a TCXO's drift per second" },
+    { ns: 1e6, label: "1ms / 300km", note: "hopeless for positioning" },
+  ];
+
+  function dtNs() { return Math.pow(10, +$("dtSlider").value - 1); }
+
+  function drawRuler() {
+    const { w, h } = fitCanvas(ruler, 0.16);
+    rctx.clearRect(0, 0, w, h);
+    rctx.fillStyle = "#0a1210";
+    rctx.fillRect(0, 0, w, h);
+    const pad = 20;
+    const lgMin = -1, lgMax = 6;
+    const X = (lgNs) => pad + (lgNs - lgMin) / (lgMax - lgMin) * (w - pad * 2);
+    rctx.font = "10px ui-monospace, Consolas, monospace";
+    rctx.strokeStyle = "rgba(148,180,170,.35)";
+    rctx.beginPath();
+    rctx.moveTo(pad, h * 0.55);
+    rctx.lineTo(w - pad, h * 0.55);
+    rctx.stroke();
+    for (let lg = lgMin; lg <= lgMax; lg++) {
+      const x = X(lg);
+      rctx.strokeStyle = "rgba(148,180,170,.25)";
+      rctx.beginPath();
+      rctx.moveTo(x, h * 0.42);
+      rctx.lineTo(x, h * 0.68);
+      rctx.stroke();
+    }
+    for (const m of MARKS) {
+      const x = X(Math.log10(m.ns));
+      rctx.fillStyle = "rgba(125,223,208,.9)";
+      rctx.beginPath();
+      rctx.arc(x, h * 0.55, 3, 0, Math.PI * 2);
+      rctx.fill();
+      rctx.fillStyle = "rgba(160,190,182,.85)";
+      rctx.fillText(m.label, Math.min(x - 20, w - 120), h * 0.3);
+      rctx.fillStyle = "rgba(160,190,182,.55)";
+      rctx.fillText(m.note, Math.min(x - 20, w - 170), h * 0.88);
+    }
+    const cx = X(Math.log10(dtNs()));
+    rctx.strokeStyle = "#fbbf24";
+    rctx.lineWidth = 2;
+    rctx.beginPath();
+    rctx.moveTo(cx, h * 0.18);
+    rctx.lineTo(cx, h * 0.8);
+    rctx.stroke();
+  }
+
+  function updRuler() {
+    const ns = dtNs();
+    const sec = ns * 1e-9;
+    $("dtOut").textContent = fmtTime(sec);
+    const d = sec * C;
+    $("distOut").textContent = fmtDist(d);
+    let note = "";
+    if (d < 1) note = "the precision RTK / carrier phase deals in";
+    else if (d < 30) note = "about a good day of standalone positioning";
+    else if (d < 1000) note = "what a receiver crystal accumulates per second";
+    else note = "a fine clock — but fatal for positioning";
+    $("distNote").textContent = note;
+    drawRuler();
+  }
+  $("dtSlider").addEventListener("input", updRuler);
+
+  const CLOCKS = [
+    { name: "Wristwatch quartz", spec: "±20 ppm", rate: 2e-5, color: "#f87171" },
+    { name: "Receiver TCXO", spec: "±1 ppm", rate: 1e-6, color: "#fbbf24" },
+    { name: "OCXO (ovenized quartz)", spec: "±0.01 ppm", rate: 1e-8, color: "#a3e635" },
+    { name: "Rubidium atomic clock", spec: "≈1×10⁻¹¹", rate: 1e-11, color: "#22d3ee" },
+    { name: "Satellite-grade atomic clock", spec: "≈1×10⁻¹³", rate: 1e-13, color: "#c084fc" },
+    { name: "Relativity (if uncorrected)", spec: "+38 μs/day", rate: 38e-6 / 86400, color: "#f472b6", dashed: true },
+  ];
+  const race = { t: 60, playing: true };
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) race.playing = false;
+
+  const raceCv = $("race");
+  const rc = raceCv.getContext("2d");
+  const T_MIN = 1, T_MAX = 30 * 86400;
+  const E_MIN = 1e-10, E_MAX = 100;
+
+  function drawRace() {
+    const { w, h } = fitCanvas(raceCv, 0.46);
+    rc.clearRect(0, 0, w, h);
+    rc.fillStyle = "#0a1210";
+    rc.fillRect(0, 0, w, h);
+    const padL = 56, padR = 96, padT = 12, padB = 26;
+    const X = (t) => padL + (Math.log10(t) - Math.log10(T_MIN)) / (Math.log10(T_MAX) - Math.log10(T_MIN)) * (w - padL - padR);
+    const Y = (e) => h - padB - (Math.log10(e) - Math.log10(E_MIN)) / (Math.log10(E_MAX) - Math.log10(E_MIN)) * (h - padT - padB);
+    rc.font = "10px ui-monospace, Consolas, monospace";
+
+    const XT = [[1, "1s"], [60, "1min"], [3600, "1h"], [86400, "1day"], [7 * 86400, "1wk"], [30 * 86400, "30d"]];
+    for (const [t, lb] of XT) {
+      const x = X(t);
+      rc.strokeStyle = "rgba(148,180,170,.12)";
+      rc.beginPath(); rc.moveTo(x, padT); rc.lineTo(x, h - padB); rc.stroke();
+      rc.fillStyle = "rgba(160,190,182,.6)";
+      rc.fillText(lb, x - 10, h - 8);
+    }
+    const YT = [[1e-9, "1ns", "30cm"], [1e-6, "1μs", "300m"], [1e-3, "1ms", "300km"], [1, "1s", "300Mm"]];
+    for (const [e, lb, dl] of YT) {
+      const y = Y(e);
+      rc.strokeStyle = "rgba(148,180,170,.12)";
+      rc.beginPath(); rc.moveTo(padL, y); rc.lineTo(w - padR, y); rc.stroke();
+      rc.fillStyle = "rgba(160,190,182,.7)";
+      rc.fillText(lb, 8, y + 3);
+      rc.fillStyle = "rgba(125,223,208,.6)";
+      rc.fillText("≙" + dl, w - padR + 6, y + 3);
+    }
+
+    for (const c of CLOCKS) {
+      rc.strokeStyle = c.color;
+      rc.lineWidth = 1.8;
+      rc.setLineDash(c.dashed ? [6, 5] : []);
+      rc.beginPath();
+      let started = false;
+      for (let px = 0; px <= w - padL - padR; px += 3) {
+        const t = Math.pow(10, Math.log10(T_MIN) + px / (w - padL - padR) * (Math.log10(T_MAX) - Math.log10(T_MIN)));
+        const e = Math.min(Math.max(c.rate * t, E_MIN), E_MAX);
+        const x = padL + px, y = Y(e);
+        if (!started) { rc.moveTo(x, y); started = true; }
+        else rc.lineTo(x, y);
+      }
+      rc.stroke();
+      rc.setLineDash([]);
+    }
+
+    const t = Math.min(Math.max(race.t, T_MIN), T_MAX);
+    const cx = X(t);
+    rc.strokeStyle = "#e2e8f0";
+    rc.lineWidth = 1.4;
+    rc.setLineDash([4, 4]);
+    rc.beginPath();
+    rc.moveTo(cx, padT);
+    rc.lineTo(cx, h - padB);
+    rc.stroke();
+    rc.setLineDash([]);
+    for (const c of CLOCKS) {
+      const e = Math.min(Math.max(c.rate * t, E_MIN), E_MAX);
+      rc.fillStyle = c.color;
+      rc.beginPath();
+      rc.arc(cx, Y(e), 3.5, 0, Math.PI * 2);
+      rc.fill();
+    }
+  }
+
+  function updClockTable() {
+    const t = race.t;
+    let html = "<tr><th>Clock</th><th>Stability</th><th>Time error</th><th>As distance</th></tr>";
+    for (const c of CLOCKS) {
+      const e = c.rate * t;
+      html += "<tr><td><span class='sw' style='background:" + c.color + "'></span>" + c.name + "</td>" +
+        "<td class='num'>" + c.spec + "</td>" +
+        "<td class='num'>" + fmtTime(e) + "</td>" +
+        "<td class='num'>" + fmtDist(e * C) + "</td></tr>";
+    }
+    $("clockTable").innerHTML = html;
+    $("raceT").textContent = fmtElapsed(t);
+  }
+
+  $("racePlay").addEventListener("click", () => {
+    race.playing = !race.playing;
+    $("racePlay").textContent = race.playing ? "⏸ Pause" : "▶ Play";
+    $("racePlay").setAttribute("aria-pressed", String(race.playing));
+  });
+  $("raceReset").addEventListener("click", () => { race.t = 1; });
+
+  function pad2(n) { return String(n).padStart(2, "0"); }
+  function fmtClock(d) { return pad2(d.getUTCHours()) + ":" + pad2(d.getUTCMinutes()) + ":" + pad2(d.getUTCSeconds()); }
+  function updTz() {
+    const now = new Date();
+    $("tzUtc").textContent = fmtClock(now);
+    $("tzGps").textContent = fmtClock(new Date(now.getTime() + 18000));
+    $("tzTai").textContent = fmtClock(new Date(now.getTime() + 37000));
+  }
+
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.1, (now - last) / 1000);
+    last = now;
+    if (race.playing) {
+      race.t += dt * (+$("raceSpeed").value);
+      if (race.t > T_MAX) race.t = T_MAX;
+      drawRace();
+      updClockTable();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  setInterval(updTz, 250);
+  window.addEventListener("resize", () => { updRuler(); drawRace(); });
+  if (window.ResizeObserver) new ResizeObserver(() => { updRuler(); drawRace(); }).observe(ruler);
+  updRuler();
+  drawRace();
+  updClockTable();
+  updTz();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

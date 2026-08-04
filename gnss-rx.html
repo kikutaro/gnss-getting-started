@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>受信の流れ — 衛星からPCまで | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  nav.site-nav {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    max-width: 1060px; margin: 0 auto; padding: 12px 16px 0; font-size: .88rem;
+  }
+  nav.site-nav .brand { font-weight: 700; margin-right: 12px; letter-spacing: .02em; }
+  nav.site-nav a { color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 999px; }
+  nav.site-nav a:hover { color: var(--accent); background: var(--surface2); }
+  nav.site-nav a.active { color: var(--accent); background: var(--surface2); font-weight: 600; }
+  nav.site-nav a.lang { margin-left: auto; border: 1px solid var(--border); font-weight: 600; }
+  nav.site-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px 16px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .layout { display: grid; grid-template-columns: 380px 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+
+  /* ---- flow diagram ---- */
+  .flow { display: flex; flex-direction: column; }
+  .grp {
+    font-size: .74rem; font-weight: 700; color: var(--muted);
+    letter-spacing: .1em; margin: 10px 0 6px; padding-left: 2px;
+  }
+  .grp:first-child { margin-top: 0; }
+  .stage {
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .stage:hover { border-color: var(--accent); }
+  .stage.active { border-color: var(--accent); background: var(--surface2); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .stage b { font-size: .88rem; }
+  .stage small { color: var(--muted); font-size: .72rem; margin-left: auto; text-align: right; }
+  .stage:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .arrow {
+    text-align: center; color: var(--muted); font-size: .8rem;
+    line-height: 1.3; padding: 1px 0;
+  }
+  .arrow .sig {
+    display: inline-block;
+    font-size: .68rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0 10px;
+    color: var(--muted);
+  }
+  .modbox {
+    border: 1.5px dashed var(--accent);
+    border-radius: 14px;
+    padding: 10px 10px 12px;
+    margin: 4px 0;
+    display: flex; flex-direction: column;
+  }
+  .modbox > .modtitle {
+    font-size: .76rem; font-weight: 700; color: var(--accent);
+    letter-spacing: .08em; margin-bottom: 4px;
+  }
+
+  /* ---- info panel ---- */
+  .info {
+    position: sticky; top: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .info h2 { margin: 0 0 2px; font-size: 1.05rem; }
+  .info .sub { color: var(--muted); font-size: .8rem; margin-bottom: 10px; }
+  .info p { font-size: .88rem; margin: 0 0 10px; }
+  .info .kv {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: .82rem;
+    margin-bottom: 8px;
+  }
+  .info .kv b { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  .info code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .82em;
+    word-break: break-all;
+  }
+  .info a { color: var(--accent); }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-top: 16px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>受信の流れ — 衛星からPCまで</h1>
+    <p>L1 C/Aの電波が位置になってPCに届くまでの全行程。ブロックをクリックすると解説が出ます</p>
+  </header>
+
+  <div class="layout">
+    <div class="flow" id="flow"></div>
+    <aside class="info" id="info"></aside>
+  </div>
+
+  <details class="note">
+    <summary>「アンテナ+GNSSモジュール+PC」という構成について</summary>
+    <div class="body">
+      <p>市販のGNSS受信機（u-bloxモジュール、スマホ内蔵チップなど）は、この図の「LNA以降〜プロトコル出力」までを1チップ〜1モジュールに収めています。アクティブアンテナを使う場合はアンテナ側にLNAが内蔵され、同軸ケーブルの損失に負けない信号でモジュールへ渡します。</p>
+      <p>PC側は基本的に「完成品の位置」を受け取るだけですが、RTKLIBのようなソフトでは観測量（擬似距離・搬送波位相・ドップラー）を生データで受け取り、PC側で高精度測位を計算することもできます。u-bloxのUBX-RXM-RAWXなどがその生データです。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>補正はどこで効いているのか（L1 C/A単独測位の場合）</summary>
+    <div class="body">
+      <p>単独測位（スタンドアロン）でも、実は補正だらけです: 衛星時計誤差は航法メッセージのaf0/af1/af2で、電離層は放送Klobucharモデルで（およそ半分しか取れない）、対流圏は受信機内の標準モデルで補正されます。これらはすべてPVT計算の直前、擬似距離を「掃除」する段階で適用されます。</p>
+      <p>さらに精度を上げる外部補正として、QZSSのL1S（サブメータ級補強・日本域）、SBAS、ネット経由のRTK補正（cm級）などがあり、対応受信機なら同じ「補正処理」段に追加投入されます。QZSSのL1SはL1 C/Aと同じ周波数・同じ変調で飛んでくるので、アンテナもRF部もそのまま使えるのが賢いところです。</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  const STAGES = [
+    { grp: "宇宙セグメント", id: "sat", title: "GNSS衛星（GPS / QZSS）", tag: "送信", sig: "L1 C/A電波 1575.42MHz",
+      kv: "送信電力 数十W / 高度 約2万km（QZSSは約3.6万km）",
+      d: "原子時計を基準に、PRNコードと航法メッセージを載せたL1 C/A信号を送信し続ける。信号の作りは「信号の構造」ページの通り。GPSもQZSSも同じフォーマットなので、受信機は同列に扱える。",
+      link: ['gnss-signal.html', '信号の構造を見る'] },
+    { grp: "宇宙セグメント", id: "path", title: "伝搬路（電離層・対流圏・マルチパス）", tag: "約70ms の旅", sig: "遅延・減衰した電波",
+      kv: "電離層遅延 数m〜数十m / 対流圏 2〜10m / 地表到達 約−130dBm（雑音以下）",
+      d: "電波は電離層と大気で遅らされ、ビルで反射する。ここで生まれる誤差が測位精度の主敵。地表に届く頃には熱雑音より20dB以上弱く、波形を見ても雑音にしか見えない。",
+      link: ['gnss-sim.html', '遮蔽・マルチパスのシミュレーターへ'] },
+    { grp: "アンテナ", id: "ant", title: "アンテナ", tag: "電波→電気信号", sig: "微弱なRF信号",
+      kv: "右旋円偏波（RHCP）/ パッチ・ヘリカル・チョークリング",
+      d: "衛星電波は右旋円偏波で届くので、アンテナもそれに合わせる。反射波は偏波が反転（左旋）するため、円偏波アンテナ自体が軽いマルチパス対策になっている。上空全体が見える設置が何より重要。" },
+    { grp: "アンテナ", id: "lna", title: "LNA（低雑音増幅器）", tag: "増幅", sig: "増幅されたRF信号",
+      kv: "利得 20〜40dB / 雑音指数（NF）1dB前後",
+      d: "最初の増幅器の雑音性能が受信システム全体の感度をほぼ決める（フリスの公式）。だからアンテナ直下に置く。「アクティブアンテナ」はアンテナとLNAが一体になったもので、ケーブルが長い場合の定番。" },
+    { grp: "GNSSモジュール — RF部", id: "mix", title: "ダウンコンバート（周波数変換）", tag: "RF→IF", sig: "中間周波数（IF）信号",
+      kv: "1575.42MHz → 数MHz帯へ / 局部発振器はTCXO等から生成",
+      d: "1.5GHzのままでは処理しにくいので、局部発振器の信号と混合（ミキサ）して数MHzの中間周波数に落とす。「波の学習ラボ」のうなりの原理が、ここでは周波数変換として働いている。受信機の時計（TCXO）のズレはそのまま測定に乗るが、後で未知数として解かれる。",
+      link: ['wave-lab.html', 'うなり（周波数混合）の原理へ'] },
+    { grp: "GNSSモジュール — RF部", id: "adc", title: "ADC（アナログ→デジタル変換）", tag: "デジタル化", sig: "デジタルサンプル列",
+      kv: "サンプリング 数MHz〜 / 量子化はわずか1〜3ビット",
+      d: "信号はまだ雑音の下なので、細かい振幅情報に意味がなく、1〜3ビットの粗い量子化で十分（これがGNSS受信機の面白いところ）。ここから先はすべてデジタル信号処理になる。" },
+    { grp: "GNSSモジュール — ベースバンド", id: "acq", title: "捕捉（アクイジション）", tag: "信号を探す", sig: "相関ピーク",
+      kv: "コード位相 1023通り × ドップラー ±5kHz を総当たり",
+      d: "衛星ごとのレプリカコードを片っ端から掛けて、「コード位相 × ドップラー周波数」の2次元サーチで相関ピークを探す。A-GNSS（ネットから概略位置・時刻・軌道をもらう）はこのサーチ範囲を激減させて、初期測位を数秒にする技術。",
+      link: ['gnss-obs.html', '相関サーチを自分でやってみる'] },
+    { grp: "GNSSモジュール — ベースバンド", id: "trk", title: "追尾ループ（DLL / PLL）", tag: "掴んで離さない", sig: "コード位相・搬送波位相",
+      kv: "衛星ごとに1チャネル、数十チャネル並列",
+      d: "DLL（遅延ロックループ）がコードのズレを追い続けて擬似距離の元を作り、PLL（位相同期ループ）が搬送波とドップラーを追い続ける。移動や電波の弱さでロックが外れると再捕捉に戻る。ビル街でナビが迷子になるのはこの辺りの苦労。" },
+    { grp: "GNSSモジュール — ベースバンド", id: "dec", title: "航法メッセージ復号", tag: "50bpsを読む", sig: "エフェメリス・時計補正値",
+      kv: "サブフレーム同期 → パリティ検査 → パラメータ抽出",
+      d: "追尾中の信号からデータビットを取り出し、プリアンブルでサブフレーム同期を取り、エフェメリス（衛星軌道）と時計補正を得る。TOWから送信時刻が確定し、擬似距離の計算が可能になる。",
+      link: ['gnss-navmsg.html', '航法メッセージの中身へ'] },
+    { grp: "GNSSモジュール — 測位演算", id: "cor", title: "補正処理", tag: "誤差の掃除", sig: "補正済み擬似距離",
+      kv: "衛星時計(af0〜af2)・TGD / 電離層(Klobuchar) / 対流圏モデル / (あれば)SBAS・QZSS L1S補強",
+      d: "生の擬似距離から、わかっている誤差を順に引き算する。衛星時計とTGDは航法メッセージの値で、電離層は放送係数のモデルで（半分程度しか取れない）、対流圏は標準モデルで補正。SBASやQZSSのL1S（サブメータ級補強）対応機なら、その補正値もここで適用される。" },
+    { grp: "GNSSモジュール — 測位演算", id: "pvt", title: "PVT計算（位置・速度・時刻）", tag: "連立方程式を解く", sig: "緯度経度高度・速度・時刻",
+      kv: "未知数4つ（x, y, z, 受信機時計）/ 最小二乗法・カルマンフィルタ / DOPで品質評価",
+      d: "4機以上の補正済み擬似距離から、位置3成分＋受信機時計誤差を解く。速度はドップラーから直接推定。衛星の配置が偏っていると解が不安定になる（DOP大）。カルマンフィルタで時間方向にも平滑化する。",
+      link: ['gnss-obs.html', '擬似距離と時計誤差の関係へ'] },
+    { grp: "出力・PC", id: "out", title: "プロトコル出力（NMEA / バイナリ）", tag: "共通言語化", sig: "テキスト/バイナリ電文",
+      kv: "NMEA 0183（テキスト・1〜10Hz）/ UBX等のバイナリ（生観測量も可）",
+      d: "結果を標準フォーマットで出力する。定番はNMEA 0183: 例えば <code>$GPGGA,051234.00,3541.1234,N,13945.5678,E,1,08,1.0,45.2,M,...</code> のようなカンマ区切りテキストで、位置・使用衛星数・DOPなどが読める。RTKLIB等で使う生データ（擬似距離そのもの）はUBX-RXM-RAWXのようなバイナリで出す。" },
+    { grp: "出力・PC", id: "usb", title: "インタフェース（UART / USB / I2C）", tag: "物理接続", sig: "シリアルデータ",
+      kv: "UART 9600〜115200bps / USBは仮想COMポート",
+      d: "モジュールとPC（またはマイコン）をつなぐのは古典的なシリアル通信。USB接続でもPCからは仮想COMポートに見えることが多い。ボーレート設定を間違えると文字化けするのはここ。" },
+    { grp: "出力・PC", id: "pc", title: "PCアプリケーション", tag: "見る・使う", sig: "地図上の現在地",
+      kv: "u-center（モニタ）/ 地図アプリ / RTKLIB（後処理・RTK）",
+      d: "NMEAを読んで地図に描くだけなら数十行のスクリプトでも書ける。u-centerのようなモニタツールは衛星配置・S/N・DOPまで可視化してくれる。生観測量まで出せば、RTKLIBでRTK/PPKといったcm級の後処理測位も試せる。" },
+  ];
+
+  // module boundary: stages from 'mix' to 'out' are inside the GNSS module
+  const MODULE_IDS = ["mix", "adc", "acq", "trk", "dec", "cor", "pvt", "out"];
+
+  const flow = $("flow");
+  let lastGrp = null;
+  let modWrap = null;
+
+  function addArrow(parent, sig) {
+    const a = document.createElement("div");
+    a.className = "arrow";
+    a.innerHTML = "↓ <span class='sig'>" + sig + "</span>";
+    parent.appendChild(a);
+  }
+
+  STAGES.forEach((s, i) => {
+    let parent = flow;
+    const inModule = MODULE_IDS.includes(s.id);
+    if (inModule) {
+      if (!modWrap) {
+        modWrap = document.createElement("div");
+        modWrap.className = "modbox";
+        const t = document.createElement("div");
+        t.className = "modtitle";
+        t.textContent = "GNSSモジュール（受信チップ）の中";
+        modWrap.appendChild(t);
+        flow.appendChild(modWrap);
+        lastGrp = null;
+      }
+      parent = modWrap;
+    }
+    if (s.grp !== lastGrp) {
+      const g = document.createElement("div");
+      g.className = "grp";
+      g.textContent = s.grp;
+      parent.appendChild(g);
+      lastGrp = s.grp;
+    }
+    const el = document.createElement("div");
+    el.className = "stage";
+    el.tabIndex = 0;
+    el.dataset.i = i;
+    el.innerHTML = "<b>" + s.title + "</b><small>" + s.tag + "</small>";
+    el.addEventListener("click", () => select(i));
+    el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(i); } });
+    parent.appendChild(el);
+    if (i < STAGES.length - 1) {
+      const next = STAGES[i + 1];
+      const nextInModule = MODULE_IDS.includes(next.id);
+      addArrow(inModule && nextInModule ? modWrap : flow, s.sig);
+    }
+  });
+
+  function select(i) {
+    document.querySelectorAll(".stage").forEach((el) => el.classList.toggle("active", +el.dataset.i === i));
+    const s = STAGES[i];
+    $("info").innerHTML =
+      "<h2>" + s.title + "</h2>" +
+      '<div class="sub">' + s.grp + " — この段の出力: " + s.sig + "</div>" +
+      '<div class="kv"><b>' + s.kv + "</b></div>" +
+      "<p>" + s.d + "</p>" +
+      (s.link ? '<p><a href="' + s.link[0] + '">→ ' + s.link[1] + "</a></p>" : "");
+  }
+
+  select(0);
+})();
+</script>
+</body>
+</html>

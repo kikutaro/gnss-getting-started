@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>L1 C/A信号の構造 | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --c-msg: #db2777;
+    --c-code: #0891b2;
+    --c-mix: #d97706;
+    --c-car: #059669;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --c-msg: #f472b6; --c-code: #22d3ee; --c-mix: #fbbf24; --c-car: #34d399;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --c-msg: #f472b6; --c-code: #22d3ee; --c-mix: #fbbf24; --c-car: #34d399;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --c-msg: #db2777; --c-code: #0891b2; --c-mix: #d97706; --c-car: #059669;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  nav.site-nav {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    max-width: 1060px; margin: 0 auto; padding: 12px 16px 0; font-size: .88rem;
+  }
+  nav.site-nav .brand { font-weight: 700; margin-right: 12px; letter-spacing: .02em; }
+  nav.site-nav a { color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 999px; }
+  nav.site-nav a:hover { color: var(--accent); background: var(--surface2); }
+  nav.site-nav a.active { color: var(--accent); background: var(--surface2); font-weight: 600; }
+  nav.site-nav a.lang { margin-left: auto; border: 1px solid var(--border); font-weight: 600; }
+  nav.site-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+
+  /* ---- block diagram ---- */
+  .bd { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; padding: 6px 0; }
+  .bd .box {
+    border: 2px solid var(--bc, var(--border));
+    color: var(--bc, var(--text));
+    border-radius: 10px;
+    padding: 8px 14px;
+    text-align: center;
+    font-size: .84rem;
+    line-height: 1.35;
+    background: var(--surface2);
+    min-width: 9em;
+  }
+  .bd .box b { display: block; font-size: .9rem; }
+  .bd .box small { color: var(--muted); font-size: .72rem; }
+  .bd .op {
+    width: 34px; height: 34px; flex: none;
+    border: 2px solid var(--muted);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; font-weight: 700; color: var(--text);
+    background: var(--surface2);
+  }
+  .bd .arr { font-size: 1.2rem; color: var(--muted); }
+  .bd .vgroup { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .bd .vgroup .varr { color: var(--muted); }
+
+  /* ---- zoom tabs ---- */
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .tabs .lbl { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+  .tab-btn {
+    appearance: none; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface2); color: var(--text);
+    padding: 6px 14px; cursor: pointer; line-height: 1.3; text-align: center;
+  }
+  .tab-btn b { display: block; font-size: .85rem; }
+  .tab-btn small { display: block; font-size: .7rem; color: var(--muted); }
+  .tab-btn:hover { border-color: var(--accent); }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tab-btn.active small { color: rgba(255,255,255,.85); }
+  .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.bitbtn {
+    appearance: none; font-family: ui-monospace, Consolas, monospace;
+    border: 1px solid var(--accent); border-radius: 8px;
+    background: transparent; color: var(--accent);
+    padding: 6px 14px; cursor: pointer; font-size: .85rem; font-weight: 700;
+    margin-left: auto;
+  }
+  button.bitbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---- scale table ---- */
+  .scales { overflow-x: auto; }
+  .scales table { border-collapse: collapse; font-size: .86rem; margin: 0; width: 100%; }
+  .scales th, .scales td { border: 1px solid var(--border); padding: 6px 12px; text-align: left; }
+  .scales th { background: var(--surface2); font-weight: 600; }
+  .scales td.num { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>L1 C/A信号の構造</h1>
+    <p>搬送波 × PRNコード × 航法メッセージ — 3つの部品がどう重なって1つの電波になるか</p>
+  </header>
+
+  <!-- block diagram -->
+  <div class="panel">
+    <h3>衛星の中の信号生成（ブロック図）</h3>
+    <div class="bd">
+      <div class="vgroup">
+        <div class="box" style="--bc: var(--c-msg)"><b>航法メッセージ</b>50 bps<small>エフェメリス・時計補正…（0/1）</small></div>
+      </div>
+      <div class="op" title="mod-2加算（XOR）">⊕</div>
+      <div class="vgroup">
+        <div class="box" style="--bc: var(--c-code)"><b>PRNコード（C/A）</b>1.023 Mcps<small>衛星ごとに違うGold符号 1023チップ・1ms周期</small></div>
+      </div>
+      <span class="arr">→</span>
+      <div class="box" style="--bc: var(--c-mix)"><b>拡散された符号</b><small>コード ⊕ データ（±1の高速な列）</small></div>
+      <div class="op" title="乗算（BPSK変調）">⊗</div>
+      <div class="vgroup">
+        <div class="box" style="--bc: var(--c-car)"><b>搬送波</b>1575.42 MHz<small>原子時計から生成された正弦波</small></div>
+      </div>
+      <span class="arr">→</span>
+      <div class="box"><b>L1 C/A送信信号</b><small>BPSK: 符号の±1で位相を0°/180°反転</small></div>
+    </div>
+    <p class="cap">⊕はmod-2加算（XOR）、⊗は乗算。データもコードも「0/1」を「+1/−1」に読み替えれば、どちらも乗算として扱える。すべての周波数・レートは衛星の原子時計1つから作られている（10.23 MHz基準: ×154=L1、÷10=C/Aコード）。</p>
+  </div>
+
+  <!-- layered waveform -->
+  <div class="panel">
+    <h3>3層の波形をズームで見る</h3>
+    <div class="tabs">
+      <span class="lbl">ズーム:</span>
+      <button class="tab-btn" data-z="1"><b>① メッセージ → コード</b><small>60 ms（ビットの世界）</small></button>
+      <button class="tab-btn" data-z="2"><b>② コード → チップ</b><small>約23 μs（チップの世界）</small></button>
+      <button class="tab-btn" data-z="3"><b>③ チップ → 搬送波</b><small>約3 μs（波の世界）</small></button>
+      <button class="bitbtn" id="bitBtn">データビット: 1</button>
+    </div>
+    <canvas class="dark" id="wave" aria-label="航法メッセージ・PRNコード・搬送波の3層波形"></canvas>
+    <p class="cap" id="zoomCap"></p>
+  </div>
+
+  <!-- scale table -->
+  <div class="panel">
+    <h3>スケール感 — 3つの時間の世界</h3>
+    <div class="scales">
+      <table>
+        <tr><th>層</th><th>速さ</th><th>1単位の長さ</th><th>電波にすると</th><th>役割</th></tr>
+        <tr><td style="color:var(--c-msg);font-weight:700">航法メッセージ</td><td class="num">50 bps</td><td class="num">1ビット = 20 ms</td><td class="num">約 6,000 km</td><td>意味（軌道・時刻）を運ぶ</td></tr>
+        <tr><td style="color:var(--c-code);font-weight:700">PRNコード</td><td class="num">1.023 Mcps</td><td class="num">1チップ ≒ 0.977 μs</td><td class="num">約 293 m</td><td>衛星の識別＋距離の目盛</td></tr>
+        <tr><td style="color:var(--c-car);font-weight:700">搬送波</td><td class="num">1575.42 MHz</td><td class="num">1周期 ≒ 0.635 ns</td><td class="num">波長 約 19 cm</td><td>電波として空を飛ぶ・位相測定の物差し</td></tr>
+      </table>
+    </div>
+    <p class="cap">換算: 1ビット = C/Aコード20周期 = 20,460チップ = 約3,150万搬送波サイクル。1チップ = 1,540搬送波サイクル。「粗い目盛（コード）で大づかみ→細かい目盛（搬送波位相）で精密に」という測位の階層構造がここから生まれる。</p>
+  </div>
+
+  <details class="note" open>
+    <summary>なぜコードを掛けて「拡散」するのか</summary>
+    <div class="body">
+      <p>50bpsのデータをそのまま送るなら帯域は約100Hzで足ります。それをわざわざ1.023Mcpsのコードで置き換えて帯域を約2MHzに広げる（スペクトラム拡散）のには、3つの理由があります。</p>
+      <p>(1) <strong>雑音の下から信号を掘り出せる</strong>: 地上に届くGPS信号は約−130dBm、熱雑音より20dB以上も弱い。しかし受信機がレプリカコードで相関を取ると、コードの規則性が揃った成分だけが積み上がり（処理利得 10log₁₀(1023×20) ≒ 43dB）、雑音の中からピークが浮かび上がる。<a href="gnss-obs.html">擬似距離のページ</a>の相関実験がまさにこれ。</p>
+      <p>(2) <strong>全衛星が同じ周波数を共用できる（CDMA）</strong>: 衛星ごとに違うGold符号を使う。Gold符号同士は相関がほぼゼロなので、レプリカに一致する衛星だけが浮かび上がり、他衛星は雑音のまま。「PRN番号」とはこの符号の背番号。</p>
+      <p>(3) <strong>距離の目盛になる</strong>: チップの並びは時刻の目盛そのもの。どこまでコードがずれて届いたかが伝搬時間＝距離になる。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>BPSKと位相 — 「波の基礎」とのつながり</summary>
+    <div class="body">
+      <p>BPSK（二位相偏移変調）は、符号が+1なら搬送波をそのまま、−1なら位相を180°反転して送る方式です。ズーム③で、チップの境目で波がぷつっと反転しているのがそれ。<a href="wave-lab.html">波の学習ラボ</a>で見た「位相」が、ここでは情報を運ぶスイッチとして働いています。</p>
+      <p>受信機側では、この位相反転を取り除いて（コードを掛け直して）搬送波を復元し、その位相をPLLで追いかけます。搬送波の波長は19cm — この位相まで読むのがRTKなどcm級測位の入口です。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>GPSとQZSSではどう違う？</summary>
+    <div class="body">
+      <p>L1 C/Aに関しては、この構造はGPSもQZSSも完全に同じです。違いは使うGold符号の番号だけ: GPSがPRN 1〜32、QZSSがPRN 193〜202を使います。だから受信機はソフトの変更なしにQZSSを「33機目以降のGPS」のように扱えます — これがQZSSの互換設計の核心です。</p>
+      <p>なお同じL1でも、新しい信号L1C（CNAV-2）はBOC変調というより凝った方式を使います。<a href="gnss-navmsg.html">航法メッセージのページ</a>でメッセージ構造の違いも見てください。</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  // 127-chip m-sequence for illustration (real C/A is a 1023-chip Gold code)
+  const CODE = (function () {
+    const c = [];
+    let reg = 0b1010101;
+    for (let i = 0; i < 127; i++) {
+      c.push(reg & 1 ? 1 : -1);
+      const fb = ((reg >> 6) ^ (reg >> 5)) & 1;
+      reg = ((reg << 1) | fb) & 0x7f;
+    }
+    return c;
+  })();
+
+  const S = { zoom: 1, bit: 1 };
+
+  const CV = $("wave");
+  const ctx = CV.getContext("2d");
+  const COL = { msg: "#f472b6", code: "#22d3ee", mix: "#fbbf24", car: "#34d399",
+                grid: "rgba(148,180,170,.15)", label: "rgba(160,190,182,.85)", flip: "#f87171" };
+
+  function fitCanvas(cv, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth;
+    const h = Math.round(w * aspect);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      cv.style.height = h + "px";
+    }
+    cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  const CAPS = {
+    1: "ズーム①: 1データビット（20ms）の間に、C/Aコード（1ms周期）が20回まるごと繰り返す。データビットが0のとき、その区間のコード全体が反転する（緑の帯=ビット1、赤の帯=ビット0）。※コードは127チップに簡略化",
+    2: "ズーム②: コードの中身はチップの列。合成信号 = データビット × チップ。右上のボタンでデータビットを切り替えると、合成信号（黄）が丸ごと反転するのがわかる。",
+    3: "ズーム③: 各チップの±1が搬送波の位相を決める（BPSK）。チップが反転する境目で波の位相が180°反転する（赤マーク）。実際は1チップに1,540サイクル入るが、図では8サイクルに簡略化。",
+  };
+
+  // draw a square-wave trace from a sample function (+1/-1)
+  function trace(y0, hh, w, pad, nSamples, fn, color, lw) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw || 1.6;
+    ctx.beginPath();
+    for (let i = 0; i <= nSamples; i++) {
+      const x = pad + i / nSamples * (w - pad * 2);
+      const v = fn(i / nSamples);
+      const y = y0 - v * hh * 0.42;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  function rowLabel(txt, y, color) {
+    ctx.fillStyle = color;
+    ctx.font = "11px sans-serif";
+    ctx.fillText(txt, 10, y);
+  }
+  function zeroLine(y0, w, pad) {
+    ctx.strokeStyle = COL.grid;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad, y0);
+    ctx.lineTo(w - pad, y0);
+    ctx.stroke();
+  }
+
+  function draw() {
+    const { w, h } = fitCanvas(CV, 0.5);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#0a1210";
+    ctx.fillRect(0, 0, w, h);
+    const pad = 14;
+    const rowH = (h - 30) / 3;
+    const y = [rowH * 0.62, rowH * 1.62, rowH * 2.62];
+    ctx.font = "10px ui-monospace, Consolas, monospace";
+
+    if (S.zoom === 1) {
+      // 60 ms: 3 bits x 20 code periods; code compressed (127 chips per "period" of w/60)
+      const BITS = [1, -1, 1];
+      const bitOf = (u) => BITS[Math.min(2, Math.floor(u * 3))];
+      const chipOf = (u) => CODE[Math.floor(u * 60 * 32) % 127];   // 32 chips/ms shown (texture)
+      // bit backgrounds
+      for (let b = 0; b < 3; b++) {
+        ctx.fillStyle = BITS[b] > 0 ? "rgba(52,211,153,.07)" : "rgba(248,113,113,.08)";
+        ctx.fillRect(pad + b / 3 * (w - pad * 2), 8, (w - pad * 2) / 3, h - 30);
+      }
+      // ms ticks
+      for (let m = 0; m <= 60; m += 5) {
+        const x = pad + m / 60 * (w - pad * 2);
+        ctx.strokeStyle = COL.grid;
+        ctx.beginPath(); ctx.moveTo(x, 8); ctx.lineTo(x, h - 22); ctx.stroke();
+        ctx.fillStyle = COL.label;
+        if (m % 20 === 0) ctx.fillText(m + "ms", x + 2, h - 10);
+      }
+      rowLabel("航法メッセージ（50bps: 1 0 1 …）", 16, COL.msg);
+      zeroLine(y[0], w, pad);
+      trace(y[0], rowH, w, pad, 600, (u) => bitOf(u), COL.msg, 2);
+      rowLabel("C/Aコード（1ms周期で同じ列が繰り返す）", rowH + 16, COL.code);
+      zeroLine(y[1], w, pad);
+      trace(y[1], rowH, w, pad, 1900, chipOf, COL.code, 1);
+      rowLabel("合成 = メッセージ ⊕ コード（ビット0の区間はコードが反転）", rowH * 2 + 16, COL.mix);
+      zeroLine(y[2], w, pad);
+      trace(y[2], rowH, w, pad, 1900, (u) => chipOf(u) * bitOf(u), COL.mix, 1);
+    } else if (S.zoom === 2) {
+      const N = 24;                              // chips shown
+      const chipOf = (u) => CODE[Math.min(N - 1, Math.floor(u * N)) % 127];
+      for (let c = 0; c <= N; c++) {
+        const x = pad + c / N * (w - pad * 2);
+        ctx.strokeStyle = COL.grid;
+        ctx.beginPath(); ctx.moveTo(x, 8); ctx.lineTo(x, h - 22); ctx.stroke();
+      }
+      ctx.fillStyle = COL.label;
+      ctx.fillText("← 1チップ ≒ 0.977μs ≒ 293m →", pad + 4, h - 10);
+      rowLabel("データビット（この20msの間ずっと " + (S.bit > 0 ? "1" : "0") + "）", 16, COL.msg);
+      zeroLine(y[0], w, pad);
+      trace(y[0], rowH, w, pad, 300, () => S.bit, COL.msg, 2);
+      rowLabel("C/Aコードのチップ列（衛星ごとに違うパターン = PRN）", rowH + 16, COL.code);
+      zeroLine(y[1], w, pad);
+      trace(y[1], rowH, w, pad, 800, chipOf, COL.code, 1.8);
+      rowLabel("合成 = ビット × チップ", rowH * 2 + 16, COL.mix);
+      zeroLine(y[2], w, pad);
+      trace(y[2], rowH, w, pad, 800, (u) => chipOf(u) * S.bit, COL.mix, 1.8);
+    } else {
+      const N = 3;                               // chips shown
+      const CYC = 8;                             // carrier cycles per chip (simplified)
+      const chipAt = (u) => CODE[Math.floor(u * N)] * S.bit;
+      for (let c = 0; c <= N; c++) {
+        const x = pad + c / N * (w - pad * 2);
+        ctx.strokeStyle = COL.grid;
+        ctx.beginPath(); ctx.moveTo(x, 8); ctx.lineTo(x, h - 22); ctx.stroke();
+      }
+      ctx.fillStyle = COL.label;
+      ctx.fillText("← 1チップ（実際は搬送波1,540サイクル / 図は" + CYC + "サイクル）→", pad + 4, h - 10);
+      rowLabel("合成符号（±1）", 16, COL.mix);
+      zeroLine(y[0], w, pad);
+      trace(y[0], rowH, w, pad, 500, (u) => chipAt(Math.min(u, 0.999)), COL.mix, 2);
+      rowLabel("搬送波（参考: 変調前の正弦波）", rowH + 16, COL.car);
+      zeroLine(y[1], w, pad);
+      trace(y[1], rowH, w, pad, 900, (u) => Math.sin(2 * Math.PI * CYC * N * u), "rgba(52,211,153,.35)", 1.2);
+      rowLabel("BPSK送信信号 = 符号 × 搬送波（境目で位相が180°反転）", rowH * 2 + 16, COL.car);
+      zeroLine(y[2], w, pad);
+      trace(y[2], rowH, w, pad, 1400, (u) => chipAt(Math.min(u, 0.999)) * Math.sin(2 * Math.PI * CYC * N * u), COL.car, 1.6);
+      // mark phase flips
+      for (let c = 1; c < N; c++) {
+        if (CODE[c - 1] !== CODE[c]) {
+          const x = pad + c / N * (w - pad * 2);
+          ctx.strokeStyle = COL.flip;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(x, y[2], 10, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = COL.flip;
+          ctx.fillText("位相反転", x - 22, y[2] - rowH * 0.35);
+        }
+      }
+    }
+  }
+
+  function setZoom(z) {
+    S.zoom = z;
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", +b.dataset.z === z));
+    $("zoomCap").textContent = CAPS[z];
+    draw();
+  }
+  document.querySelectorAll(".tab-btn").forEach((b) => b.addEventListener("click", () => setZoom(+b.dataset.z)));
+  $("bitBtn").addEventListener("click", () => {
+    S.bit = -S.bit;
+    $("bitBtn").textContent = "データビット: " + (S.bit > 0 ? "1" : "0");
+    draw();
+  });
+
+  window.addEventListener("resize", draw);
+  if (window.ResizeObserver) new ResizeObserver(draw).observe(CV);
+  setZoom(1);
+})();
+</script>
+</body>
+</html>

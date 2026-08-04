@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>Coordinates &amp; Height Basics | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  nav.site-nav {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    max-width: 1060px; margin: 0 auto; padding: 12px 16px 0; font-size: .88rem;
+  }
+  nav.site-nav .brand { font-weight: 700; margin-right: 12px; letter-spacing: .02em; }
+  nav.site-nav a { color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 999px; }
+  nav.site-nav a:hover { color: var(--accent); background: var(--surface2); }
+  nav.site-nav a.active { color: var(--accent); background: var(--surface2); font-weight: 600; }
+  nav.site-nav a.lang { margin-left: auto; border: 1px solid var(--border); font-weight: 600; }
+  nav.site-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .ctl { display: grid; grid-template-columns: 8.5em 1fr 8em; align-items: center; gap: 10px; padding: 5px 0; }
+  .ctl .name { font-size: .82rem; color: var(--muted); }
+  .ctl output {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .84rem; text-align: right;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .bigread {
+    display: flex; gap: 10px 26px; flex-wrap: wrap; align-items: baseline;
+    padding: 10px 14px; margin-top: 6px;
+    background: var(--surface2); border-radius: 8px;
+    font-variant-numeric: tabular-nums;
+    font-size: .88rem;
+  }
+  .bigread b { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  .bigread .hi { color: var(--accent); font-weight: 700; }
+
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding-top: 6px; }
+  .presets .lbl { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+  .presets button {
+    appearance: none; font-family: inherit; font-size: .84rem;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text);
+    cursor: pointer;
+  }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .presets button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Coordinates &amp; Height Basics</h1>
+    <p>What exactly is the "position" GNSS gives you? Ellipsoid, geoid, elevation — and ECEF coordinates</p>
+  </header>
+
+  <div class="panel">
+    <h3>THE THREE HEIGHTS — WHY GPS ALTITUDE DISAGREES WITH THE MAP</h3>
+    <canvas class="dark" id="hgt" aria-label="Cross-section of ellipsoid, geoid and terrain with the three height types"></canvas>
+    <div class="ctl">
+      <span class="name">Geoid height N</span>
+      <input type="range" id="geoidN" min="-100" max="85" step="0.1" value="36.7">
+      <output id="geoidNOut">+36.7 m</output>
+    </div>
+    <div class="ctl">
+      <span class="name">Elevation H</span>
+      <input type="range" id="elevH" min="0" max="150" step="1" value="40">
+      <output id="elevHOut">40 m</output>
+    </div>
+    <div class="presets">
+      <span class="lbl">Example places:</span>
+      <button data-n="36.7" data-h="40">Tokyo (N≈+37 m)</button>
+      <button data-n="-95" data-h="5">South of India (N≈−95 m)</button>
+      <button data-n="75" data-h="60">Near New Guinea (N≈+75 m)</button>
+    </div>
+    <div class="bigread" id="hgtRead"></div>
+    <p class="cap">Ellipsoidal height h (raw GNSS height) = elevation H (map / leveling height) + geoid height N. Around Japan N ≈ +30–40 m, so a phone's raw GPS altitude reads ~30–40 m above the map elevation unless the app corrects it.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>WHAT LATITUDE REALLY IS — THE ANGLE OF YOUR LOCAL VERTICAL</h3>
+      <canvas class="dark" id="lat" aria-label="Geodetic vs geocentric latitude on an ellipse cross-section"></canvas>
+      <div class="ctl" style="grid-template-columns: 6em 1fr 7em">
+        <span class="name">Latitude φ</span>
+        <input type="range" id="latSlider" min="0" max="90" step="0.5" value="35.7">
+        <output id="latOut">35.7°</output>
+      </div>
+      <div class="bigread" id="latRead"></div>
+      <p class="cap">Flattening exaggerated (the real Earth is only 1/298 squashed). The "geodetic latitude" we all use is the angle of the surface normal (your local vertical) — which misses the Earth's center by up to ~0.19°.</p>
+    </div>
+
+    <div class="panel">
+      <h3>ECEF CONVERTER — GNSS THINKS IN XYZ</h3>
+      <div class="ctl" style="grid-template-columns: 7.5em 1fr 8em">
+        <span class="name">Latitude φ</span>
+        <input type="range" id="ecefLat" min="-90" max="90" step="0.01" value="35.68">
+        <output id="ecefLatOut">35.68°</output>
+      </div>
+      <div class="ctl" style="grid-template-columns: 7.5em 1fr 8em">
+        <span class="name">Longitude λ</span>
+        <input type="range" id="ecefLon" min="-180" max="180" step="0.01" value="139.77">
+        <output id="ecefLonOut">139.77°</output>
+      </div>
+      <div class="ctl" style="grid-template-columns: 7.5em 1fr 8em">
+        <span class="name">Ellip. height h</span>
+        <input type="range" id="ecefH" min="0" max="10000" step="10" value="40">
+        <output id="ecefHOut">40 m</output>
+      </div>
+      <div class="bigread" id="ecefRead" style="flex-direction:column; align-items:flex-start; gap:4px"></div>
+      <p class="cap">ECEF (Earth-Centered, Earth-Fixed) Cartesian coordinates: origin at Earth's center of mass, X toward longitude 0°, Z toward the north pole. Satellite positions and the PVT solution are all computed in XYZ, then converted to lat/lon/height for display. Defaults: near Tokyo Station.</p>
+    </div>
+  </div>
+
+  <details class="note" open>
+    <summary>What is the geoid? — "sea level extended under the land"</summary>
+    <div class="body">
+      <p>The <strong>geoid</strong> is the surface you'd get by extending mean sea level beneath the continents — an equipotential surface of gravity (water doesn't flow along it). Reflecting the lumpy mass distribution inside the Earth, it undulates by up to ±100 m against the smooth ellipsoid. <strong>Elevation (height above sea level) is measured from the geoid</strong>, which is the practical height that agrees with which way water flows.</p>
+      <p>GNSS, being pure geometry, outputs <strong>height above the ellipsoid h</strong>. The difference is the geoid height N: <code>h = H + N</code>. Receivers and map apps convert to H using a geoid model (in Japan, the GSI geoid model). When "GPS altitude looks wrong", the culprit is almost always whether N was corrected.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Datums — the same spot doesn't have just one coordinate</summary>
+    <div class="body">
+      <p>Latitude and longitude only mean something once you fix a convention (datum): which ellipsoid, positioned where. The GNSS world standard is <strong>WGS84</strong> (the GPS datum), consistent with the international <strong>ITRF</strong> at the cm level. Japan's official <strong>JGD2011</strong> is also ITRF-based and practically identical to WGS84.</p>
+      <p>A history lesson: the old Tokyo Datum, used until 2002, was based on 19th-century astronomical surveys and disagreed with WGS84 by <strong>~400 m</strong> — a famous source of old-map offsets and car-nav conversion bugs. And since plates move, Japan drifts several cm per year; precision surveying even has to state the epoch ("coordinates as of when").</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>The coordinate pipeline inside a receiver</summary>
+    <div class="body">
+      <p>① Compute each satellite's position in <strong>ECEF XYZ</strong> from the ephemeris → ② solve the pseudorange equations to get the receiver's position, also in <strong>ECEF XYZ</strong> → ③ convert to <strong>lat/lon/ellipsoidal height</strong> with the ellipsoid formulas → ④ apply the geoid model to show <strong>elevation</strong>.</p>
+      <p>NMEA's GGA sentence carries "elevation + geoid height" as separate fields rather than ellipsoidal height (see <a href="gnss-rx.html">Receive Chain</a>). Handy mental conversions for position errors: 1 arc-second of latitude ≈ 31 m; 1 arc-second of longitude ≈ 25 m around Tokyo's latitude.</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  function fitCanvas(cv, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth;
+    const h = Math.round(w * aspect);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      cv.style.height = h + "px";
+    }
+    cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  // ---------- A: heights ----------
+  const hgt = $("hgt");
+  const hctx = hgt.getContext("2d");
+  const HS = { N: 36.7, H: 40 };
+
+  function drawHgt() {
+    const { w, h } = fitCanvas(hgt, 0.42);
+    hctx.clearRect(0, 0, w, h);
+    hctx.fillStyle = "#0a1210";
+    hctx.fillRect(0, 0, w, h);
+    hctx.font = "11px ui-monospace, Consolas, monospace";
+
+    const mTop = Math.max(HS.N, 0) + HS.H + 40;
+    const mBot = Math.min(HS.N, 0) - 30;
+    const Y = (m) => 24 + (mTop - m) / (mTop - mBot) * (h - 48);
+    const cx = w * 0.52;
+
+    const yE = Y(0);
+    hctx.strokeStyle = "#60a5fa";
+    hctx.lineWidth = 2;
+    hctx.beginPath();
+    hctx.moveTo(0, yE);
+    hctx.lineTo(w, yE);
+    hctx.stroke();
+    hctx.fillStyle = "#60a5fa";
+    hctx.fillText("Ellipsoid (WGS84 — the smooth mathematical surface)", 10, yE + 14);
+
+    hctx.strokeStyle = "#34d399";
+    hctx.lineWidth = 2;
+    hctx.beginPath();
+    for (let x = 0; x <= w; x += 4) {
+      const wave = Math.sin(x / w * Math.PI * 2.2 + 1.2) * 14;
+      const m = HS.N + wave - Math.sin(cx / w * Math.PI * 2.2 + 1.2) * 14;
+      const y = Y(m);
+      if (x === 0) hctx.moveTo(x, y);
+      else hctx.lineTo(x, y);
+    }
+    hctx.stroke();
+    hctx.fillStyle = "#34d399";
+    hctx.fillText("Geoid (mean sea level extended — undulating)", 10, Y(HS.N) - 8);
+
+    hctx.strokeStyle = "#d6a05c";
+    hctx.lineWidth = 2;
+    hctx.beginPath();
+    for (let x = 0; x <= w; x += 4) {
+      const gwave = Math.sin(x / w * Math.PI * 2.2 + 1.2) * 14 - Math.sin(cx / w * Math.PI * 2.2 + 1.2) * 14;
+      const twave = Math.sin(x / w * Math.PI * 3.4) * 10 + Math.cos(x / w * Math.PI * 1.3) * 8;
+      const m = HS.N + gwave + HS.H + twave - (Math.sin(cx / w * Math.PI * 3.4) * 10 + Math.cos(cx / w * Math.PI * 1.3) * 8);
+      hctx.lineTo(x, Y(m));
+      if (x === 0) hctx.moveTo(x, Y(m));
+    }
+    hctx.stroke();
+    hctx.fillStyle = "#d6a05c";
+    hctx.fillText("Terrain", 10, Y(HS.N + HS.H) - 26);
+
+    const yG = Y(HS.N);
+    const yT = Y(HS.N + HS.H);
+    hctx.strokeStyle = "#e2e8f0";
+    hctx.lineWidth = 2;
+    hctx.beginPath();
+    hctx.moveTo(cx, yT);
+    hctx.lineTo(cx, yT - 12);
+    hctx.stroke();
+    hctx.fillStyle = "#e2e8f0";
+    hctx.beginPath();
+    hctx.arc(cx, yT - 15, 3.5, 0, Math.PI * 2);
+    hctx.fill();
+    hctx.fillText("Receiver", cx - 22, yT - 24);
+
+    function arrow(x, y1, y2, color, label) {
+      hctx.strokeStyle = color;
+      hctx.fillStyle = color;
+      hctx.lineWidth = 1.6;
+      hctx.beginPath();
+      hctx.moveTo(x, y1);
+      hctx.lineTo(x, y2);
+      hctx.stroke();
+      const dir = y2 < y1 ? 1 : -1;
+      hctx.beginPath();
+      hctx.moveTo(x - 4, y2 + 6 * dir);
+      hctx.lineTo(x, y2);
+      hctx.lineTo(x + 4, y2 + 6 * dir);
+      hctx.stroke();
+      hctx.fillText(label, x + 8, (y1 + y2) / 2 + 4);
+    }
+    arrow(cx - 130, yE, yT, "#fbbf24", "h ellipsoidal = " + (HS.N + HS.H).toFixed(1) + " m (raw GNSS)");
+    arrow(cx + 60, yG, yT, "#d6a05c", "H elevation = " + HS.H.toFixed(0) + " m (the map)");
+    arrow(cx + 200, yE, yG, "#34d399", "N geoid = " + HS.N.toFixed(1) + " m");
+  }
+
+  function updHgt() {
+    $("geoidNOut").textContent = (HS.N >= 0 ? "+" : "") + HS.N.toFixed(1) + " m";
+    $("elevHOut").textContent = HS.H.toFixed(0) + " m";
+    $("hgtRead").innerHTML =
+      'GNSS raw height h = <b class="hi">' + (HS.N + HS.H).toFixed(1) + " m</b>" +
+      "<span>Map elevation H = <b>" + HS.H.toFixed(0) + " m</b></span>" +
+      "<span>Difference (geoid N) = <b>" + (HS.N >= 0 ? "+" : "") + HS.N.toFixed(1) + " m</b></span>";
+    drawHgt();
+  }
+  $("geoidN").addEventListener("input", (e) => { HS.N = +e.target.value; updHgt(); });
+  $("elevH").addEventListener("input", (e) => { HS.H = +e.target.value; updHgt(); });
+  document.querySelectorAll(".presets button").forEach((b) => {
+    b.addEventListener("click", () => {
+      HS.N = +b.dataset.n; HS.H = +b.dataset.h;
+      $("geoidN").value = HS.N; $("elevH").value = HS.H;
+      updHgt();
+    });
+  });
+
+  // ---------- B: latitude ----------
+  const lat = $("lat");
+  const lctx = lat.getContext("2d");
+  const LS = { phi: 35.7 };
+  const E2 = 0.00669437999014;
+
+  function drawLat() {
+    const { w, h } = fitCanvas(lat, 0.72);
+    lctx.clearRect(0, 0, w, h);
+    lctx.fillStyle = "#0a1210";
+    lctx.fillRect(0, 0, w, h);
+    lctx.font = "11px ui-monospace, Consolas, monospace";
+
+    const cx = w * 0.42, cy = h * 0.62;
+    const a = Math.min(w, h) * 0.52, b = a * 0.66;
+    lctx.strokeStyle = "#60a5fa";
+    lctx.lineWidth = 2;
+    lctx.beginPath();
+    lctx.ellipse(cx, cy, a, b, 0, 0, Math.PI * 2);
+    lctx.stroke();
+    lctx.strokeStyle = "rgba(148,180,170,.3)";
+    lctx.lineWidth = 1;
+    lctx.beginPath();
+    lctx.moveTo(cx - a - 12, cy); lctx.lineTo(cx + a + 12, cy);
+    lctx.moveTo(cx, cy - b - 12); lctx.lineTo(cx, cy + b + 12);
+    lctx.stroke();
+    lctx.fillStyle = "rgba(160,190,182,.7)";
+    lctx.fillText("equator", cx + a - 40, cy + 14);
+    lctx.fillText("N pole", cx - 44, cy - b - 2);
+
+    const phi = LS.phi * Math.PI / 180;
+    const psi = Math.atan((b / a) * Math.tan(phi));
+    const px = cx + a * Math.cos(psi);
+    const py = cy - b * Math.sin(psi);
+
+    const nx = Math.cos(phi), ny = Math.sin(phi);
+    const L = a * 1.35;
+    lctx.strokeStyle = "#fbbf24";
+    lctx.lineWidth = 2;
+    lctx.beginPath();
+    lctx.moveTo(px + nx * 26, py - ny * 26);
+    lctx.lineTo(px - nx * L, py + ny * L);
+    lctx.stroke();
+    lctx.fillStyle = "#fbbf24";
+    lctx.fillText("normal (your local 'down') → geodetic φ", 10, 18);
+
+    lctx.strokeStyle = "#f472b6";
+    lctx.setLineDash([5, 5]);
+    lctx.beginPath();
+    lctx.moveTo(px, py);
+    lctx.lineTo(cx, cy);
+    lctx.stroke();
+    lctx.setLineDash([]);
+    lctx.fillStyle = "#f472b6";
+    lctx.fillText("line to Earth's center → geocentric φ′", 10, 34);
+
+    lctx.fillStyle = "#e2e8f0";
+    lctx.beginPath();
+    lctx.arc(px, py, 4.5, 0, Math.PI * 2);
+    lctx.fill();
+    lctx.fillText("you", px + 8, py - 6);
+  }
+
+  function updLat() {
+    $("latOut").textContent = LS.phi.toFixed(1) + "°";
+    const phi = LS.phi * Math.PI / 180;
+    const phiC = Math.atan((1 - E2) * Math.tan(phi)) * 180 / Math.PI;
+    const diff = LS.phi - phiC;
+    $("latRead").innerHTML =
+      "Geodetic φ = <b>" + LS.phi.toFixed(2) + "°</b>" +
+      "<span>Geocentric φ′ = <b>" + phiC.toFixed(2) + "°</b></span>" +
+      '<span>Difference = <b class="hi">' + (diff * 3600).toFixed(0) + " arcsec ≈ " + (diff * 111.32).toFixed(1) + " km</b></span>";
+    drawLat();
+  }
+  $("latSlider").addEventListener("input", (e) => { LS.phi = +e.target.value; updLat(); });
+
+  // ---------- C: ECEF ----------
+  const A_WGS = 6378137.0;
+  function updEcef() {
+    const phi = +$("ecefLat").value * Math.PI / 180;
+    const lam = +$("ecefLon").value * Math.PI / 180;
+    const hh = +$("ecefH").value;
+    $("ecefLatOut").textContent = (+$("ecefLat").value).toFixed(2) + "°";
+    $("ecefLonOut").textContent = (+$("ecefLon").value).toFixed(2) + "°";
+    $("ecefHOut").textContent = hh.toFixed(0) + " m";
+    const Nn = A_WGS / Math.sqrt(1 - E2 * Math.sin(phi) ** 2);
+    const X = (Nn + hh) * Math.cos(phi) * Math.cos(lam);
+    const Yc = (Nn + hh) * Math.cos(phi) * Math.sin(lam);
+    const Z = (Nn * (1 - E2) + hh) * Math.sin(phi);
+    const r = Math.sqrt(X * X + Yc * Yc + Z * Z);
+    $("ecefRead").innerHTML =
+      "X = <b>" + (X / 1000).toFixed(3) + " km</b>" +
+      "<span>Y = <b>" + (Yc / 1000).toFixed(3) + " km</b></span>" +
+      "<span>Z = <b>" + (Z / 1000).toFixed(3) + " km</b></span>" +
+      '<span>Geocentric distance = <b class="hi">' + (r / 1000).toFixed(3) + " km</b> (smaller at the poles, larger at the equator)</span>";
+  }
+  ["ecefLat", "ecefLon", "ecefH"].forEach((id) => $(id).addEventListener("input", updEcef));
+
+  window.addEventListener("resize", () => { drawHgt(); drawLat(); });
+  if (window.ResizeObserver) new ResizeObserver(() => { drawHgt(); drawLat(); }).observe(hgt);
+  updHgt();
+  updLat();
+  updEcef();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>dBと信号強度 | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --ok: #10b981;
+    --warn: #d97706;
+    --bad: #dc2626;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --ok: #34d399; --warn: #fbbf24; --bad: #f87171;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --ok: #34d399; --warn: #fbbf24; --bad: #f87171;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --ok: #10b981; --warn: #d97706; --bad: #dc2626;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  nav.site-nav {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    max-width: 1060px; margin: 0 auto; padding: 12px 16px 0; font-size: .88rem;
+  }
+  nav.site-nav .brand { font-weight: 700; margin-right: 12px; letter-spacing: .02em; }
+  nav.site-nav a { color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 999px; }
+  nav.site-nav a:hover { color: var(--accent); background: var(--surface2); }
+  nav.site-nav a.active { color: var(--accent); background: var(--surface2); font-weight: 600; }
+  nav.site-nav a.lang { margin-left: auto; border: 1px solid var(--border); font-weight: 600; }
+  nav.site-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .ctl { display: grid; grid-template-columns: 9em 1fr 9em; align-items: center; gap: 10px; padding: 5px 0; }
+  .ctl .name { font-size: .82rem; color: var(--muted); }
+  .ctl output {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .84rem; text-align: right;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .bigread {
+    display: flex; gap: 12px 30px; flex-wrap: wrap; align-items: baseline;
+    padding: 10px 14px; margin-top: 6px;
+    background: var(--surface2); border-radius: 8px;
+    font-variant-numeric: tabular-nums;
+    font-size: .9rem;
+  }
+  .bigread .v { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+  .bigread .u { font-size: .82rem; color: var(--muted); }
+
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding-top: 6px; }
+  .presets .lbl { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+  .presets button {
+    appearance: none; font-family: inherit; font-size: .84rem;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text);
+    cursor: pointer;
+  }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .presets button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  #verdict {
+    padding: 9px 12px; border-radius: 8px;
+    font-weight: 700; font-size: .92rem; margin-top: 10px;
+    background: var(--surface2);
+    border-left: 4px solid var(--muted);
+  }
+  #verdict.ok { border-left-color: var(--ok); color: var(--ok); }
+  #verdict.warn { border-left-color: var(--warn); color: var(--warn); }
+  #verdict.bad { border-left-color: var(--bad); color: var(--bad); }
+
+  .lb-read { display: flex; gap: 8px 26px; flex-wrap: wrap; padding: 8px 2px 0; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .lb-read b { font-family: ui-monospace, Consolas, monospace; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+  details.note a { color: var(--accent); }
+  details.note table { border-collapse: collapse; font-size: .84rem; margin: 4px 0 10px; }
+  details.note th, details.note td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; }
+  details.note th { background: var(--surface2); font-weight: 600; }
+  .tw { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>dBと信号強度</h1>
+    <p>−130dBmってどのくらい？ — 電波の強さの言葉「デシベル」を体で覚える</p>
+  </header>
+
+  <!-- A: converters -->
+  <div class="grid2">
+    <div class="panel">
+      <h3>dB ⇔ 倍率 変換器</h3>
+      <div class="ctl">
+        <span class="name">dB</span>
+        <input type="range" id="dbSlider" min="-30" max="30" step="1" value="3">
+        <output id="dbOut">+3 dB</output>
+      </div>
+      <div class="bigread">
+        <span>電力比 <span class="v" id="ratioOut">×2.0</span></span>
+        <span class="u" id="ratioNote">+3dBは「約2倍」。これだけは暗記の価値あり</span>
+      </div>
+      <p class="cap">dB = 10 × log₁₀(電力比)。+10dBが10倍、+3dBが約2倍、−3dBが約半分。掛け算の世界を足し算に変える対数の道具。</p>
+    </div>
+    <div class="panel">
+      <h3>dBm ものさし（1mW基準の絶対値）</h3>
+      <div class="ctl">
+        <span class="name">電力</span>
+        <input type="range" id="dbmSlider" min="-140" max="60" step="1" value="-130">
+        <output id="dbmOut">−130 dBm</output>
+      </div>
+      <div class="bigread">
+        <span><span class="v" id="wattOut">0.1 fW</span></span>
+        <span class="u" id="dbmNote"></span>
+      </div>
+      <canvas class="dark" id="ladder" aria-label="dBmの目盛りと身近な電波の強さの例"></canvas>
+    </div>
+  </div>
+
+  <!-- B: link budget -->
+  <div class="panel">
+    <h3>リンクバジェット — 衛星の25Wが地上で−130dBmになるまで</h3>
+    <canvas class="dark" id="budget" aria-label="衛星から受信機までの電力の増減を示すウォーターフォール図"></canvas>
+    <div class="ctl" style="margin-top:8px">
+      <span class="name">受信アンテナ利得</span>
+      <input type="range" id="rxGain" min="-5" max="6" step="0.5" value="3">
+      <output id="rxGainOut">+3.0 dBi</output>
+    </div>
+    <div class="ctl">
+      <span class="name">遮蔽・屋内減衰</span>
+      <input type="range" id="blockLoss" min="0" max="40" step="1" value="0">
+      <output id="blockLossOut">0 dB</output>
+    </div>
+    <div class="presets">
+      <span class="lbl">環境プリセット:</span>
+      <button data-loss="0">屋外オープンスカイ</button>
+      <button data-loss="8">窓際</button>
+      <button data-loss="18">屋内の奥</button>
+      <button data-loss="38">地下・鉄筋の陰</button>
+    </div>
+    <div class="lb-read" id="lbRead"></div>
+    <div id="verdict">—</div>
+    <p class="cap">数値は教材用の概算。熱雑音床は帯域2MHz（C/A信号相当）で計算。C/N₀はu-centerなどの受信機モニタに出る「衛星ごとの棒グラフ」の値そのもの。</p>
+  </div>
+
+  <details class="note" open>
+    <summary>dBのルール — なぜ掛け算が足し算になるのか</summary>
+    <div class="body">
+      <p>電波の強さは、送信で数十W→受信で10⁻¹⁶Wと、桁が16個も変わります。この掛け算だらけの世界を扱いやすくするのが対数です。<code>dB = 10 log₁₀(比)</code>と定義すると、「100万分の1になる」は「−60dB」、「2倍のアンプを3段」は「+3+3+3=+9dB」— <strong>すべての増幅・減衰がただの足し算</strong>になります。リンクバジェットの図が縦にストンストンと降りていくのはこのおかげ。</p>
+      <p>覚えるのは2つだけ: <strong>+10dB＝10倍、+3dB≈2倍</strong>。組み合わせれば何でも出ます（例: +26dB = 10×10×2×2 = 400倍）。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>dBm・dBW・dBi・dB-Hz — 単位の後ろに付く文字の意味</summary>
+    <div class="body">
+      <div class="tw">
+      <table>
+        <tr><th>表記</th><th>基準</th><th>用途</th></tr>
+        <tr><td>dBm</td><td>1 mW</td><td>絶対的な電力。GPS受信レベル−130dBmなど</td></tr>
+        <tr><td>dBW</td><td>1 W</td><td>大きな電力。dBm − 30 = dBW</td></tr>
+        <tr><td>dBi</td><td>等方性アンテナ</td><td>アンテナ利得。「全方向に均等」と比べ何倍か</td></tr>
+        <tr><td>dB-Hz</td><td>1 Hz帯域</td><td>C/N₀（搬送波電力対雑音密度比）。GNSSの信号品質の共通言語</td></tr>
+        <tr><td>dB（無印）</td><td>相対比</td><td>利得・損失・SNRなど、何かと何かの比</td></tr>
+      </table>
+      </div>
+      <p>「dBの後ろの文字＝何を基準にした絶対値か」。無印のdBだけが相対値です。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>熱雑音 kTB — 何もしなくても存在する床</summary>
+    <div class="body">
+      <p>抵抗の中の電子が熱でゆらぐだけで、電力 <code>N = kTB</code>（k: ボルツマン定数、T: 温度、B: 帯域幅）の雑音が生まれます。常温（290K）では <strong>−174dBm/Hz</strong> — これが物理が決める床です。帯域を広げるほど雑音は増え、C/A信号の2MHzでは −174 + 63 = <strong>約−111dBm</strong>。</p>
+      <p>GPS信号は−130dBmでこの床より約20dBも下。つまり<strong>スペクトラムアナライザで見ても何も見えません</strong>。それでも受信できるのは、相関処理で約43dBの処理利得を稼ぐから（<a href="gnss-signal.html">信号の構造</a>参照）。「雑音の下に隠れた信号を掘り出す」がGNSS受信の本質です。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>C/N₀とSNR — 受信機モニタの棒グラフの読み方</summary>
+    <div class="body">
+      <p>GNSSでは信号品質をSNRでなく<strong>C/N₀（dB-Hz）</strong>で言うのが習慣です。帯域の取り方に依存しない値で、<code>SNR = C/N₀ − 10log₁₀(帯域)</code> の関係。u-centerなどで見る衛星ごとの棒グラフがまさにC/N₀です。</p>
+      <p>目安: <strong>45dB-Hz以上</strong>=屋外の良好な受信、<strong>35〜45</strong>=普通、<strong>28〜35</strong>=弱い（都市部・窓際）、<strong>28以下</strong>=追尾が切れはじめる限界。上のリンクバジェットで屋内減衰を増やして、この限界を体験してみてください。</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  function fitCanvas(cv, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth;
+    const h = Math.round(w * aspect);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      cv.style.height = h + "px";
+    }
+    cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  // ---------- A1: dB ratio ----------
+  function updDb() {
+    const db = +$("dbSlider").value;
+    $("dbOut").textContent = (db > 0 ? "+" : "") + db + " dB";
+    const ratio = Math.pow(10, db / 10);
+    let rs;
+    if (ratio >= 100) rs = "×" + Math.round(ratio).toLocaleString();
+    else if (ratio >= 1) rs = "×" + ratio.toFixed(1);
+    else if (ratio >= 0.01) rs = "×" + ratio.toFixed(3);
+    else rs = "×1/" + Math.round(1 / ratio).toLocaleString();
+    $("ratioOut").textContent = rs;
+    const notes = {
+      "-30": "1000分の1", "-20": "100分の1", "-10": "10分の1", "-3": "約半分",
+      "0": "等倍（変化なし）", "3": "+3dBは「約2倍」。これだけは暗記の価値あり",
+      "10": "ちょうど10倍", "20": "100倍", "30": "1000倍",
+    };
+    $("ratioNote").textContent = notes[String(db)] || "";
+  }
+  $("dbSlider").addEventListener("input", updDb);
+
+  // ---------- A2: dBm ladder ----------
+  const LADDER = [
+    { dbm: 50, label: "100W — 放送・レーダー級" },
+    { dbm: 44, label: "25W — GNSS衛星の送信機" },
+    { dbm: 20, label: "100mW — WiFi・スマホ送信" },
+    { dbm: 0, label: "1mW — 基準（0dBm）" },
+    { dbm: -50, label: "強い放送波の受信" },
+    { dbm: -80, label: "スマホのLTE受信レベル" },
+    { dbm: -111, label: "熱雑音床（2MHz幅）" },
+    { dbm: -130, label: "GPS受信レベル（雑音の下！）" },
+  ];
+  const ladder = $("ladder");
+  const lctx = ladder.getContext("2d");
+
+  function fmtWatt(dbm) {
+    const w = Math.pow(10, dbm / 10) / 1000; // W
+    if (w >= 1) return w.toFixed(w >= 100 ? 0 : 1) + " W";
+    if (w >= 1e-3) return (w * 1e3).toFixed(1) + " mW";
+    if (w >= 1e-6) return (w * 1e6).toFixed(1) + " μW";
+    if (w >= 1e-9) return (w * 1e9).toFixed(1) + " nW";
+    if (w >= 1e-12) return (w * 1e12).toFixed(1) + " pW";
+    if (w >= 1e-15) return (w * 1e15).toFixed(1) + " fW";
+    return (w * 1e18).toFixed(2) + " aW";
+  }
+
+  function drawLadder() {
+    const { w, h } = fitCanvas(ladder, 0.62);
+    lctx.clearRect(0, 0, w, h);
+    lctx.fillStyle = "#0a1210";
+    lctx.fillRect(0, 0, w, h);
+    const padT = 10, padB = 10;
+    const Y = (dbm) => padT + (60 - dbm) / 200 * (h - padT - padB);
+    lctx.font = "10px ui-monospace, Consolas, monospace";
+    // axis
+    lctx.strokeStyle = "rgba(148,180,170,.3)";
+    lctx.beginPath();
+    lctx.moveTo(54, padT);
+    lctx.lineTo(54, h - padB);
+    lctx.stroke();
+    for (let d = 60; d >= -140; d -= 20) {
+      const y = Y(d);
+      lctx.strokeStyle = "rgba(148,180,170,.15)";
+      lctx.beginPath(); lctx.moveTo(48, y); lctx.lineTo(w - 8, y); lctx.stroke();
+      lctx.fillStyle = "rgba(160,190,182,.6)";
+      lctx.fillText((d > 0 ? "+" : "") + d, 8, y + 3);
+    }
+    // reference marks
+    for (const m of LADDER) {
+      const y = Y(m.dbm);
+      lctx.fillStyle = "rgba(125,223,208,.85)";
+      lctx.beginPath();
+      lctx.arc(58, y, 3, 0, Math.PI * 2);
+      lctx.fill();
+      lctx.fillStyle = "rgba(160,190,182,.85)";
+      lctx.fillText(m.label, 68, y + 3);
+    }
+    // cursor
+    const cur = +$("dbmSlider").value;
+    const cy = Y(cur);
+    lctx.strokeStyle = "#fbbf24";
+    lctx.lineWidth = 2;
+    lctx.beginPath();
+    lctx.moveTo(46, cy);
+    lctx.lineTo(w - 8, cy);
+    lctx.stroke();
+  }
+
+  function updDbm() {
+    const dbm = +$("dbmSlider").value;
+    $("dbmOut").textContent = (dbm > 0 ? "+" : dbm < 0 ? "−" : "") + Math.abs(dbm) + " dBm";
+    $("wattOut").textContent = fmtWatt(dbm);
+    let note = "";
+    if (dbm >= 20) note = "送信機の世界";
+    else if (dbm >= -60) note = "しっかり受かる電波";
+    else if (dbm >= -111) note = "弱いが雑音床よりは上";
+    else note = "熱雑音より弱い — 相関処理なしでは受信不可能";
+    $("dbmNote").textContent = note;
+    drawLadder();
+  }
+  $("dbmSlider").addEventListener("input", updDbm);
+
+  // ---------- B: link budget ----------
+  const budget = $("budget");
+  const bctx = budget.getContext("2d");
+  const NOISE_FLOOR = -111;   // dBm in 2 MHz
+  const PROC_GAIN = 43;       // dB
+
+  function stages() {
+    const rxg = +$("rxGain").value;
+    const loss = +$("blockLoss").value;
+    return [
+      { label: "衛星送信電力", delta: null, abs: 44.3, note: "≈27W" },
+      { label: "送信アンテナ利得", delta: +13.4 },
+      { label: "自由空間損失（2万km）", delta: -182.5 },
+      { label: "大気・その他損失", delta: -2.5 },
+      { label: "受信アンテナ利得", delta: rxg },
+      { label: "遮蔽・屋内減衰", delta: -loss },
+    ];
+  }
+
+  function drawBudget() {
+    const { w, h } = fitCanvas(budget, 0.5);
+    bctx.clearRect(0, 0, w, h);
+    bctx.fillStyle = "#0a1210";
+    bctx.fillRect(0, 0, w, h);
+    const st = stages();
+    const padL = 46, padR = 14, padT = 14, padB = 40;
+    const DB_TOP = 70, DB_BOT = -180;
+    const Y = (dbm) => padT + (DB_TOP - dbm) / (DB_TOP - DB_BOT) * (h - padT - padB);
+    const n = st.length + 1; // + post-correlation column
+    const colW = (w - padL - padR) / n;
+    bctx.font = "10px ui-monospace, Consolas, monospace";
+
+    // y grid
+    for (let d = 60; d >= -180; d -= 30) {
+      const y = Y(d);
+      bctx.strokeStyle = "rgba(148,180,170,.1)";
+      bctx.beginPath(); bctx.moveTo(padL, y); bctx.lineTo(w - padR, y); bctx.stroke();
+      bctx.fillStyle = "rgba(160,190,182,.55)";
+      bctx.fillText((d > 0 ? "+" : "") + d, 6, y + 3);
+    }
+    bctx.fillStyle = "rgba(160,190,182,.55)";
+    bctx.fillText("dBm", 6, padT - 2);
+
+    // noise floor line
+    const ny = Y(NOISE_FLOOR);
+    bctx.strokeStyle = "rgba(248,113,113,.6)";
+    bctx.setLineDash([5, 5]);
+    bctx.beginPath(); bctx.moveTo(padL, ny); bctx.lineTo(w - padR, ny); bctx.stroke();
+    bctx.setLineDash([]);
+    bctx.fillStyle = "rgba(248,113,113,.85)";
+    bctx.fillText("熱雑音床 −111dBm（2MHz）", padL + 4, ny - 5);
+
+    // staircase
+    let cum = 0;
+    let x = padL;
+    const segW = colW * 0.72;
+    st.forEach((s, i) => {
+      const prev = cum;
+      cum = s.abs !== null && s.delta === null ? s.abs : cum + s.delta;
+      const y = Y(cum);
+      // connector
+      if (i > 0) {
+        bctx.strokeStyle = "rgba(148,180,170,.4)";
+        bctx.beginPath();
+        bctx.moveTo(x, Y(prev));
+        bctx.lineTo(x + colW * 0.14, Y(prev));
+        bctx.lineTo(x + colW * 0.14, y);
+        bctx.stroke();
+      }
+      // level segment
+      bctx.strokeStyle = "#34d399";
+      bctx.lineWidth = 3;
+      bctx.beginPath();
+      bctx.moveTo(x + colW * 0.14, y);
+      bctx.lineTo(x + colW * 0.14 + segW, y);
+      bctx.stroke();
+      bctx.lineWidth = 1;
+      // delta label
+      bctx.fillStyle = s.delta === null ? "rgba(230,238,236,.9)" : (s.delta >= 0 ? "rgba(52,211,153,.9)" : "rgba(251,191,36,.9)");
+      const dl = s.delta === null ? (s.note || "") : ((s.delta >= 0 ? "+" : "") + s.delta.toFixed(1));
+      bctx.fillText(dl, x + colW * 0.16, y - 6);
+      // stage label (wrapped diagonally at bottom)
+      bctx.save();
+      bctx.translate(x + colW * 0.4, h - padB + 12);
+      bctx.rotate(0.28);
+      bctx.fillStyle = "rgba(160,190,182,.8)";
+      bctx.fillText(s.label, 0, 0);
+      bctx.restore();
+      x += colW;
+    });
+
+    const received = cum;
+    // post-correlation effective level
+    const post = received + PROC_GAIN;
+    const py = Y(post);
+    bctx.strokeStyle = "#22d3ee";
+    bctx.lineWidth = 3;
+    bctx.beginPath();
+    bctx.moveTo(x + colW * 0.14, py);
+    bctx.lineTo(x + colW * 0.14 + segW, py);
+    bctx.stroke();
+    bctx.lineWidth = 1.4;
+    // arrow from received to post
+    bctx.strokeStyle = "#22d3ee";
+    bctx.beginPath();
+    bctx.moveTo(x + colW * 0.14 + segW / 2, Y(received) - 2);
+    bctx.lineTo(x + colW * 0.14 + segW / 2, py + 4);
+    bctx.stroke();
+    bctx.beginPath();
+    bctx.moveTo(x + colW * 0.14 + segW / 2 - 4, py + 10);
+    bctx.lineTo(x + colW * 0.14 + segW / 2, py + 3);
+    bctx.lineTo(x + colW * 0.14 + segW / 2 + 4, py + 10);
+    bctx.stroke();
+    bctx.fillStyle = "rgba(34,211,238,.9)";
+    bctx.fillText("+43 逆拡散", x + colW * 0.14, (py + Y(received)) / 2);
+    bctx.save();
+    bctx.translate(x + colW * 0.4, h - padB + 12);
+    bctx.rotate(0.28);
+    bctx.fillStyle = "rgba(34,211,238,.85)";
+    bctx.fillText("相関後（実効）", 0, 0);
+    bctx.restore();
+
+    return received;
+  }
+
+  function updBudget() {
+    $("rxGainOut").textContent = (+$("rxGain").value >= 0 ? "+" : "") + (+$("rxGain").value).toFixed(1) + " dBi";
+    $("blockLossOut").textContent = $("blockLoss").value + " dB";
+    const received = drawBudget();
+    const snr = received - NOISE_FLOOR;
+    const cn0 = received + 174;
+    const postSnr = snr + PROC_GAIN;
+    $("lbRead").innerHTML =
+      "受信電力 <b>" + received.toFixed(1) + " dBm</b>" +
+      "<span>SNR（相関前）<b>" + snr.toFixed(1) + " dB</b></span>" +
+      "<span>C/N₀ <b>" + cn0.toFixed(1) + " dB-Hz</b></span>" +
+      "<span>相関後SNR <b>" + postSnr.toFixed(1) + " dB</b></span>";
+    const v = $("verdict");
+    if (cn0 >= 45) { v.className = "ok"; v.textContent = "C/N₀ " + cn0.toFixed(0) + " dB-Hz — 良好な受信（屋外オープンスカイ相当）"; }
+    else if (cn0 >= 35) { v.className = "ok"; v.textContent = "C/N₀ " + cn0.toFixed(0) + " dB-Hz — 実用レベルの受信"; }
+    else if (cn0 >= 28) { v.className = "warn"; v.textContent = "C/N₀ " + cn0.toFixed(0) + " dB-Hz — 弱い。測位精度が落ち、追尾ぎりぎり"; }
+    else { v.className = "bad"; v.textContent = "C/N₀ " + cn0.toFixed(0) + " dB-Hz — 追尾不能。受信機はこの衛星を失う"; }
+  }
+  $("rxGain").addEventListener("input", updBudget);
+  $("blockLoss").addEventListener("input", updBudget);
+  document.querySelectorAll(".presets button").forEach((b) => {
+    b.addEventListener("click", () => {
+      $("blockLoss").value = b.dataset.loss;
+      updBudget();
+    });
+  });
+
+  window.addEventListener("resize", () => { drawLadder(); updBudget(); });
+  if (window.ResizeObserver) new ResizeObserver(() => { updDbm(); updBudget(); }).observe(ladder);
+  updDb();
+  updDbm();
+  updBudget();
+})();
+</script>
+</body>
+</html>

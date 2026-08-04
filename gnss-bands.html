@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>GNSS周波数帯マップ | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  nav.site-nav {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    max-width: 1060px; margin: 0 auto; padding: 12px 16px 0; font-size: .88rem;
+  }
+  nav.site-nav .brand { font-weight: 700; margin-right: 12px; letter-spacing: .02em; }
+  nav.site-nav a { color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 999px; }
+  nav.site-nav a:hover { color: var(--accent); background: var(--surface2); }
+  nav.site-nav a.active { color: var(--accent); background: var(--surface2); font-weight: 600; }
+  nav.site-nav a.lang { margin-left: auto; border: 1px solid var(--border); font-weight: 600; }
+  nav.site-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+
+  .sysbar { display: flex; gap: 6px 14px; flex-wrap: wrap; align-items: center; }
+  .sysbar .lbl { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+  .sysbar label {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: .86rem; cursor: pointer;
+    padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface2);
+  }
+  .sysbar label i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; background: var(--c); }
+  .sysbar input { accent-color: var(--accent); }
+
+  .chart-panel { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  canvas.chart { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; cursor: crosshair; }
+  .chart-note { font-size: .8rem; color: var(--muted); padding: 0 4px; }
+  #tip {
+    position: fixed;
+    pointer-events: none;
+    background: rgba(10, 20, 18, 0.95);
+    color: #e6eeec;
+    border: 1px solid #3c5a52;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: .8rem;
+    line-height: 1.5;
+    max-width: 280px;
+    z-index: 10;
+    display: none;
+  }
+  #tip b { color: #7ddfd0; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary {
+    cursor: pointer; padding: 12px 16px;
+    font-weight: 600; font-size: .92rem; list-style-position: inside;
+  }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>GNSS周波数帯マップ</h1>
+    <p>各国GNSSが使う周波数帯を1本の軸に並べて比較。どこが重なり、どこが独自かを見る</p>
+  </header>
+
+  <div class="panel sysbar" id="sysbar">
+    <span class="lbl">表示する測位システム:</span>
+  </div>
+
+  <div class="panel chart-panel">
+    <canvas class="chart" id="chart" aria-label="GNSS各システムの周波数帯を横軸周波数で並べた帯グラフ"></canvas>
+    <div class="chart-note">横軸: 周波数 [MHz]（L帯 1150〜1620 MHz）。帯にマウスを乗せると詳細を表示。縦の点線は複数システムが共用する周波数。NavICはこのほかS帯 2492.028 MHz も使用（軸の範囲外）。</div>
+  </div>
+  <div id="tip"></div>
+
+  <details class="note" open>
+    <summary>見どころ — なぜ同じ周波数に集まるのか</summary>
+    <div class="body">
+      <p><strong>1575.42 MHz（L1/E1/B1C）と1176.45 MHz（L5/E5a/B2a）に注目。</strong>GPS・QZSS・Galileo・BeiDou・NavICが同じ中心周波数に信号を置いています。これは偶然ではなく<strong>相互運用性（interoperability）</strong>のための国際協調の結果です。受信機は1つのアンテナ・1つのRF回路で複数システムをまとめて受信でき、「全部合わせて衛星数を稼ぐ」マルチGNSS受信が安価に実現します。スマホのGNSSチップがまさにこれです。</p>
+      <p>一方、GLONASSのG1/G2は少し離れた独自の周波数にあり、しかも衛星ごとに周波数をずらすFDMA方式（新しいG3はCDMA化して他システムに接近）。BeiDouのB3やGalileoのE6、QZSSのL6も各システム独自の帯域で、補強・高精度サービスなど差別化機能に使われています。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>そもそもなぜ「L帯」（1.1〜1.6 GHz）なのか</summary>
+    <div class="body">
+      <p>衛星測位の電波はほぼすべてL帯に集まっています。理由はバランスの良さです: 周波数が低いほど電離層の影響が大きく（誤差・シンチレーション）、高いほど雨や大気による減衰が増え、また同じアンテナ利得を得るのが難しくなります。L帯は電離層の影響がそこそこ小さく、天候の影響もほぼ無視でき、アンテナも小型化できる「ちょうどいい」帯域です。</p>
+      <p>加えてL1やL5周辺は航空無線航法（ARNS）に割り当てられた保護帯域で、他の電波システムからの干渉が規制上抑えられていることも、安全用途（航空など）に重要です。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>FDMAとCDMA — GLONASSだけ形が違う理由</summary>
+    <div class="body">
+      <p>GPSをはじめ多くのGNSSは<strong>CDMA</strong>: 全衛星が同じ中心周波数で送信し、衛星ごとに違う拡散符号（PRNコード）で区別します。一方、従来のGLONASSは<strong>FDMA</strong>: 同じ符号を使い、衛星ごとに周波数を約0.5625 MHzずつずらして区別します。グラフでG1/G2の帯がやや幅広なのは、この衛星ごとのチャネルが並んでいるためです。</p>
+      <p>FDMAは受信機のRF設計が複雑になりがちで、他システムとの相互運用もしにくいため、GLONASSも新世代ではCDMA信号（G3ほか）を追加しています。</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  // band edges are approximate main-lobe / allocation extents, MHz
+  const SYSTEMS = [
+    { key: "gps", label: "GPS（米国）", color: "#3b82f6", bands: [
+      { name: "L1 C/A・L1C", lo: 1563.0, hi: 1587.0, fc: 1575.42, use: "基本測位。すべての受信機が対応する看板信号" },
+      { name: "L2C / L2P", lo: 1215.0, hi: 1239.6, fc: 1227.60, use: "2周波目。電離層補正・測量用途" },
+      { name: "L5", lo: 1164.0, hi: 1189.0, fc: 1176.45, use: "次世代高精度信号。広帯域でマルチパスに強い" },
+    ]},
+    { key: "qzs", label: "QZSS みちびき（日本）", color: "#ef4444", bands: [
+      { name: "L1 C/A・L1C・L1S", lo: 1563.0, hi: 1587.0, fc: 1575.42, use: "GPS互換の測位信号＋サブメータ級補強(L1S)" },
+      { name: "L2C", lo: 1215.0, hi: 1239.6, fc: 1227.60, use: "GPS互換の2周波目" },
+      { name: "L5 / L5S", lo: 1164.0, hi: 1189.0, fc: 1176.45, use: "GPS互換の広帯域信号" },
+      { name: "L6 (CLAS)", lo: 1258.0, hi: 1300.0, fc: 1278.75, use: "cm級測位補強CLASのデータ配信。QZSS独自" },
+    ]},
+    { key: "glo", label: "GLONASS（ロシア）", color: "#a855f7", bands: [
+      { name: "G1 (FDMA)", lo: 1593.0, hi: 1610.0, fc: 1602.0, use: "衛星ごとに周波数をずらすFDMA方式" },
+      { name: "G2 (FDMA)", lo: 1237.0, hi: 1254.0, fc: 1246.0, use: "FDMAの2周波目" },
+      { name: "G3 (CDMA)", lo: 1190.0, hi: 1212.0, fc: 1202.025, use: "新世代のCDMA信号。他システムに接近" },
+    ]},
+    { key: "gal", label: "Galileo（欧州）", color: "#f59e0b", bands: [
+      { name: "E1", lo: 1559.0, hi: 1591.0, fc: 1575.42, use: "GPS L1と同一中心周波数。相互運用設計" },
+      { name: "E6 (HAS)", lo: 1260.0, hi: 1300.0, fc: 1278.75, use: "高精度サービスHASのデータ配信" },
+      { name: "E5 (E5a+E5b)", lo: 1164.0, hi: 1215.0, fc: 1191.795, use: "超広帯域AltBOC。E5a=1176.45はGPS L5と共用" },
+    ]},
+    { key: "bds", label: "BeiDou 北斗（中国）", color: "#10b981", bands: [
+      { name: "B1I", lo: 1553.0, hi: 1569.0, fc: 1561.098, use: "従来信号。L1のすぐ隣" },
+      { name: "B1C", lo: 1569.0, hi: 1583.0, fc: 1575.42, use: "新信号。GPS L1C互換設計" },
+      { name: "B2a", lo: 1164.0, hi: 1189.0, fc: 1176.45, use: "GPS L5互換の広帯域信号" },
+      { name: "B2b (PPP-B2b)", lo: 1195.0, hi: 1219.0, fc: 1207.14, use: "測位＋高精度補強PPPの配信" },
+      { name: "B3I", lo: 1258.0, hi: 1279.0, fc: 1268.52, use: "独自帯域。高精度・軍用系" },
+    ]},
+    { key: "irn", label: "NavIC（インド）", color: "#ec4899", bands: [
+      { name: "L5", lo: 1164.0, hi: 1189.0, fc: 1176.45, use: "GPS L5と同帯域。ほかにS帯2492.028 MHzも使用（図の範囲外）" },
+    ]},
+  ];
+
+  const FMIN = 1150, FMAX = 1620;
+  const SHARED = [
+    { f: 1176.45, tag: "1176.45" },
+    { f: 1227.60, tag: "1227.60" },
+    { f: 1278.75, tag: "1278.75" },
+    { f: 1575.42, tag: "1575.42" },
+  ];
+
+  const enabled = { gps: true, qzs: true, glo: false, gal: false, bds: false, irn: false };
+
+  // ---- system checkboxes ----
+  const bar = $("sysbar");
+  for (const sys of SYSTEMS) {
+    const label = document.createElement("label");
+    label.style.setProperty("--c", sys.color);
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = enabled[sys.key];
+    cb.addEventListener("change", () => { enabled[sys.key] = cb.checked; draw(); });
+    const sw = document.createElement("i");
+    label.appendChild(cb);
+    label.appendChild(sw);
+    label.appendChild(document.createTextNode(sys.label));
+    bar.appendChild(label);
+  }
+
+  // ---- chart ----
+  const cv = $("chart");
+  const ctx = cv.getContext("2d");
+  const tip = $("tip");
+  let hitBoxes = [];   // {x,y,w,h, sys, band}
+
+  const ROW_H = 46, BAR_H = 26, TOP_PAD = 34, BOTTOM_PAD = 30, LEFT_PAD = 8, RIGHT_PAD = 8;
+
+  function fitCanvas(rows) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth;
+    const h = TOP_PAD + rows * ROW_H + BOTTOM_PAD;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      cv.style.height = h + "px";
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  function draw() {
+    const active = SYSTEMS.filter((s) => enabled[s.key]);
+    const rows = Math.max(active.length, 1);
+    const { w, h } = fitCanvas(rows);
+    const plotW = w - LEFT_PAD - RIGHT_PAD;
+    const FX = (f) => LEFT_PAD + (f - FMIN) / (FMAX - FMIN) * plotW;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#0a1210";
+    ctx.fillRect(0, 0, w, h);
+    hitBoxes = [];
+
+    ctx.font = "10px ui-monospace, Consolas, monospace";
+
+    // frequency gridlines every 50 MHz
+    for (let f = 1150; f <= FMAX; f += 50) {
+      const x = FX(f);
+      ctx.strokeStyle = "rgba(148, 180, 170, 0.12)";
+      ctx.beginPath();
+      ctx.moveTo(x, TOP_PAD - 14);
+      ctx.lineTo(x, h - BOTTOM_PAD + 6);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(160, 190, 182, 0.6)";
+      ctx.fillText(String(f), x - 12, h - BOTTOM_PAD + 18);
+    }
+    ctx.fillStyle = "rgba(160, 190, 182, 0.6)";
+    ctx.fillText("MHz", w - 30, h - 6);
+
+    // shared-frequency guides
+    for (const g of SHARED) {
+      const x = FX(g.f);
+      ctx.strokeStyle = "rgba(125, 223, 208, 0.35)";
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(x, TOP_PAD - 14);
+      ctx.lineTo(x, h - BOTTOM_PAD + 6);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "rgba(125, 223, 208, 0.85)";
+      ctx.fillText(g.tag, x - 20, TOP_PAD - 20);
+    }
+
+    if (!active.length) {
+      ctx.fillStyle = "rgba(160, 190, 182, 0.7)";
+      ctx.font = "13px sans-serif";
+      ctx.fillText("上のチェックボックスから表示するシステムを選択", w / 2 - 140, h / 2);
+      return;
+    }
+
+    // system rows
+    active.forEach((sys, ri) => {
+      const yTop = TOP_PAD + ri * ROW_H;
+      const yBar = yTop + (ROW_H - BAR_H) / 2 + 4;
+      // row label
+      ctx.fillStyle = "rgba(230, 238, 236, 0.85)";
+      ctx.font = "600 11px sans-serif";
+      ctx.fillText(sys.label, LEFT_PAD + 2, yTop + 10);
+      ctx.font = "10px ui-monospace, Consolas, monospace";
+      // row separator
+      ctx.strokeStyle = "rgba(148, 180, 170, 0.08)";
+      ctx.beginPath();
+      ctx.moveTo(0, yTop + ROW_H);
+      ctx.lineTo(w, yTop + ROW_H);
+      ctx.stroke();
+
+      for (const b of sys.bands) {
+        const x1 = FX(b.lo), x2 = FX(b.hi);
+        const bw = Math.max(x2 - x1, 3);
+        // band rect
+        ctx.fillStyle = sys.color;
+        ctx.globalAlpha = 0.32;
+        ctx.beginPath();
+        ctx.roundRect(x1, yBar, bw, BAR_H, 4);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = sys.color;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.roundRect(x1, yBar, bw, BAR_H, 4);
+        ctx.stroke();
+        // center frequency tick
+        const xc = FX(b.fc);
+        ctx.beginPath();
+        ctx.moveTo(xc, yBar);
+        ctx.lineTo(xc, yBar + BAR_H);
+        ctx.stroke();
+        // label (inside if wide enough, else above)
+        ctx.fillStyle = "#e6eeec";
+        const short = b.name.split(" ")[0];
+        if (bw > ctx.measureText(b.name).width + 8) ctx.fillText(b.name, x1 + 4, yBar + BAR_H / 2 + 3);
+        else ctx.fillText(short, x1 + bw / 2 - ctx.measureText(short).width / 2, yBar - 4);
+
+        hitBoxes.push({ x: x1, y: yBar, w: bw, h: BAR_H, sys, band: b });
+      }
+    });
+  }
+
+  // ---- hover tooltip ----
+  cv.addEventListener("mousemove", (e) => {
+    const rect = cv.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const hit = hitBoxes.find((b) => mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h);
+    if (hit) {
+      tip.style.display = "block";
+      tip.style.left = Math.min(e.clientX + 14, window.innerWidth - 300) + "px";
+      tip.style.top = (e.clientY + 14) + "px";
+      tip.innerHTML = "<b>" + hit.sys.label + " — " + hit.band.name + "</b><br>" +
+        "中心 " + hit.band.fc.toFixed(2) + " MHz（約" + hit.band.lo.toFixed(0) + "〜" + hit.band.hi.toFixed(0) + " MHz）<br>" +
+        hit.band.use;
+    } else {
+      tip.style.display = "none";
+    }
+  });
+  cv.addEventListener("mouseleave", () => { tip.style.display = "none"; });
+
+  window.addEventListener("resize", draw);
+  draw();
+})();
+</script>
+</body>
+</html>
