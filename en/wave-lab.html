@@ -493,7 +493,7 @@
 
     const cx = w / 2, cy = h / 2;
     const maxAmp = Math.max(state.a.on ? state.a.amp : 0, state.b.on ? state.b.amp : 0, 1);
-    const R = (Math.min(w, h) / 2 - 12) / maxAmp;
+    const R = Math.max(0, (Math.min(w, h) / 2 - 12) / maxAmp);
 
     pctx.strokeStyle = COLORS.grid;
     pctx.lineWidth = 1;
@@ -551,7 +551,7 @@
 
   let last = performance.now();
   function loop(now) {
-    const dt = Math.min(0.1, (now - last) / 1000);
+    const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
     last = now;
     if (state.playing) {
       state.t += dt * state.speed;

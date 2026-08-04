@@ -620,8 +620,9 @@
       for (const r of results) {
         if (!r.tx) continue;
         const maxR = dist(r.S.x, r.S.y, RX.x, RX.y) * s;
+        if (!(maxR > 0)) continue;
         for (let k = 0; k < 3; k++) {
-          const rr = ((state.t * 60 + k * (maxR / 3 / s)) * s) % maxR;
+          const rr = Math.max(0, ((state.t * 60 + k * (maxR / 3 / s)) * s) % maxR);
           ctx.strokeStyle = C.wf;
           ctx.globalAlpha = 0.5 * (1 - rr / maxR) + 0.08;
           ctx.beginPath();
@@ -822,7 +823,7 @@
   // ---------- main loop ----------
   let last = performance.now();
   function loop(now) {
-    const dt = Math.min(0.1, (now - last) / 1000);
+    const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
     last = now;
     if (state.playing) state.t += dt;
     draw();
