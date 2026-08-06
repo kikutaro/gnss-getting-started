@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>Transmitting GNSS with SDR | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --ok: #10b981;
+    --warn: #d97706;
+    --bad: #dc2626;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --ok: #34d399; --warn: #fbbf24; --bad: #f87171;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --ok: #34d399; --warn: #fbbf24; --bad: #f87171;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --ok: #10b981; --warn: #d97706; --bad: #dc2626;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .lawbox {
+    border: 2px solid var(--bad);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 12px 16px;
+    font-size: .88rem;
+  }
+  .lawbox b { color: var(--bad); }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+  .tabs .lbl { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+  .tab-btn {
+    appearance: none; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface2); color: var(--text);
+    padding: 6px 14px; cursor: pointer; line-height: 1.3; text-align: center;
+  }
+  .tab-btn b { display: block; font-size: .86rem; }
+  .tab-btn small { display: block; font-size: .68rem; color: var(--muted); }
+  .tab-btn:hover { border-color: var(--accent); }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tab-btn.active small { color: rgba(255,255,255,.85); }
+  .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .ctl { display: grid; grid-template-columns: 11em 1fr 9em; align-items: center; gap: 10px; padding: 5px 0; }
+  .ctl .name { font-size: .82rem; color: var(--muted); }
+  .ctl output {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .84rem; text-align: right;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .radio-row { display: flex; gap: 16px; flex-wrap: wrap; padding: 4px 0; font-size: .86rem; }
+  .radio-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+  .lb-read { display: flex; gap: 8px 26px; flex-wrap: wrap; padding: 8px 2px 0; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .lb-read b { font-family: ui-monospace, Consolas, monospace; }
+  #verdict {
+    padding: 9px 12px; border-radius: 8px;
+    font-weight: 700; font-size: .92rem; margin-top: 10px;
+    background: var(--surface2);
+    border-left: 4px solid var(--muted);
+  }
+  #verdict.ok { border-left-color: var(--ok); color: var(--ok); }
+  #verdict.warn { border-left-color: var(--warn); color: var(--warn); }
+  #verdict.bad { border-left-color: var(--bad); color: var(--bad); }
+  button.act {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent); color: #fff;
+    border-radius: 8px; font-size: .86rem; font-weight: 600;
+    padding: 6px 16px; cursor: pointer; font-family: inherit;
+    margin-top: 8px;
+  }
+  button.act:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .freqbar { margin-top: 6px; }
+  .freqbar .bar {
+    position: relative; height: 26px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .freqbar .range { position: absolute; top: 0; bottom: 0; background: rgba(45,212,191,.25); }
+  .freqbar .mk { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--warn); }
+  .freqbar .lbl { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Transmitting GNSS with SDR</h1>
+    <p>Generating GPS / QZSS L1 C/A with LimeSDR XTRX / Mini 2.0 — designing a signal level that's "just right" for the receiver</p>
+  </header>
+
+  <div class="lawbox">
+    <b>⚠ Legal notice (read first):</b> Radiating in the GNSS bands (L1 etc.) over the air is <b>illegal in virtually every country</b> (in Japan under the Radio Act; GPS repeaters are also prohibited there). Always experiment over a <b>coax cable with generous attenuation</b>, or inside an RF shield box. The simulator below exists precisely to design that attenuation correctly.
+  </div>
+
+  <div class="panel">
+    <h3>TX LINK BUDGET — FROM SDR OUTPUT TO RECEIVER INPUT</h3>
+    <div class="tabs">
+      <span class="lbl">TX board:</span>
+      <button class="tab-btn" data-b="xtrx"><b>LimeSDR XTRX</b><small>max ≈ +5 dBm</small></button>
+      <button class="tab-btn" data-b="mini2"><b>LimeSDR Mini 2.0</b><small>max ≈ +10 dBm</small></button>
+      <button class="tab-btn" data-b="pluto"><b>ADALM-Pluto</b><small>max ≈ +7 dBm</small></button>
+      <button class="tab-btn" data-b="hackrf"><b>HackRF One</b><small>max ≈ +13 dBm</small></button>
+    </div>
+    <canvas class="dark" id="budget" aria-label="Power waterfall from SDR output to receiver input"></canvas>
+    <div class="ctl">
+      <span class="name">TX output (gain)</span>
+      <input type="range" id="txPow" min="-50" max="5" step="1" value="-20">
+      <output id="txPowOut">−20 dBm</output>
+    </div>
+    <div class="radio-row">
+      <label><input type="radio" name="conn" value="cable" checked>Wired (SMA cable)</label>
+      <label><input type="radio" name="conn" value="ota">Over the air (OTA) — <b style="color:var(--bad)">illegal</b>, shown for reference only</label>
+    </div>
+    <div class="ctl" id="attRow">
+      <span class="name">Attenuators</span>
+      <input type="range" id="att" min="0" max="140" step="1" value="60">
+      <output id="attOut">60 dB</output>
+    </div>
+    <div class="ctl" id="distRow" style="display:none">
+      <span class="name">Distance</span>
+      <input type="range" id="dist" min="-2" max="1" step="0.05" value="0">
+      <output id="distOut">1.0 m</output>
+    </div>
+    <div class="lb-read" id="txRead"></div>
+    <div id="verdict">—</div>
+    <button class="act" id="solveBtn">Auto-adjust to real-satellite level (−130 dBm)</button>
+    <p class="cap">Educational approximations (max output varies with frequency, settings and unit). Includes a flat 1 dB cable/connector loss. Real satellites arrive at ≈−130 dBm (see <a href="db-lab.html">dB &amp; Signal Power</a>).</p>
+  </div>
+
+  <div class="panel">
+    <h3>FREQUENCY ACCURACY — CAN THE RECEIVER EVEN FIND YOUR SIGNAL?</h3>
+    <div class="lb-read" id="freqRead"></div>
+    <div class="freqbar">
+      <div class="bar" id="fbar">
+        <div class="range" id="fSearch"></div>
+        <div class="mk" id="fMark"></div>
+      </div>
+      <div class="lbl"><span>−40 kHz</span><span>receiver acquisition search (±5 kHz typ.)</span><span>+40 kHz</span></div>
+    </div>
+    <p class="cap">Reference-clock error (ppm) maps directly to carrier offset: Δf = 1575.42 MHz × ppm. Acquisition search expects roughly ±5 kHz of Doppler; beyond that you must widen the search or correct the frequency (see <a href="gnss-obs.html">the 2-D acquisition search</a>).</p>
+  </div>
+
+  <details class="note" open>
+    <summary>Workflow — build and replay L1 C/A with gps-sdr-sim</summary>
+    <div class="body">
+      <p>The classic recipe: ① grab broadcast ephemeris (a RINEX brdc file) from IGS → ② generate an I/Q file for any position/time: <code>gps-sdr-sim -e brdcXXX.24n -l 35.68,139.77,50 -s 2600000</code> → ③ replay it through the SDR with LimeSuite (<code>limeplayer</code>) or SoapySDR. The receiver believes it is standing at Tokyo Station.</p>
+      <p>QZSS is L1 C/A-compatible with GPS (PRN 193+), so capable simulators generate QZSS satellites in the same framework. A ~2.6 Msps sample rate covers the C/A main lobe (±1 MHz) — easy for a LimeSDR Mini 2.0 or XTRX.</p>
+      <p>Legit uses: receiver bring-up, timing tests, jamming/spoofing robustness research. <strong>Deceiving someone else's receiver is a crime.</strong> Your own device, on a closed path, always.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Why 130 dB of attenuation? — what's wrong with "too strong"</summary>
+    <div class="body">
+      <p>0 dBm out of an SDR is <strong>10¹³ times (ten trillion times)</strong> the real satellite's −130 dBm. Feed that straight in and: ① the receiver's LNA/AGC saturates and works worse, not better; ② even the leakage jams every real GNSS receiver nearby (car navs, phones, cell-site timing!); ③ you may physically damage the front-end. So: turn TX gain down AND chain fixed attenuators (20/30 dB units) to land at −120…−135 dBm.</p>
+      <p>Judge the result by C/N₀ on the receiver: real-satellite-like is mid-40s dB-Hz; pinned at high-50s means too hot. It's exactly the link-budget thinking from <a href="db-lab.html">dB &amp; Signal Power</a>, applied to your bench.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Bench tips — where people get bitten</summary>
+    <div class="body">
+      <p><strong>DC block is mandatory</strong>: GNSS receivers put 3–5 V bias on the antenna port to power active antennas. Connect that straight to an SDR TX port and the bias flows into it — always insert a DC block.</p>
+      <p><strong>Phones need a shield box</strong>: phones have internal antennas, so no cable option. Legal testing means radiating faintly inside an RF-shielded enclosure.</p>
+      <p><strong>Mind the time</strong>: a receiver that locks onto a past-dated simulation jumps its clock into the past. Keep GNSS-time-synced equipment (PCs, timing gear) away from the test path.</p>
+      <p><strong>Consider starting with RX</strong>: before building a TX bench, receiving real L1 with an RTL-SDR + GNSS-SDR teaches the whole <a href="gnss-rx.html">receive chain</a> hands-on.</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  const BOARDS = {
+    xtrx:   { name: "LimeSDR XTRX",     max: 5,  min: -50, ppm: 0.5 },
+    mini2:  { name: "LimeSDR Mini 2.0", max: 10, min: -50, ppm: 1 },
+    pluto:  { name: "ADALM-Pluto",      max: 7,  min: -45, ppm: 25 },
+    hackrf: { name: "HackRF One",       max: 13, min: -35, ppm: 20 },
+  };
+  const CABLE_LOSS = 1;
+  const SAT_LEVEL = -130;
+  const L1 = 1575.42e6;
+
+  const S = { board: "xtrx", tx: -20, conn: "cable", att: 60, distLog: 0 };
+
+  const budget = $("budget");
+  const bctx = budget.getContext("2d");
+
+  function fitCanvas(cv, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth;
+    const h = Math.round(w * aspect);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      cv.style.height = h + "px";
+    }
+    cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  function pathLoss() {
+    if (S.conn === "cable") return { label: "attenuators", loss: S.att };
+    const d = Math.pow(10, S.distLog);
+    const fspl = 20 * Math.log10(d) + 20 * Math.log10(L1) - 147.55;
+    return { label: "free-space loss", loss: fspl };
+  }
+
+  function stages() {
+    const b = BOARDS[S.board];
+    const pl = pathLoss();
+    return [
+      { label: b.name + " out", abs: S.tx, delta: null },
+      { label: "cable etc.", delta: -CABLE_LOSS },
+      { label: pl.label, delta: -pl.loss },
+    ];
+  }
+
+  function drawBudget() {
+    const { w, h } = fitCanvas(budget, 0.44);
+    bctx.clearRect(0, 0, w, h);
+    bctx.fillStyle = "#0a1210";
+    bctx.fillRect(0, 0, w, h);
+    const st = stages();
+    const padL = 46, padR = 14, padT = 14, padB = 34;
+    const TOP = 20, BOT = -170;
+    const Y = (v) => padT + (TOP - v) / (TOP - BOT) * (h - padT - padB);
+    const n = st.length;
+    const colW = (w - padL - padR) / n;
+    bctx.font = "10px ui-monospace, Consolas, monospace";
+
+    for (let d = 20; d >= -170; d -= 30) {
+      const y = Y(d);
+      bctx.strokeStyle = "rgba(148,180,170,.1)";
+      bctx.beginPath(); bctx.moveTo(padL, y); bctx.lineTo(w - padR, y); bctx.stroke();
+      bctx.fillStyle = "rgba(160,190,182,.55)";
+      bctx.fillText((d > 0 ? "+" : "") + d, 6, y + 3);
+    }
+    bctx.fillStyle = "rgba(160,190,182,.55)";
+    bctx.fillText("dBm", 6, padT - 3);
+
+    const refs = [
+      { v: SAT_LEVEL, color: "rgba(52,211,153,.7)", label: "real satellite level −130 dBm" },
+      { v: -60, color: "rgba(248,113,113,.6)", label: "saturation / interference danger zone (above = NG)" },
+    ];
+    for (const r of refs) {
+      const y = Y(r.v);
+      bctx.strokeStyle = r.color;
+      bctx.setLineDash([5, 5]);
+      bctx.beginPath(); bctx.moveTo(padL, y); bctx.lineTo(w - padR, y); bctx.stroke();
+      bctx.setLineDash([]);
+      bctx.fillStyle = r.color;
+      bctx.fillText(r.label, padL + 4, y - 5);
+    }
+
+    let cum = 0, x = padL;
+    const segW = colW * 0.6;
+    st.forEach((s, i) => {
+      const prev = cum;
+      cum = s.abs !== undefined && s.delta === null ? s.abs : cum + s.delta;
+      const y = Y(Math.max(cum, BOT));
+      if (i > 0) {
+        bctx.strokeStyle = "rgba(148,180,170,.4)";
+        bctx.beginPath();
+        bctx.moveTo(x, Y(Math.max(prev, BOT)));
+        bctx.lineTo(x + colW * 0.2, Y(Math.max(prev, BOT)));
+        bctx.lineTo(x + colW * 0.2, y);
+        bctx.stroke();
+      }
+      bctx.strokeStyle = i === st.length - 1 ? "#22d3ee" : "#34d399";
+      bctx.lineWidth = 3;
+      bctx.beginPath();
+      bctx.moveTo(x + colW * 0.2, y);
+      bctx.lineTo(x + colW * 0.2 + segW, y);
+      bctx.stroke();
+      bctx.lineWidth = 1;
+      bctx.fillStyle = s.delta === null ? "rgba(230,238,236,.9)" : "rgba(251,191,36,.9)";
+      bctx.fillText(s.delta === null ? cum.toFixed(0) + " dBm" : s.delta.toFixed(1) + " dB", x + colW * 0.22, y - 6);
+      bctx.fillStyle = "rgba(160,190,182,.8)";
+      bctx.fillText(s.label, x + colW * 0.1, h - 10);
+      x += colW;
+    });
+    return cum;
+  }
+
+  function verdictFor(p) {
+    if (p > -60) return ["bad", "Receiver saturation/damage risk plus serious interference. Never do this"];
+    if (p > -100) return ["bad", "Way too hot (10,000×+ a real satellite). AGC saturates; even leakage can jam nearby GNSS"];
+    if (p > -120) return ["warn", "Still hot. It works, but unrealistically (C/N₀ pinned). Polite benches attenuate more"];
+    if (p >= -138) return ["ok", "Real-satellite equivalent ✓ — the ideal range for receiver testing"];
+    if (p >= -150) return ["warn", "Weak — marginal acquisition (useful for sensitivity testing, though)"];
+    return ["bad", "Too weak to acquire"];
+  }
+
+  function update() {
+    const b = BOARDS[S.board];
+    $("txPow").min = b.min; $("txPow").max = b.max;
+    if (S.tx > b.max) S.tx = b.max;
+    if (S.tx < b.min) S.tx = b.min;
+    $("txPow").value = S.tx;
+    $("txPowOut").textContent = (S.tx > 0 ? "+" : S.tx < 0 ? "−" : "") + Math.abs(S.tx) + " dBm";
+    $("attOut").textContent = S.att + " dB";
+    const d = Math.pow(10, S.distLog);
+    $("distOut").textContent = d < 1 ? (d * 100).toFixed(0) + " cm" : d.toFixed(1) + " m";
+    $("attRow").style.display = S.conn === "cable" ? "" : "none";
+    $("distRow").style.display = S.conn === "ota" ? "" : "none";
+
+    const rx = drawBudget();
+    const cn0 = rx + 174 - 2;
+    $("txRead").innerHTML =
+      "Receiver input <b>" + rx.toFixed(1) + " dBm</b>" +
+      "<span>vs real satellite <b>" + (rx - SAT_LEVEL >= 0 ? "+" : "") + (rx - SAT_LEVEL).toFixed(1) + " dB</b></span>" +
+      "<span>equiv. C/N₀ <b>" + (cn0 > 60 ? "60+ (pinned)" : cn0.toFixed(0)) + " dB-Hz</b></span>";
+    const [cls, msg] = verdictFor(rx);
+    const v = $("verdict");
+    v.className = cls;
+    v.textContent = msg + (S.conn === "ota" ? " (and OTA is illegal in the first place)" : "");
+
+    const df = L1 * b.ppm / 1e6;
+    $("freqRead").innerHTML =
+      b.name + ": reference clock <b>±" + b.ppm + " ppm</b>" +
+      "<span>offset at L1 <b>±" + (df / 1000).toFixed(1) + " kHz</b></span>" +
+      "<span>" + (df <= 5000 ? "✓ within normal acquisition search" : "⚠ needs wider search or frequency correction") + "</span>";
+    const HALF = 40e3;
+    const pct = Math.min(Math.max(df / HALF * 50, 0), 49);
+    $("fSearch").style.left = (50 - 5e3 / HALF * 50) + "%";
+    $("fSearch").style.width = (2 * 5e3 / HALF * 50) + "%";
+    $("fMark").style.left = "calc(" + (50 + pct) + "% - 1px)";
+  }
+
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      S.board = btn.dataset.b;
+      document.querySelectorAll(".tab-btn").forEach((x) => x.classList.toggle("active", x === btn));
+      update();
+    });
+  });
+  $("txPow").addEventListener("input", (e) => { S.tx = +e.target.value; update(); });
+  $("att").addEventListener("input", (e) => { S.att = +e.target.value; update(); });
+  $("dist").addEventListener("input", (e) => { S.distLog = +e.target.value; update(); });
+  document.querySelectorAll('input[name="conn"]').forEach((r) => {
+    r.addEventListener("change", (e) => { S.conn = e.target.value; update(); });
+  });
+  $("solveBtn").addEventListener("click", () => {
+    if (S.conn !== "cable") {
+      S.conn = "cable";
+      document.querySelector('input[name="conn"][value="cable"]').checked = true;
+    }
+    let need = S.tx - CABLE_LOSS - SAT_LEVEL;
+    if (need > 140) { S.tx = Math.max(BOARDS[S.board].min, SAT_LEVEL + 140 + CABLE_LOSS); need = S.tx - CABLE_LOSS - SAT_LEVEL; }
+    S.att = Math.round(Math.min(Math.max(need, 0), 140));
+    $("att").value = S.att;
+    update();
+  });
+
+  document.querySelector('.tab-btn[data-b="xtrx"]').classList.add("active");
+  window.addEventListener("resize", update);
+  if (window.ResizeObserver) new ResizeObserver(update).observe(budget);
+  update();
+})();
+</script>
+</body>
+</html>

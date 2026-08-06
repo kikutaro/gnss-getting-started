@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>SDR入門とボード図鑑 | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+
+  /* block diagram */
+  .bd { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; padding: 6px 0; }
+  .bd .box {
+    border: 2px solid var(--bc, var(--border));
+    color: var(--bc, var(--text));
+    border-radius: 10px;
+    padding: 8px 14px;
+    text-align: center;
+    font-size: .84rem;
+    line-height: 1.35;
+    background: var(--surface2);
+    min-width: 8em;
+  }
+  .bd .box b { display: block; font-size: .9rem; }
+  .bd .box small { color: var(--muted); font-size: .72rem; }
+  .bd .arr { font-size: 1.2rem; color: var(--muted); }
+
+  #tip {
+    position: fixed;
+    pointer-events: none;
+    background: rgba(10, 20, 18, 0.95);
+    color: #e6eeec;
+    border: 1px solid #3c5a52;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: .8rem;
+    line-height: 1.5;
+    max-width: 300px;
+    z-index: 10;
+    display: none;
+  }
+  #tip b { color: #7ddfd0; }
+
+  .binfo {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: 8px;
+    font-size: .86rem;
+  }
+  .binfo h4 { margin: 0 0 4px; font-size: .95rem; color: var(--accent); }
+  .binfo .specs { display: flex; gap: 6px 22px; flex-wrap: wrap; font-size: .82rem; color: var(--muted); margin-bottom: 6px; }
+  .binfo .specs b { color: var(--text); font-family: ui-monospace, Consolas, monospace; }
+  .binfo p { margin: 0; }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 5px 9px; text-align: left; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>SDR入門とボード図鑑</h1>
+    <p>Software Defined Radio — 無線機を「ソフトウェア」にした道具と、GNSS学習に使える定番ボードたち</p>
+  </header>
+
+  <div class="panel">
+    <h3>SDRとは — ハードは「電波⇔数値」の変換だけ</h3>
+    <div class="bd">
+      <div class="box"><b>アンテナ</b><small>電波</small></div>
+      <span class="arr">→</span>
+      <div class="box" style="--bc:#60a5fa"><b>RFフロントエンド</b><small>増幅・周波数変換<br>（チューナー）</small></div>
+      <span class="arr">→</span>
+      <div class="box" style="--bc:#fbbf24"><b>ADC / DAC</b><small>アナログ⇔デジタル<br>I/Qサンプル</small></div>
+      <span class="arr">→</span>
+      <div class="box" style="--bc:#34d399"><b>PC / FPGA</b><small>復調・変調は<br>ぜんぶソフトウェア</small></div>
+    </div>
+    <p class="cap">従来の無線機は「FM専用」「GPS専用」のように復調回路がハードに焼き付いていた。SDRはハードを最小限（周波数変換＋AD/DA変換）にして、残りをソフトウェアで行う。同じ1枚のボードが、コードを変えるだけでFMラジオにも、航空無線受信機にも、<strong>GNSS受信機・GNSS信号発生器</strong>にもなる。<a href="gnss-rx.html">受信の流れ</a>で見たGNSSモジュールの「捕捉・追尾・復号」を、自分のPCで動かせるということ。</p>
+  </div>
+
+  <div class="panel">
+    <h3>周波数カバレッジ — 各ボードが受信・送信できる範囲（クリックで詳細）</h3>
+    <canvas class="dark" id="cov" aria-label="各SDRボードの対応周波数範囲と GNSS 周波数の位置"></canvas>
+    <div id="tip"></div>
+    <div class="binfo" id="binfo"></div>
+    <p class="cap">縦の緑破線がGNSSの周波数（L5 1176 / L1 1575 MHz）。どのボードもGNSS帯をカバーしているが、「カバーしている」と「GNSSに向いている」は別問題（ビット数と基準クロック精度が効く — 下の解説参照）。数値は代表値の目安で、改造・設定で変わるものもある。</p>
+  </div>
+
+  <div class="panel">
+    <h3>比較表（目安）</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>ボード</th><th>周波数範囲</th><th>分解能</th><th>帯域/レート</th><th>送受信</th><th>基準クロック</th><th>実売目安</th></tr>
+        <tr><td>RTL-SDR (V4)</td><td class="num">24M–1.77GHz</td><td class="num">8bit</td><td class="num">~2.4 Msps</td><td>受信のみ</td><td class="num">±1ppm (TCXO)</td><td class="num">~¥6千</td></tr>
+        <tr><td>HackRF One</td><td class="num">1M–6GHz</td><td class="num">8bit</td><td class="num">20 Msps</td><td>半二重</td><td class="num">±20ppm</td><td class="num">~¥5万</td></tr>
+        <tr><td>ADALM-Pluto</td><td class="num">325M–3.8GHz*</td><td class="num">12bit</td><td class="num">61.44 Msps*</td><td>全二重 1T1R</td><td class="num">±25ppm</td><td class="num">~¥4万</td></tr>
+        <tr><td>LimeSDR Mini 2.0</td><td class="num">10M–3.5GHz</td><td class="num">12bit</td><td class="num">30.72 MHz帯域</td><td>全二重 1T1R</td><td class="num">VCTCXO ±1ppm級</td><td class="num">~¥7万</td></tr>
+        <tr><td>LimeSDR XTRX</td><td class="num">30M–3.8GHz</td><td class="num">12bit</td><td class="num">~120 MHz帯域 (PCIe)</td><td>全二重 2T2R</td><td class="num">VCTCXO ±0.5ppm級</td><td class="num">~¥10万</td></tr>
+        <tr><td>bladeRF 2.0 micro</td><td class="num">47M–6GHz</td><td class="num">12bit</td><td class="num">61.44 Msps</td><td>全二重 2T2R</td><td class="num">VCTCXO ±1ppm</td><td class="num">~¥8万</td></tr>
+        <tr><td>USRP B210</td><td class="num">70M–6GHz</td><td class="num">12bit</td><td class="num">56 MHz帯域</td><td>全二重 2T2R</td><td class="num">±2ppm (GPSDO対応)</td><td class="num">~¥30万</td></tr>
+      </table>
+    </div>
+    <p class="cap">* Plutoは改造（設定変更）で70M–6GHzまで拡張可能。USB 2.0接続のため実効転送レートは数Msps程度。価格は為替・時期で大きく変動。</p>
+  </div>
+
+  <details class="note" open>
+    <summary>I/Qサンプルとは — SDRの共通言語</summary>
+    <div class="body">
+      <p>SDRが吐き出す（受け取る）のは「I/Qサンプル」という複素数の列です。搬送波を基準に、同相成分I（cos側）と直交成分Q（sin側）の2つの数値で信号を表します。<a href="wave-lab.html">波の基礎</a>で見た回転ベクトル（フェーザ）そのもので、I/Qは矢印のX座標とY座標。振幅は √(I²+Q²)、位相は atan2(Q, I)。</p>
+      <p>つまりI/Qサンプルさえあれば、振幅も周波数も位相もあとから自由に取り出せる — AM/FM/PSKぜんぶソフトで復調できる理由がこれです。gps-sdr-simのようなツールが生成する「I/Qファイル」は、GNSS信号の波形をこの形式で記録したものです。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>ビット数（8bit vs 12bit）— ダイナミックレンジの差</summary>
+    <div class="body">
+      <p>ADCの分解能1ビットあたり約6dBのダイナミックレンジが決まります。8bitなら約48dB、12bitなら約72dB。<a href="db-lab.html">dBのページ</a>の感覚でいうと、「一番強い信号と一番弱い信号の差をどこまで同時に扱えるか」の違いです。</p>
+      <p>GNSSは雑音より弱い信号を相関で掘り出すので、量子化は粗くても意外と動きます（専用チップは1〜3bit！）。ただし近くに強い電波（携帯基地局など）があると、8bitでは強い信号がレンジを食いつぶして弱いGNSSが押し出されがち。12bit機のほうが安定します。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>基準クロック精度 — GNSSでは±ppmが勝負</summary>
+    <div class="body">
+      <p>SDRの周波数はボード上の基準発振器（XO/TCXO/VCTCXO）から作られ、その誤差はppm（100万分の1）で表されます。L1=1575.42MHzでは <strong>1ppmのズレ＝約1.58kHzの周波数オフセット</strong>。<a href="gnss-obs.html">捕捉の2次元サーチ</a>はドップラー±5kHz程度を想定しているので、±20ppm（≈±31kHz）のHackRF素の状態では、サーチ範囲を大きく広げないと衛星が見つかりません。</p>
+      <p>LimeSDR系がGNSS用途で人気なのは、VCTCXO（±0.5〜1ppm級）を積んでいてこの問題が小さいから。逆にRTL-SDRでも「TCXO搭載版」ならL1受信入門には十分です。本気の実験では外部10MHz基準（GPSDO）を入れる文化もあります。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>GNSS×SDRでできること — 定番ツール</summary>
+    <div class="body">
+      <p><strong>受信</strong>: <code>GNSS-SDR</code>（本格的なオープンソースGNSS受信機。捕捉→追尾→復号→PVTまで全部ソフトで動く）、<code>PocketSDR</code>（GNSS研究者に人気の軽量ツール）。RTL-SDR＋パッチアンテナでもL1 C/Aの捕捉・追尾を体験できます。<a href="gnss-rx.html">受信の流れ</a>の各ブロックが実際のコードとして見えるのは感動もの。</p>
+      <p><strong>送信（信号生成）</strong>: <code>gps-sdr-sim</code>で任意の位置・時刻のGPS L1 C/A信号のI/QファイルをつくってSDRで再生 — 受信機のテストに使われる定番手法です。ただし<strong>電波を空間に出すのは電波法違反</strong>になるため、必ず有線＋減衰器で。詳しくは次のページ「<a href="sdr-gnss-tx.html">SDRでGNSS信号を送る</a>」で、LimeSDRを使った出力レベル設計を学びます。</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  const BOARDS = [
+    { id: "rtl",   name: "RTL-SDR (V4)",      lo: 24e6,  hi: 1.77e9, color: "#94a3b8",
+      specs: "受信のみ / 8bit / ~2.4Msps / TCXO ±1ppm / ~¥6千",
+      gnss: "L1受信の入門に最適。数千円でGNSS-SDRの捕捉・追尾を体験できる。送信は不可、帯域も狭いのでL5は不可。" },
+    { id: "hackrf", name: "HackRF One",       lo: 1e6,   hi: 6e9,    color: "#f87171",
+      specs: "半二重 / 8bit / 20Msps / XO ±20ppm / ~¥5万",
+      gnss: "1M〜6GHzの広さが魅力の万能機。ただし8bitと±20ppmクロックがGNSSでは弱点で、TCXOアドオンがほぼ必須。送信も可能（出力は要注意）。" },
+    { id: "pluto", name: "ADALM-Pluto",       lo: 325e6, hi: 3.8e9,  color: "#fbbf24",
+      specs: "全二重1T1R / 12bit / 61.44Msps(USB2がボトルネック) / ±25ppm / ~¥4万",
+      gnss: "Analog Devices製の教育定番。12bitで受信品質は良いが、素のクロック±25ppmはGNSSにはつらい。設定で70M–6GHzに拡張できる。" },
+    { id: "mini2", name: "LimeSDR Mini 2.0",  lo: 10e6,  hi: 3.5e9,  color: "#34d399",
+      specs: "全二重1T1R / 12bit / 30.72MHz帯域 / VCTCXO ±1ppm級 / ~¥7万",
+      gnss: "GNSS信号生成の定番格。VCTCXO搭載で周波数が素直、L1/L2/L5/L6を全部カバー。gps-sdr-sim＋LimeSuiteの作例が豊富。" },
+    { id: "xtrx",  name: "LimeSDR XTRX",      lo: 30e6,  hi: 3.8e9,  color: "#22d3ee",
+      specs: "全二重2T2R / 12bit / ~120MHz帯域(PCIe) / VCTCXO ±0.5ppm級 / ~¥10万",
+      gnss: "M.2サイズの小型カード。PCIe接続で広帯域・低レイテンシ、2x2 MIMO。組込み・アレイ実験・多周波同時など一歩進んだ用途に。" },
+    { id: "blade", name: "bladeRF 2.0 micro", lo: 47e6,  hi: 6e9,    color: "#c084fc",
+      specs: "全二重2T2R / 12bit / 61.44Msps / VCTCXO ±1ppm / ~¥8万",
+      gnss: "性能バランスの良い中堅機。工場校正済みVCTCXOで周波数も安心。gps-sdr-simの送信例も多い。" },
+    { id: "usrp",  name: "USRP B210",         lo: 70e6,  hi: 6e9,    color: "#60a5fa",
+      specs: "全二重2T2R / 12bit / 56MHz帯域 / ±2ppm(GPSDO対応) / ~¥30万",
+      gnss: "研究室の定番Ettus製。GNU Radioとのエコシステムが最強で、論文の実験装置欄によく登場。GPSDO同期で基準クロック問題も解決できる。" },
+  ];
+  const MARKS = [
+    { f: 80e6, label: "FMラジオ" },
+    { f: 1176.45e6, label: "L5", gnss: true },
+    { f: 1575.42e6, label: "L1", gnss: true },
+    { f: 2.4e9, label: "WiFi" },
+  ];
+  const FMIN = 1e6, FMAX = 6e9;
+
+  const cv = $("cov");
+  const ctx = cv.getContext("2d");
+  const tip = $("tip");
+  let hitRows = [];
+  let selected = "mini2";
+
+  function fitCanvas(c, hpx) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = c.clientWidth;
+    const h = hpx;
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+      c.width = Math.round(w * dpr);
+      c.height = Math.round(h * dpr);
+      c.style.height = h + "px";
+    }
+    c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  function draw() {
+    const rowH = 34, topPad = 26, botPad = 26;
+    const { w, h } = fitCanvas(cv, topPad + BOARDS.length * rowH + botPad);
+    const padL = 10, padR = 10;
+    const X = (f) => padL + (Math.log10(f) - Math.log10(FMIN)) / (Math.log10(FMAX) - Math.log10(FMIN)) * (w - padL - padR);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#0a1210";
+    ctx.fillRect(0, 0, w, h);
+    ctx.font = "10px ui-monospace, Consolas, monospace";
+    hitRows = [];
+
+    // freq grid (decades)
+    for (const f of [1e6, 1e7, 1e8, 1e9]) {
+      const x = X(f);
+      ctx.strokeStyle = "rgba(148,180,170,.12)";
+      ctx.beginPath(); ctx.moveTo(x, topPad - 12); ctx.lineTo(x, h - botPad + 6); ctx.stroke();
+      ctx.fillStyle = "rgba(160,190,182,.6)";
+      ctx.fillText(f >= 1e9 ? (f / 1e9) + "GHz" : (f / 1e6) + "MHz", x + 3, h - 8);
+    }
+    // marks
+    for (const m of MARKS) {
+      const x = X(m.f);
+      ctx.strokeStyle = m.gnss ? "rgba(52,211,153,.55)" : "rgba(148,180,170,.3)";
+      ctx.setLineDash(m.gnss ? [5, 4] : [2, 5]);
+      ctx.beginPath(); ctx.moveTo(x, topPad - 12); ctx.lineTo(x, h - botPad + 6); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = m.gnss ? "rgba(52,211,153,.9)" : "rgba(160,190,182,.6)";
+      ctx.fillText(m.label, x - 8, topPad - 15);
+    }
+    // board bars
+    BOARDS.forEach((b, i) => {
+      const y = topPad + i * rowH + 8;
+      const x1 = X(b.lo), x2 = X(b.hi);
+      ctx.fillStyle = b.color;
+      ctx.globalAlpha = b.id === selected ? 0.85 : 0.4;
+      ctx.beginPath();
+      ctx.roundRect(x1, y, Math.max(x2 - x1, 4), 14, 4);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      if (b.id === selected) {
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.roundRect(x1, y, Math.max(x2 - x1, 4), 14, 4);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "rgba(230,238,236,.9)";
+      ctx.fillText(b.name, x1 + 4, y - 3);
+      hitRows.push({ y0: y - 8, y1: y + 20, b });
+    });
+  }
+
+  function showInfo() {
+    const b = BOARDS.find((x) => x.id === selected);
+    $("binfo").innerHTML =
+      "<h4>" + b.name + "</h4>" +
+      '<div class="specs"><span>周波数 <b>' + (b.lo / 1e6) + "M–" + (b.hi >= 1e9 ? (b.hi / 1e9) + "G" : (b.hi / 1e6) + "M") + "Hz</b></span><span><b>" + b.specs + "</b></span></div>" +
+      "<p>" + b.gnss + "</p>";
+  }
+
+  cv.addEventListener("click", (e) => {
+    const rect = cv.getBoundingClientRect();
+    const my = e.clientY - rect.top;
+    const hit = hitRows.find((r) => my >= r.y0 && my <= r.y1);
+    if (hit) { selected = hit.b.id; draw(); showInfo(); }
+  });
+  cv.addEventListener("mousemove", (e) => {
+    const rect = cv.getBoundingClientRect();
+    const my = e.clientY - rect.top;
+    const hit = hitRows.find((r) => my >= r.y0 && my <= r.y1);
+    if (hit) {
+      tip.style.display = "block";
+      tip.style.left = Math.min(e.clientX + 14, window.innerWidth - 320) + "px";
+      tip.style.top = (e.clientY + 14) + "px";
+      tip.innerHTML = "<b>" + hit.b.name + "</b><br>" + hit.b.specs;
+      cv.style.cursor = "pointer";
+    } else {
+      tip.style.display = "none";
+      cv.style.cursor = "default";
+    }
+  });
+  cv.addEventListener("mouseleave", () => { tip.style.display = "none"; });
+
+  window.addEventListener("resize", draw);
+  if (window.ResizeObserver) new ResizeObserver(draw).observe(cv);
+  draw();
+  showInfo();
+})();
+</script>
+</body>
+</html>
