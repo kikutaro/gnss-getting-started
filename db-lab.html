@@ -118,6 +118,30 @@
   .lb-read { display: flex; gap: 8px 26px; flex-wrap: wrap; padding: 8px 2px 0; font-size: .85rem; font-variant-numeric: tabular-nums; }
   .lb-read b { font-family: ui-monospace, Consolas, monospace; }
 
+  .panel p.intro { margin: 0 0 10px; font-size: .9rem; }
+  .chain-btns { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 0 10px; }
+  .chain-btns button {
+    appearance: none; font-family: inherit; font-size: .85rem; font-weight: 600;
+    padding: 6px 14px; border-radius: 8px;
+    border: 1px solid var(--accent); background: var(--accent); color: #fff;
+    cursor: pointer;
+  }
+  .chain-btns button.ghost { background: transparent; color: var(--accent); }
+  .chain-btns button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .chain-view {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    min-height: 44px; padding: 8px 10px;
+    background: var(--surface2); border-radius: 8px; font-size: .85rem;
+  }
+  .chain-view .blk {
+    border: 1.5px solid var(--accent); border-radius: 8px;
+    padding: 2px 10px; text-align: center; line-height: 1.25;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .chain-view .blk small { display: block; font-size: .68rem; color: var(--muted); }
+  .chain-view .arrow2 { color: var(--muted); }
+  .chain-view .empty { color: var(--muted); font-size: .8rem; }
+
   details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
   details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
   details.note[open] summary { border-bottom: 1px solid var(--border); }
@@ -142,6 +166,27 @@
     <p>−130dBmってどのくらい？ — 電波の強さの言葉「デシベル」を体で覚える</p>
   </header>
 
+  <!-- intro: what dB counts -->
+  <div class="panel">
+    <h3>まずはここから — dBは「何倍？」を数えることば</h3>
+    <p class="intro">電波の強さは<strong>電力（ワット）</strong>で測ります。そして電波の世界では、強さは足し引きではなく「<strong>何倍になったか</strong>」で変わっていきます: アンプを通せば100倍、長いケーブルで半分、空を飛べば1兆分の1…。この掛け算を毎回まじめにやるのは大変なので、<strong>倍率を桁で数える別の書き方</strong>が発明されました。それがdB（デシベル）です。</p>
+    <p class="intro">対応はこれだけ: <b>×10 = +10dB</b>、<b>×2 ≈ +3dB</b>。逆方向は <b>×1/2 ≈ −3dB</b>、<b>×1/10 = −10dB</b>。下のボタンでアンプや減衰器をつないで、「<strong>倍率の掛け算がdBのただの足し算になる</strong>」のを体験してください。</p>
+    <div class="chain-btns">
+      <button data-f="10">×10 アンプ</button>
+      <button data-f="2">×2 アンプ</button>
+      <button data-f="0.5">×1/2 減衰</button>
+      <button data-f="0.1">×1/10 減衰</button>
+      <button id="chainReset" class="ghost">リセット</button>
+    </div>
+    <div class="chain-view" id="chainView"></div>
+    <div class="bigread">
+      <span>倍率 <span class="v" id="chainRatio">×1</span></span>
+      <span>dBで言うと <span class="v" id="chainDb">0 dB</span></span>
+      <span class="u" id="chainNote"></span>
+    </div>
+    <p class="cap">※ ×2＝+3dBは覚えやすい近似（正確には+3.01dB）。この2つの対応さえ覚えれば、あとは組み合わせでどんな倍率も作れます（例: ×400 = 10×10×2×2 = +26dB）。</p>
+  </div>
+
   <!-- A: converters -->
   <div class="grid2">
     <div class="panel">
@@ -152,7 +197,7 @@
         <output id="dbOut">+3 dB</output>
       </div>
       <div class="bigread">
-        <span>電力比 <span class="v" id="ratioOut">×2.0</span></span>
+        <span>倍率（電力比） <span class="v" id="ratioOut">×2.0</span></span>
         <span class="u" id="ratioNote">+3dBは「約2倍」。これだけは暗記の価値あり</span>
       </div>
       <p class="cap">dB = 10 × log₁₀(電力比)。+10dBが10倍、+3dBが約2倍、−3dBが約半分。掛け算の世界を足し算に変える対数の道具。</p>
@@ -273,6 +318,35 @@
     $("ratioNote").textContent = notes[String(db)] || "";
   }
   $("dbSlider").addEventListener("input", updDb);
+
+  // ---------- intro: multiplier chain ----------
+  const chain = [];
+  const DBMAP = { "10": 10, "2": 3, "0.5": -3, "0.1": -10 };
+  function fmtF(f) { return f >= 1 ? "×" + f : "×1/" + Math.round(1 / f); }
+  function updChain() {
+    const ratio = chain.reduce((a, f) => a * f, 1);
+    const db = chain.reduce((a, f) => a + DBMAP[String(f)], 0);
+    let rs;
+    if (ratio >= 1) rs = "×" + (ratio >= 1000 ? Math.round(ratio).toLocaleString() : (Number.isInteger(ratio) ? ratio : ratio.toFixed(2)));
+    else rs = "×1/" + Math.round(1 / ratio).toLocaleString();
+    $("chainRatio").textContent = rs;
+    $("chainDb").textContent = (db > 0 ? "+" : "") + db + " dB";
+    $("chainView").innerHTML = chain.length
+      ? chain.map((f) => '<span class="blk">' + fmtF(f) + "<small>" + (DBMAP[String(f)] > 0 ? "+" : "") + DBMAP[String(f)] + "dB</small></span>").join('<span class="arrow2">→</span>')
+      : '<span class="empty">（まだ何もつないでいない — 上のボタンでブロックを追加）</span>';
+    $("chainNote").textContent = chain.length >= 2
+      ? "掛け算 " + chain.map((f) => (f >= 1 ? f : "1/" + Math.round(1 / f))).join(" × ") + " が、足し算 " + chain.map((f) => (DBMAP[String(f)] > 0 ? "+" : "") + DBMAP[String(f)]).join(" ") + " になった"
+      : chain.length === 1 ? "もう1つつなぐと「足し算」が見えてくる" : "";
+  }
+  document.querySelectorAll(".chain-btns button[data-f]").forEach((b) => {
+    b.addEventListener("click", () => {
+      if (chain.length >= 8) { $("chainNote").textContent = "いっぱいです — リセットしてみよう"; return; }
+      chain.push(+b.dataset.f);
+      updChain();
+    });
+  });
+  $("chainReset").addEventListener("click", () => { chain.length = 0; updChain(); });
+  updChain();
 
   // ---------- A2: dBm ladder ----------
   const LADDER = [

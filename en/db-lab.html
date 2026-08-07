@@ -118,6 +118,30 @@
   .lb-read { display: flex; gap: 8px 26px; flex-wrap: wrap; padding: 8px 2px 0; font-size: .85rem; font-variant-numeric: tabular-nums; }
   .lb-read b { font-family: ui-monospace, Consolas, monospace; }
 
+  .panel p.intro { margin: 0 0 10px; font-size: .9rem; }
+  .chain-btns { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 0 10px; }
+  .chain-btns button {
+    appearance: none; font-family: inherit; font-size: .85rem; font-weight: 600;
+    padding: 6px 14px; border-radius: 8px;
+    border: 1px solid var(--accent); background: var(--accent); color: #fff;
+    cursor: pointer;
+  }
+  .chain-btns button.ghost { background: transparent; color: var(--accent); }
+  .chain-btns button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .chain-view {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    min-height: 44px; padding: 8px 10px;
+    background: var(--surface2); border-radius: 8px; font-size: .85rem;
+  }
+  .chain-view .blk {
+    border: 1.5px solid var(--accent); border-radius: 8px;
+    padding: 2px 10px; text-align: center; line-height: 1.25;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .chain-view .blk small { display: block; font-size: .68rem; color: var(--muted); }
+  .chain-view .arrow2 { color: var(--muted); }
+  .chain-view .empty { color: var(--muted); font-size: .8rem; }
+
   details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
   details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
   details.note[open] summary { border-bottom: 1px solid var(--border); }
@@ -142,6 +166,26 @@
     <p>Just how weak is −130 dBm? Learn the decibel — the language of signal strength — by feel</p>
   </header>
 
+  <div class="panel">
+    <h3>START HERE — dB IS A WAY OF COUNTING "HOW MANY TIMES"</h3>
+    <p class="intro">Signal strength is measured as <strong>power (watts)</strong>. And in the radio world, strength changes by <strong>multiplication</strong>, not addition: an amplifier makes it ×100, a long cable ×1/2, a trip through space ×1/1,000,000,000,000. Doing that multiplication all day is painful, so engineers invented a notation that <strong>counts the multiplier in orders of magnitude</strong>. That's the decibel (dB).</p>
+    <p class="intro">You only need two facts: <b>×10 = +10 dB</b> and <b>×2 ≈ +3 dB</b> (so <b>×1/2 ≈ −3 dB</b>, <b>×1/10 = −10 dB</b>). Chain some amplifiers and attenuators below and watch <strong>multiplication turn into plain addition</strong>.</p>
+    <div class="chain-btns">
+      <button data-f="10">×10 amp</button>
+      <button data-f="2">×2 amp</button>
+      <button data-f="0.5">×1/2 loss</button>
+      <button data-f="0.1">×1/10 loss</button>
+      <button id="chainReset" class="ghost">Reset</button>
+    </div>
+    <div class="chain-view" id="chainView"></div>
+    <div class="bigread">
+      <span>Multiplier <span class="v" id="chainRatio">×1</span></span>
+      <span>In dB <span class="v" id="chainDb">0 dB</span></span>
+      <span class="u" id="chainNote"></span>
+    </div>
+    <p class="cap">※ ×2 = +3 dB is a handy approximation (exactly +3.01 dB). With just these two facts you can build any multiplier (e.g. ×400 = 10×10×2×2 = +26 dB).</p>
+  </div>
+
   <div class="grid2">
     <div class="panel">
       <h3>dB ⇔ RATIO CONVERTER</h3>
@@ -151,7 +195,7 @@
         <output id="dbOut">+3 dB</output>
       </div>
       <div class="bigread">
-        <span>Power ratio <span class="v" id="ratioOut">×2.0</span></span>
+        <span>Multiplier (power ratio) <span class="v" id="ratioOut">×2.0</span></span>
         <span class="u" id="ratioNote">+3 dB is "about double" — worth memorizing</span>
       </div>
       <p class="cap">dB = 10 × log₁₀(power ratio). +10 dB is ×10, +3 dB is ≈×2, −3 dB is ≈half. A logarithmic tool that turns multiplication into addition.</p>
@@ -270,6 +314,35 @@
     $("ratioNote").textContent = notes[String(db)] || "";
   }
   $("dbSlider").addEventListener("input", updDb);
+
+  // ---------- intro: multiplier chain ----------
+  const chain = [];
+  const DBMAP = { "10": 10, "2": 3, "0.5": -3, "0.1": -10 };
+  function fmtF(f) { return f >= 1 ? "×" + f : "×1/" + Math.round(1 / f); }
+  function updChain() {
+    const ratio = chain.reduce((a, f) => a * f, 1);
+    const db = chain.reduce((a, f) => a + DBMAP[String(f)], 0);
+    let rs;
+    if (ratio >= 1) rs = "×" + (ratio >= 1000 ? Math.round(ratio).toLocaleString() : (Number.isInteger(ratio) ? ratio : ratio.toFixed(2)));
+    else rs = "×1/" + Math.round(1 / ratio).toLocaleString();
+    $("chainRatio").textContent = rs;
+    $("chainDb").textContent = (db > 0 ? "+" : "") + db + " dB";
+    $("chainView").innerHTML = chain.length
+      ? chain.map((f) => '<span class="blk">' + fmtF(f) + "<small>" + (DBMAP[String(f)] > 0 ? "+" : "") + DBMAP[String(f)] + "dB</small></span>").join('<span class="arrow2">→</span>')
+      : '<span class="empty">(nothing connected yet — add blocks with the buttons above)</span>';
+    $("chainNote").textContent = chain.length >= 2
+      ? "the product " + chain.map((f) => (f >= 1 ? f : "1/" + Math.round(1 / f))).join(" × ") + " became the sum " + chain.map((f) => (DBMAP[String(f)] > 0 ? "+" : "") + DBMAP[String(f)]).join(" ")
+      : chain.length === 1 ? "add one more and the addition appears" : "";
+  }
+  document.querySelectorAll(".chain-btns button[data-f]").forEach((b) => {
+    b.addEventListener("click", () => {
+      if (chain.length >= 8) { $("chainNote").textContent = "Full — try Reset"; return; }
+      chain.push(+b.dataset.f);
+      updChain();
+    });
+  });
+  $("chainReset").addEventListener("click", () => { chain.length = 0; updChain(); });
+  updChain();
 
   const LADDER = [
     { dbm: 50, label: "100 W — broadcast / radar class" },
