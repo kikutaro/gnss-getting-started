@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>ジャミング・スプーフィング・ミーコニング | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --ok: #10b981;
+    --warn: #d97706;
+    --bad: #dc2626;
+    --spoof: #a855f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --ok: #34d399; --warn: #fbbf24; --bad: #f87171; --spoof: #c084fc;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --ok: #34d399; --warn: #fbbf24; --bad: #f87171; --spoof: #c084fc;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --ok: #10b981; --warn: #d97706; --bad: #dc2626; --spoof: #a855f7;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .lawbox {
+    border: 2px solid var(--bad);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 12px 16px;
+    font-size: .88rem;
+  }
+  .lawbox b { color: var(--bad); }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+
+  /* threat cards */
+  .threats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 800px) { .threats { grid-template-columns: 1fr; } }
+  .tcard {
+    border: 1.5px solid var(--tc);
+    border-radius: 10px;
+    padding: 12px 14px;
+    background: var(--surface2);
+  }
+  .tcard h4 { margin: 0 0 2px; font-size: 1rem; color: var(--tc); }
+  .tcard .en { font-size: .72rem; color: var(--muted); letter-spacing: .06em; margin-bottom: 8px; }
+  .tcard svg { width: 100%; height: 76px; display: block; margin-bottom: 8px; }
+  .tcard svg .sat { fill: var(--muted); }
+  .tcard svg .rx { stroke: var(--text); }
+  .tcard svg .ray { stroke: var(--ok); stroke-width: 1.4; stroke-dasharray: 3 3; fill: none; }
+  .tcard svg .ray.dead { stroke: var(--muted); opacity: .4; }
+  .tcard svg .gnd { stroke: var(--border); stroke-width: 1.4; }
+  .tcard svg .atk { stroke: var(--tc); fill: var(--tc); }
+  .tcard svg .atkray { stroke: var(--tc); stroke-width: 1.8; fill: none; }
+  .tcard svg text { font-size: 8px; fill: var(--muted); font-family: ui-monospace, Consolas, monospace; }
+  .tcard p { margin: 0 0 8px; font-size: .84rem; }
+  .tcard .row { font-size: .78rem; color: var(--muted); }
+  .tcard .row b { color: var(--text); }
+
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .tabs .lbl { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+  .tab-btn {
+    appearance: none; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface2); color: var(--text);
+    padding: 6px 14px; cursor: pointer; line-height: 1.3; text-align: center;
+  }
+  .tab-btn b { display: block; font-size: .86rem; }
+  .tab-btn small { display: block; font-size: .68rem; color: var(--muted); }
+  .tab-btn:hover { border-color: var(--accent); }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tab-btn.active small { color: rgba(255,255,255,.85); }
+  .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .simgrid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; }
+  @media (max-width: 820px) { .simgrid { grid-template-columns: 1fr; } }
+
+  .ctl { display: grid; grid-template-columns: 10.5em 1fr 8em; align-items: center; gap: 10px; padding: 5px 0; }
+  .ctl .name { font-size: .82rem; color: var(--muted); }
+  .ctl output {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .84rem; text-align: right;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  #verdict {
+    padding: 9px 12px; border-radius: 8px;
+    font-weight: 700; font-size: .92rem; margin-top: 10px;
+    background: var(--surface2);
+    border-left: 4px solid var(--muted);
+  }
+  #verdict.ok { border-left-color: var(--ok); color: var(--ok); }
+  #verdict.warn { border-left-color: var(--warn); color: var(--warn); }
+  #verdict.bad { border-left-color: var(--bad); color: var(--bad); }
+  #verdict.spoof { border-left-color: var(--spoof); color: var(--spoof); }
+
+  .readout { display: flex; gap: 8px 24px; flex-wrap: wrap; padding: 8px 2px 0; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .readout b { font-family: ui-monospace, Consolas, monospace; }
+
+  ul.flags { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+  ul.flags li { display: flex; align-items: baseline; gap: 8px; font-size: .84rem; }
+  ul.flags .mk { width: 1.3em; flex: none; text-align: center; font-weight: 700; }
+  ul.flags li.hit { color: var(--bad); font-weight: 600; }
+  ul.flags li.hit .mk { color: var(--bad); }
+  ul.flags li.miss { color: var(--muted); }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 5px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>ジャミング・スプーフィング・ミーコニング</h1>
+    <p>GNSSを騙す3つの脅威 — 受信機に何が起きるか、そしてどう見破るか</p>
+  </header>
+
+  <div class="lawbox">
+    <b>⚠ このページの立場:</b> ここで扱うのは<b>「攻撃をどう検知し、どう守るか」</b>です。GNSS帯の電波を空間に出す行為（妨害・偽信号の送信）は<b>日本の電波法違反</b>であり、他人の受信機を欺けば犯罪です。実験は必ず<b>有線＋減衰器またはシールドボックス内</b>で、自分の機器に対してのみ行ってください（<a href="sdr-gnss-tx.html">SDRでGNSS送信</a>参照）。
+  </div>
+
+  <!-- three threats -->
+  <div class="threats">
+    <div class="tcard" style="--tc: var(--bad)">
+      <h4>ジャミング</h4>
+      <div class="en">JAMMING — 妨害</div>
+      <svg viewBox="0 0 200 76" role="img" aria-label="衛星からの電波が妨害波にかき消される図">
+        <circle class="sat" cx="30" cy="12" r="3.5"/><circle class="sat" cx="100" cy="8" r="3.5"/><circle class="sat" cx="170" cy="14" r="3.5"/>
+        <path class="ray dead" d="M30 16 L92 52"/><path class="ray dead" d="M100 12 L98 52"/><path class="ray dead" d="M170 18 L106 52"/>
+        <circle class="atk" cx="45" cy="56" r="2.5" fill="none" stroke-width="1.5"/>
+        <circle class="atk" cx="45" cy="56" r="9" fill="none" stroke-width="1.3" opacity=".7"/>
+        <circle class="atk" cx="45" cy="56" r="16" fill="none" stroke-width="1.1" opacity=".45"/>
+        <circle class="atk" cx="45" cy="56" r="23" fill="none" stroke-width="1" opacity=".25"/>
+        <line class="atk" x1="45" y1="56" x2="45" y2="66" stroke-width="1.5"/>
+        <path class="rx" d="M100 66 L100 54 M96 52 h8" stroke-width="1.6" fill="none"/>
+        <line class="gnd" x1="8" y1="66" x2="192" y2="66"/>
+        <text x="30" y="75">妨害源</text><text x="112" y="60" fill="var(--bad)">✕ 聞こえない</text>
+      </svg>
+      <p>強い雑音や妨害波でGNSS帯を埋め、信号を<strong>雑音に埋もれさせる</strong>。受信機は衛星を見失う。</p>
+      <div class="row">難易度 <b>低</b>（安価な違法ジャマーが存在）<br>狙い <b>測位させない</b><br>症状 <b>全衛星のC/N₀が同時に低下 → 測位不能</b></div>
+    </div>
+    <div class="tcard" style="--tc: var(--spoof)">
+      <h4>スプーフィング</h4>
+      <div class="en">SPOOFING — 偽装</div>
+      <svg viewBox="0 0 200 76" role="img" aria-label="偽の衛星信号を送り込み受信機に嘘の位置を信じさせる図">
+        <circle class="sat" cx="30" cy="12" r="3.5" opacity=".45"/><circle class="sat" cx="100" cy="8" r="3.5" opacity=".45"/><circle class="sat" cx="170" cy="14" r="3.5" opacity=".45"/>
+        <path class="ray dead" d="M30 16 L96 52"/><path class="ray dead" d="M100 12 L100 52"/><path class="ray dead" d="M170 18 L104 52"/>
+        <path class="atkray" d="M46 50 L96 54" stroke-dasharray="4 3"/>
+        <path class="atkray" d="M46 50 L96 57" stroke-dasharray="4 3"/>
+        <path class="atk" d="M40 56 a8 8 0 0 1 8 -8 l0 8 z" stroke-width="1.2"/>
+        <line class="atk" x1="44" y1="56" x2="44" y2="66" stroke-width="1.5"/>
+        <path class="rx" d="M100 66 L100 54 M96 52 h8" stroke-width="1.6" fill="none"/>
+        <line class="gnd" x1="8" y1="66" x2="192" y2="66"/>
+        <text x="22" y="75">偽の送信源</text><text x="112" y="60" fill="var(--spoof)">偽の位置を信じる</text>
+      </svg>
+      <p>本物そっくりの<strong>偽の衛星信号を生成</strong>して送り込み、受信機に<strong>嘘の位置・時刻</strong>を信じ込ませる。</p>
+      <div class="row">難易度 <b>高</b>（信号生成と同期が必要）<br>狙い <b>誤った位置・時刻を信じさせる</b><br>症状 <b>正常に見えるのに位置が飛ぶ</b></div>
+    </div>
+    <div class="tcard" style="--tc: var(--warn)">
+      <h4>ミーコニング</h4>
+      <div class="en">MEACONING — 再放送</div>
+      <svg viewBox="0 0 200 76" role="img" aria-label="別の場所で受けた本物の信号を遅らせて再放送する図">
+        <circle class="sat" cx="26" cy="12" r="3.5"/><circle class="sat" cx="68" cy="8" r="3.5"/><circle class="sat" cx="110" cy="14" r="3.5"/>
+        <path class="ray" d="M26 16 L40 40"/><path class="ray" d="M68 12 L44 40"/><path class="ray" d="M110 18 L48 40"/>
+        <path class="atk" d="M40 44 a6 6 0 0 1 8 0" fill="none" stroke-width="1.4"/>
+        <line class="atk" x1="44" y1="44" x2="44" y2="66" stroke-width="1.5"/>
+        <path class="atkray" d="M50 60 L128 60" stroke-dasharray="5 3" marker-end=""/>
+        <path class="atk" d="M124 57 l6 3 l-6 3 z" stroke="none"/>
+        <text x="66" y="56" fill="var(--warn)">遅延 Δt で再放送</text>
+        <line class="atk" x1="140" y1="46" x2="140" y2="66" stroke-width="1.5"/>
+        <path class="atk" d="M136 46 a6 6 0 0 1 8 0" fill="none" stroke-width="1.4"/>
+        <path class="atkray" d="M144 50 L164 56" stroke-dasharray="3 2"/>
+        <path class="rx" d="M168 66 L168 58 M164 56 h8" stroke-width="1.6" fill="none"/>
+        <line class="gnd" x1="8" y1="66" x2="192" y2="66"/>
+        <text x="24" y="75">受信点A</text><text x="150" y="75">受信機</text>
+      </svg>
+      <p>別の場所で受けた<strong>本物の信号をそのまま遅らせて再放送</strong>する。信号自体は本物なので偽物と見分けにくい。</p>
+      <div class="row">難易度 <b>中</b>（受信＋増幅＋再放射だけ）<br>狙い <b>受信機を「別の場所・過去の時刻」に</b><br>症状 <b>再放送アンテナの位置に収束</b></div>
+    </div>
+  </div>
+
+  <!-- simulator -->
+  <div class="panel">
+    <h3>受信機はどう見えるか — 攻撃シミュレーター</h3>
+    <div class="tabs">
+      <span class="lbl">状況:</span>
+      <button class="tab-btn" data-m="none"><b>正常</b><small>攻撃なし</small></button>
+      <button class="tab-btn" data-m="jam"><b>ジャミング</b><small>妨害波</small></button>
+      <button class="tab-btn" data-m="spoof"><b>スプーフィング</b><small>偽信号</small></button>
+      <button class="tab-btn" data-m="meacon"><b>ミーコニング</b><small>再放送</small></button>
+    </div>
+    <canvas class="dark" id="scene" aria-label="攻撃の状況を示す図"></canvas>
+    <p class="cap" id="sceneCap"></p>
+    <div class="simgrid">
+      <div>
+        <canvas class="dark" id="cn0" aria-label="衛星ごとのC/N0バーグラフ"></canvas>
+        <p class="cap">受信機が表示する衛星ごとのC/N₀（u-centerの棒グラフに相当）。青=GPS、赤=QZSS、紫=偽信号。</p>
+      </div>
+      <div>
+        <canvas class="dark" id="map" aria-label="真の位置と受信機が報告する位置の地図"></canvas>
+        <p class="cap">受信機が報告する位置（○）と真の位置（＋）。</p>
+      </div>
+    </div>
+    <div class="ctl" id="ctlPow">
+      <span class="name" id="powName">妨害波の強さ J/S</span>
+      <input type="range" id="pow" min="0" max="60" step="1" value="30">
+      <output id="powOut">30 dB</output>
+    </div>
+    <div class="ctl" id="ctlDelay" style="display:none">
+      <span class="name">再放送の遅延</span>
+      <input type="range" id="delay" min="0.1" max="50" step="0.1" value="10">
+      <output id="delayOut">10.0 μs</output>
+    </div>
+    <div class="readout" id="readout"></div>
+    <div id="verdict">—</div>
+    <ul class="flags" id="flags"></ul>
+  </div>
+
+  <div class="panel">
+    <h3>見分け方まとめ — 症状から攻撃を推定する</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th></th><th>ジャミング</th><th>スプーフィング</th><th>ミーコニング</th></tr>
+        <tr><th>C/N₀</th><td>全衛星が同時に低下、やがて消失</td><td>不自然に高く・全衛星が揃った値</td><td>本物由来なのでばらつきは自然</td></tr>
+        <tr><th>AGC</th><td>強い入力を検知して利得が大きく下がる</td><td>やや下がる</td><td>やや下がる</td></tr>
+        <tr><th>位置</th><td>測位不能（解が出ない）</td><td>任意の場所へ。ジャンプまたは徐々に移動</td><td>再放送アンテナの位置に収束</td></tr>
+        <tr><th>時刻</th><td>失われる</td><td>攻撃者の任意（過去にも飛ばせる）</td><td>遅延ぶんだけ必ず遅れる</td></tr>
+        <tr><th>到来方向</th><td>1方向（妨害源）</td><td>1方向（送信源）</td><td>1方向（再放送源）</td></tr>
+        <tr><th>決め手</th><td>雑音レベル上昇＋一斉低下</td><td>位置/時刻の不連続、複数システム間の不一致、認証失敗</td><td>全衛星に共通の余分な遅延、位置が動かない</td></tr>
+      </table>
+    </div>
+    <p class="cap">共通して強力なのは「<strong>到来方向がひとつ</strong>」という点。本物の衛星は空のあちこちから来るのに、攻撃信号は1本のアンテナから来る — 複数アンテナ（CRPA）や姿勢情報を持つ受信機はここで見破ります。</p>
+  </div>
+
+  <details class="note" open>
+    <summary>なぜGNSSは狙われやすいのか</summary>
+    <div class="body">
+      <p>理由は<a href="db-lab.html">dBのページ</a>で見たとおり: 地表に届くGNSS信号は約<strong>−130dBm、熱雑音より20dB以上も下</strong>という極端に弱い電波です。相関処理という賢い仕組みでようやく掘り出しているので、その入口を汚すのは物理的に簡単。数ワットの妨害波でも半径数kmの受信機を黙らせられます。</p>
+      <p>加えて民生用のGPS L1 C/Aは<strong>公開仕様・暗号化なし</strong>。誰でも同じ信号を作れるので、スプーフィングも原理的に可能です（軍用のPコードは暗号化されており、この点で強い）。「弱くて公開されている」— 便利さと引き換えの構造的な弱点です。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>ミーコニングの独特さ — 「本物を再放送する」とどうなるか</summary>
+    <div class="body">
+      <p>ミーコニングは偽信号を作りません。ある場所（例: 屋外）で受けた本物のGNSS信号を、増幅して別の場所（例: 屋内）で再放射するだけ。信号の中身は完全に本物なので、暗号や認証があっても素通りしてしまうのが厄介な点です。</p>
+      <p>受信機がどうなるかは幾何で決まります: すべての衛星の信号が「再放送アンテナの位置＋ケーブル遅延」という<strong>共通の経路</strong>を通るので、受信機は<strong>再放送アンテナがある場所に自分がいる</strong>と結論し、時計は遅延ぶんだけ遅れます。合法な用途に見える「GPSリピータ」（屋内に電波を引き込む装置）は、まさにこれと同じ原理で、<strong>日本では違法</strong>です。</p>
+      <p>逆に言えば検知しやすい面もあります: 動いているはずなのに位置がぴくりとも動かない、時刻が一定量ずれ続ける、といった症状が出ます。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>対策 — 受信機・システム側でできること</summary>
+    <div class="body">
+      <p><strong>① 監視して気づく（安価・すぐできる）</strong>: AGC利得とC/N₀を常時ログする。妨害があるとAGCが急落し、C/N₀が全衛星一斉に下がるので、これだけで異常検知になります。位置・時刻の不連続（ワープ）検出も有効。</p>
+      <p><strong>② 冗長性で殴る</strong>: マルチGNSS（GPS+QZSS+Galileo+BeiDou）とマルチ周波数（L1+L5）。全部を矛盾なく偽装するのは格段に難しく、システム間の不一致が検知シグナルになります。<a href="gnss-bands.html">周波数帯マップ</a>で見た周波数の広がりが、そのまま耐性になるわけです。</p>
+      <p><strong>③ アンテナで空間的に弾く</strong>: 複数素子アンテナ（CRPA）は「1方向から来る強い信号」にヌルを向けて消せます。軍用・航空用の定番。安価な代替として、地面側からの信号を遮るチョークリングや設置の工夫も効きます。</p>
+      <p><strong>④ 他のセンサーと突き合わせる</strong>: IMU（慣性）、オドメトリ、気圧高度計との整合チェック。「GNSSは1km移動したと言うがIMUは止まっていると言う」— これで即座に破綻が見えます。自動運転や航空の実装ではこの融合が標準です。</p>
+      <p><strong>⑤ 信号認証（本命の技術）</strong>: 送信側が信号に電子署名を入れる方式。GalileoのOSNMA（航法メッセージ認証、運用中）、GPSのChimera、日本のQZSSも信号認証サービス（みちびきの信頼性確保）を提供しています。「この航法メッセージは本物の衛星が作った」と暗号的に検証できるので、スプーフィングへの根本的な回答になります（ただしミーコニングは本物の信号なので、認証だけでは防げません — ④の併用が要ります）。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>現実世界での事例と影響範囲</summary>
+    <div class="body">
+      <p>GNSS干渉は現実の運用問題です。空港周辺での航空機のGPS喪失、紛争地域周辺での広域なスプーフィング（船舶が実際とは違う場所に表示される、航空機の航法警報）などが各国当局から報告されており、国際民間航空機関（ICAO）も注意喚起を出しています。近年は民間航空でのGNSS干渉報告が増加傾向にあります。</p>
+      <p>影響はナビだけではありません。<a href="time-lab.html">時間と時計のページ</a>で見たとおり、携帯基地局・電力網・金融システムはGNSSの<strong>時刻</strong>に依存しています。GNSSの停止は「地図が使えない」以上に「インフラの時計が狂う」問題であり、各国が地上系バックアップ（eLoranなど）やホールドオーバー用の高安定時計を議論しているのはこのためです。</p>
+      <p>身近なところでは、車両追跡を逃れるための<strong>個人用GPSジャマー</strong>が問題になっています。ごく小さな出力でも周囲数百m〜数kmの受信機に影響し、実際に空港の補強システムを妨害した事例（米国のニューアーク空港のケースが有名）もあります。日本でも所持・使用は電波法違反です。</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  // authentic constellation (fixed for reproducibility)
+  const SATS = [
+    { name: "G02", cn0: 47, sys: "gps" },
+    { name: "G05", cn0: 44, sys: "gps" },
+    { name: "G12", cn0: 41, sys: "gps" },
+    { name: "G15", cn0: 38, sys: "gps" },
+    { name: "G24", cn0: 45, sys: "gps" },
+    { name: "G29", cn0: 36, sys: "gps" },
+    { name: "J01", cn0: 48, sys: "qzs" },
+    { name: "J03", cn0: 43, sys: "qzs" },
+  ];
+  const RC = 1.023e6;           // C/A chip rate
+  const TRACK_TH = 27;          // dB-Hz, tracking breaks below this
+  const C = 299792458;
+
+  const S = { mode: "none", pow: 30, delay: 10 };
+
+  const MODES = {
+    none: { powLabel: "（攻撃なし）", showPow: false, showDelay: false },
+    jam:  { powLabel: "妨害波の強さ J/S", showPow: true, showDelay: false, min: 0, max: 60, def: 30, unit: " dB" },
+    spoof:{ powLabel: "偽信号の強さ（本物比）", showPow: true, showDelay: false, min: -6, max: 20, def: 6, unit: " dB" },
+    meacon:{ powLabel: "再放送の強さ（本物比）", showPow: true, showDelay: true, min: -6, max: 20, def: 8, unit: " dB" },
+  };
+
+  // effective C/N0 under broadband jamming
+  function jammedCn0(cn0, jsDb) {
+    const js = Math.pow(10, jsDb / 10);
+    const denom = Math.pow(10, -cn0 / 10) + js / RC;
+    return -10 * Math.log10(denom);
+  }
+
+  function state() {
+    const out = { sats: [], posErr: 0, timeErr: 0, fix: true, agc: 0 };
+    if (S.mode === "none") {
+      out.sats = SATS.map((s) => ({ ...s, cn0v: s.cn0, spoofed: false }));
+      out.agc = 0;
+      out.posErr = 3;
+    } else if (S.mode === "jam") {
+      out.sats = SATS.map((s) => ({ ...s, cn0v: jammedCn0(s.cn0, S.pow), spoofed: false }));
+      out.agc = -Math.min(S.pow * 0.55, 33);
+      const tracked = out.sats.filter((s) => s.cn0v >= TRACK_TH).length;
+      out.tracked = tracked;
+      out.fix = tracked >= 4;
+      out.posErr = out.fix ? (tracked <= 5 ? 15 + (6 - tracked) * 20 : 3) : null;
+    } else if (S.mode === "spoof") {
+      const captured = S.pow >= 0;
+      out.sats = SATS.map((s) => captured
+        ? { ...s, cn0v: 46 + (S.pow - 6) * 0.35, spoofed: true }
+        : { ...s, cn0v: s.cn0, spoofed: false });
+      out.agc = captured ? -6 : -2;
+      out.captured = captured;
+      out.fix = true;
+      out.posErr = captured ? 3200 : 3;
+      out.timeErr = captured ? -35 : 0;
+    } else {
+      const captured = S.pow >= 0;
+      out.sats = SATS.map((s) => captured
+        ? { ...s, cn0v: Math.min(s.cn0 + S.pow * 0.25, 52), spoofed: false, replay: true }
+        : { ...s, cn0v: s.cn0, spoofed: false });
+      out.agc = captured ? -7 : -2;
+      out.captured = captured;
+      out.fix = true;
+      // meaconing: receiver lands at the meaconer antenna, clock late by the delay
+      out.posErr = captured ? 850 : 3;
+      out.timeErr = captured ? S.delay : 0;
+    }
+    return out;
+  }
+
+  // ---------- scene illustration ----------
+  const scenecv = $("scene");
+  const sctx = scenecv.getContext("2d");
+  let sceneT = 0;
+  const SCENE_CAP = {
+    none: "本物の衛星から、空のあちこちを通って弱い信号が届いている（緑）。これが正常な姿。",
+    jam: "妨害源（赤）が強い雑音を撒き、受信機の入口を汚す。衛星の信号は雑音に埋もれて聞こえなくなる。",
+    spoof: "攻撃者が偽の衛星信号（紫）を強く送り込む。受信機は本物より強い偽物にロックし、嘘の位置を信じる。",
+    meacon: "受信点Aで受けた本物の信号を、遅延させて受信機のそばで再放送（橙）。信号は本物だが、受信機は「Aにいる」と結論する。",
+  };
+
+  function drawScene() {
+    const { w, h } = fit(scenecv, 0.34);
+    sctx.clearRect(0, 0, w, h);
+    sctx.fillStyle = "#0a1210";
+    sctx.fillRect(0, 0, w, h);
+    sctx.font = "11px ui-monospace, Consolas, monospace";
+    const groundY = h * 0.8;
+    const rxX = w * 0.72;
+    const flow = -(sceneT * 40) % 16;
+
+    // ground
+    sctx.strokeStyle = "#2e5c48";
+    sctx.lineWidth = 1.4;
+    sctx.beginPath(); sctx.moveTo(0, groundY); sctx.lineTo(w, groundY); sctx.stroke();
+
+    // satellites
+    const sats = [0.14, 0.34, 0.55, 0.78].map((f, i) => ({ x: w * f, y: h * (0.24 + (i % 2) * 0.07) }));
+    function drawSat(s, dim) {
+      sctx.save();
+      sctx.globalAlpha = dim ? 0.35 : 1;
+      sctx.fillStyle = "#3b82f6";
+      sctx.fillRect(s.x - 12, s.y - 2.5, 7, 5);
+      sctx.fillRect(s.x + 5, s.y - 2.5, 7, 5);
+      sctx.fillStyle = "#cbd5e1";
+      sctx.fillRect(s.x - 4, s.y - 4, 8, 8);
+      sctx.restore();
+    }
+    function ray(x1, y1, x2, y2, color, width, dash) {
+      sctx.strokeStyle = color;
+      sctx.lineWidth = width;
+      sctx.setLineDash(dash || [6, 6]);
+      sctx.lineDashOffset = flow;
+      sctx.beginPath(); sctx.moveTo(x1, y1); sctx.lineTo(x2, y2); sctx.stroke();
+      sctx.setLineDash([]);
+    }
+    // receiver
+    function drawRx(label) {
+      sctx.strokeStyle = "#e2e8f0";
+      sctx.lineWidth = 2;
+      sctx.beginPath();
+      sctx.moveTo(rxX, groundY); sctx.lineTo(rxX, groundY - 16);
+      sctx.stroke();
+      sctx.fillStyle = "#e2e8f0";
+      sctx.beginPath(); sctx.arc(rxX, groundY - 19, 4, 0, Math.PI * 2); sctx.fill();
+      sctx.fillStyle = "rgba(160,190,182,.9)";
+      sctx.fillText(label, rxX - 18, groundY + 15);
+    }
+    // attacker antenna
+    function drawTower(x, color, label, dish) {
+      sctx.strokeStyle = color;
+      sctx.lineWidth = 2;
+      sctx.beginPath(); sctx.moveTo(x, groundY); sctx.lineTo(x, groundY - 22); sctx.stroke();
+      if (dish) {
+        sctx.beginPath();
+        sctx.arc(x, groundY - 24, 7, Math.PI * 0.9, Math.PI * 2.1);
+        sctx.stroke();
+      } else {
+        sctx.beginPath(); sctx.arc(x, groundY - 25, 3.5, 0, Math.PI * 2); sctx.fillStyle = color; sctx.fill();
+      }
+      sctx.fillStyle = color;
+      sctx.fillText(label, x - 22, groundY + 15);
+    }
+
+    const st = state();
+
+    if (S.mode === "none") {
+      sats.forEach((s) => { drawSat(s, false); ray(s.x, s.y + 6, rxX, groundY - 19, "rgba(52,211,153,.75)", 1.6); });
+      drawRx("受信機");
+      sctx.fillStyle = "rgba(52,211,153,.9)";
+      sctx.fillText("本物の信号（弱いが四方から到来）", 12, 15);
+    } else if (S.mode === "jam") {
+      const jamX = w * 0.22;
+      const strength = Math.min(S.pow / 60, 1);
+      sats.forEach((s) => { drawSat(s, S.pow > 25); ray(s.x, s.y + 6, rxX, groundY - 19, S.pow > 25 ? "rgba(148,180,170,.25)" : "rgba(52,211,153,.5)", 1.4); });
+      // noise rings
+      for (let k = 0; k < 4; k++) {
+        const rr = Math.max(0, ((sceneT * 55 + k * 34) % 150) * (0.5 + strength));
+        sctx.strokeStyle = "rgba(248,113,113," + Math.max(0.05, (0.5 - rr / 300) * (0.35 + strength)) + ")";
+        sctx.lineWidth = 1.6;
+        sctx.beginPath(); sctx.arc(jamX, groundY - 25, rr, 0, Math.PI * 2); sctx.stroke();
+      }
+      drawTower(jamX, "#f87171", "妨害源", false);
+      drawRx("受信機");
+      if (!st.fix) {
+        sctx.strokeStyle = "#f87171";
+        sctx.lineWidth = 2.5;
+        sctx.beginPath();
+        sctx.moveTo(rxX - 9, groundY - 34); sctx.lineTo(rxX + 9, groundY - 16);
+        sctx.moveTo(rxX + 9, groundY - 34); sctx.lineTo(rxX - 9, groundY - 16);
+        sctx.stroke();
+      }
+      sctx.fillStyle = "rgba(248,113,113,.9)";
+      sctx.fillText("雑音で受信機の入口を埋める（J/S = " + S.pow + " dB）", 12, 15);
+    } else if (S.mode === "spoof") {
+      const spX = w * 0.22;
+      const cap = st.captured;
+      sats.forEach((s) => { drawSat(s, cap); ray(s.x, s.y + 6, rxX, groundY - 19, cap ? "rgba(148,180,170,.22)" : "rgba(52,211,153,.7)", 1.4); });
+      // fake satellite icons floating near the spoofer
+      for (let k = 0; k < 3; k++) {
+        const fx = spX + 16 + k * 15, fy = groundY - 52 - k * 9;
+        sctx.globalAlpha = cap ? 0.9 : 0.35;
+        sctx.fillStyle = "#c084fc";
+        sctx.fillRect(fx - 3, fy - 3, 6, 6);
+        sctx.globalAlpha = 1;
+      }
+      ray(spX + 8, groundY - 26, rxX - 4, groundY - 21, cap ? "#c084fc" : "rgba(192,132,252,.35)", 2.2, [7, 5]);
+      ray(spX + 8, groundY - 22, rxX - 4, groundY - 16, cap ? "#c084fc" : "rgba(192,132,252,.35)", 2.2, [7, 5]);
+      drawTower(spX, "#c084fc", "偽信号の送信源", true);
+      drawRx("受信機");
+      sctx.fillStyle = cap ? "rgba(192,132,252,.95)" : "rgba(160,190,182,.7)";
+      sctx.fillText(cap ? "偽信号が本物を上回り、受信機は偽物にロック" : "偽信号が弱く、受信機は本物にロックしたまま", 12, 15);
+    } else {
+      const relayX = w * 0.13, reX = w * 0.45;
+      const cap = st.captured;
+      // real signals into the relay
+      sats.slice(0, 3).forEach((s) => { drawSat(s, false); ray(s.x, s.y + 6, relayX, groundY - 26, "rgba(52,211,153,.7)", 1.5); });
+      drawSat(sats[3], true);
+      drawTower(relayX, "#fbbf24", "受信点A", true);
+      // link along the ground
+      sctx.strokeStyle = "rgba(251,191,36,.75)";
+      sctx.lineWidth = 1.8;
+      sctx.setLineDash([6, 5]);
+      sctx.lineDashOffset = flow;
+      sctx.beginPath(); sctx.moveTo(relayX + 8, groundY - 8); sctx.lineTo(reX - 8, groundY - 8); sctx.stroke();
+      sctx.setLineDash([]);
+      sctx.fillStyle = "rgba(251,191,36,.95)";
+      sctx.fillText("遅延 " + S.delay.toFixed(1) + " μs", (relayX + reX) / 2 - 28, groundY - 13);
+      drawTower(reX, "#fbbf24", "再放送", false);
+      ray(reX + 6, groundY - 25, rxX - 4, groundY - 20, cap ? "#fbbf24" : "rgba(251,191,36,.3)", 2.2, [7, 5]);
+      drawRx("受信機");
+      // ghost of where the receiver thinks it is
+      if (cap) {
+        sctx.strokeStyle = "rgba(251,191,36,.6)";
+        sctx.setLineDash([3, 3]);
+        sctx.lineWidth = 1.4;
+        sctx.beginPath(); sctx.arc(relayX, groundY - 12, 15, 0, Math.PI * 2); sctx.stroke();
+        sctx.setLineDash([]);
+        sctx.fillStyle = "rgba(251,191,36,.95)";
+        sctx.fillText("受信機は「ここにいる」と思う ↑", 12, 15);
+      } else {
+        sctx.fillStyle = "rgba(160,190,182,.7)";
+        sctx.fillText("再放送が弱く、受信機は直接届く本物を追尾中", 12, 15);
+      }
+    }
+    $("sceneCap").textContent = SCENE_CAP[S.mode];
+  }
+
+  // ---------- C/N0 bars ----------
+  const cn0cv = $("cn0");
+  const cctx = cn0cv.getContext("2d");
+  function fit(cv, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth;
+    const h = Math.round(w * aspect);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      cv.style.height = h + "px";
+    }
+    cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  function drawBars(st) {
+    const { w, h } = fit(cn0cv, 0.55);
+    cctx.clearRect(0, 0, w, h);
+    cctx.fillStyle = "#0a1210";
+    cctx.fillRect(0, 0, w, h);
+    cctx.font = "10px ui-monospace, Consolas, monospace";
+    const padL = 30, padR = 8, padT = 12, padB = 26;
+    const Y = (v) => padT + (55 - v) / 55 * (h - padT - padB);
+    // grid
+    for (let v = 50; v >= 0; v -= 10) {
+      const y = Y(v);
+      cctx.strokeStyle = "rgba(148,180,170,.12)";
+      cctx.beginPath(); cctx.moveTo(padL, y); cctx.lineTo(w - padR, y); cctx.stroke();
+      cctx.fillStyle = "rgba(160,190,182,.6)";
+      cctx.fillText(String(v), 6, y + 3);
+    }
+    // tracking threshold
+    const ty = Y(TRACK_TH);
+    cctx.strokeStyle = "rgba(248,113,113,.65)";
+    cctx.setLineDash([5, 4]);
+    cctx.beginPath(); cctx.moveTo(padL, ty); cctx.lineTo(w - padR, ty); cctx.stroke();
+    cctx.setLineDash([]);
+    cctx.fillStyle = "rgba(248,113,113,.9)";
+    cctx.fillText("追尾限界 " + TRACK_TH + " dB-Hz", padL + 4, ty - 4);
+    cctx.fillStyle = "rgba(160,190,182,.6)";
+    cctx.fillText("dB-Hz", 4, padT - 2);
+
+    const n = st.sats.length;
+    const bw = (w - padL - padR) / n;
+    st.sats.forEach((s, i) => {
+      const x = padL + i * bw + bw * 0.18;
+      const bwid = bw * 0.64;
+      const v = Math.max(s.cn0v, 0);
+      const y = Y(v);
+      const alive = v >= TRACK_TH;
+      let col = s.sys === "qzs" ? "#ef4444" : "#3b82f6";
+      if (s.spoofed) col = "#a855f7";
+      cctx.fillStyle = col;
+      cctx.globalAlpha = alive ? 0.85 : 0.28;
+      cctx.fillRect(x, y, bwid, h - padB - y);
+      cctx.globalAlpha = 1;
+      cctx.fillStyle = alive ? "rgba(230,238,236,.9)" : "rgba(160,190,182,.5)";
+      cctx.fillText(s.name, x - 1, h - 14);
+      if (v >= 1) cctx.fillText(v.toFixed(0), x + 2, y - 3);
+      else { cctx.fillStyle = "rgba(248,113,113,.8)"; cctx.fillText("✕", x + bwid / 2 - 3, h - padB - 3); }
+    });
+  }
+
+  // ---------- position map ----------
+  const mapcv = $("map");
+  const mctx = mapcv.getContext("2d");
+  function drawMap(st) {
+    const { w, h } = fit(mapcv, 0.78);
+    mctx.clearRect(0, 0, w, h);
+    mctx.fillStyle = "#0a1210";
+    mctx.fillRect(0, 0, w, h);
+    mctx.font = "10px ui-monospace, Consolas, monospace";
+    const cx = w * 0.34, cy = h * 0.62;
+    // scale: fit up to 4km
+    const maxM = 4000;
+    const R = Math.min(w, h) * 0.42;
+    const P = (m) => m / maxM * R;
+    // range rings
+    for (const r of [500, 1500, 3000]) {
+      mctx.strokeStyle = "rgba(148,180,170,.14)";
+      mctx.beginPath(); mctx.arc(cx, cy, P(r), 0, Math.PI * 2); mctx.stroke();
+      mctx.fillStyle = "rgba(160,190,182,.45)";
+      mctx.fillText(r >= 1000 ? (r / 1000) + "km" : r + "m", cx + P(r) - 16, cy - 3);
+    }
+    // true position
+    mctx.strokeStyle = "#34d399";
+    mctx.lineWidth = 2;
+    mctx.beginPath();
+    mctx.moveTo(cx - 7, cy); mctx.lineTo(cx + 7, cy);
+    mctx.moveTo(cx, cy - 7); mctx.lineTo(cx, cy + 7);
+    mctx.stroke();
+    mctx.fillStyle = "#34d399";
+    mctx.fillText("真の位置", cx + 10, cy + 14);
+
+    if (!st.fix) {
+      mctx.fillStyle = "rgba(248,113,113,.9)";
+      mctx.font = "13px sans-serif";
+      mctx.fillText("測位不能 — 解なし", w * 0.28, h * 0.28);
+      return;
+    }
+    const err = st.posErr || 0;
+    const ang = S.mode === "spoof" ? -0.7 : S.mode === "meacon" ? 2.3 : 0.9;
+    const rx = cx + Math.cos(ang) * P(Math.min(err, maxM));
+    const ry = cy + Math.sin(ang) * P(Math.min(err, maxM));
+    if (err > 20) {
+      mctx.strokeStyle = "rgba(248,113,113,.5)";
+      mctx.setLineDash([4, 4]);
+      mctx.lineWidth = 1.4;
+      mctx.beginPath(); mctx.moveTo(cx, cy); mctx.lineTo(rx, ry); mctx.stroke();
+      mctx.setLineDash([]);
+    }
+    const col = err > 100 ? (S.mode === "spoof" ? "#c084fc" : "#fbbf24") : err > 20 ? "#fbbf24" : "#e2e8f0";
+    mctx.strokeStyle = col;
+    mctx.lineWidth = 2;
+    mctx.beginPath(); mctx.arc(rx, ry, 7, 0, Math.PI * 2); mctx.stroke();
+    mctx.fillStyle = col;
+    mctx.beginPath(); mctx.arc(rx, ry, 2.5, 0, Math.PI * 2); mctx.fill();
+    mctx.fillText("受信機の表示", rx + 11, ry + 4);
+    if (err > 20) {
+      mctx.fillStyle = "rgba(248,113,113,.85)";
+      mctx.fillText("誤差 " + (err >= 1000 ? (err / 1000).toFixed(1) + " km" : Math.round(err) + " m"), (cx + rx) / 2 - 20, (cy + ry) / 2 - 6);
+    }
+  }
+
+  // ---------- detection flags ----------
+  function flagsFor(st) {
+    const f = [];
+    const jam = S.mode === "jam";
+    const spoof = S.mode === "spoof" && st.captured;
+    const meacon = S.mode === "meacon" && st.captured;
+    const cn0s = st.sats.map((s) => s.cn0v);
+    const spread = Math.max(...cn0s) - Math.min(...cn0s);
+    f.push({ t: "AGC利得の急低下（強い入力を検知）", hit: st.agc <= -10 });
+    f.push({ t: "全衛星のC/N₀が同時に低下", hit: jam && S.pow >= 15 });
+    f.push({ t: "C/N₀が不自然に揃っている（全衛星が高い値で横並び）", hit: spread < 3 && Math.min.apply(null, cn0s) > 40 });
+    f.push({ t: "位置・時刻の不連続なジャンプ", hit: spoof });
+    f.push({ t: "全衛星に共通する余分な遅延（時刻が一定量遅れる）", hit: meacon });
+    f.push({ t: "移動しているのに位置が変化しない", hit: meacon });
+    f.push({ t: "測位解が得られない", hit: !st.fix });
+    f.push({ t: "航法メッセージの認証に失敗（OSNMA等）", hit: spoof });
+    return f;
+  }
+
+  function update() {
+    const cfg = MODES[S.mode];
+    $("ctlPow").style.display = cfg.showPow ? "" : "none";
+    $("ctlDelay").style.display = cfg.showDelay ? "" : "none";
+    if (cfg.showPow) {
+      $("powName").textContent = cfg.powLabel;
+      const el = $("pow");
+      if (+el.min !== cfg.min || +el.max !== cfg.max) {
+        el.min = cfg.min; el.max = cfg.max; el.value = cfg.def; S.pow = cfg.def;
+      }
+      $("powOut").textContent = (S.pow > 0 && cfg.min < 0 ? "+" : "") + S.pow + cfg.unit;
+    }
+    $("delayOut").textContent = S.delay.toFixed(1) + " μs";
+
+    const st = state();
+    drawScene();
+    drawBars(st);
+    drawMap(st);
+
+    const tracked = st.sats.filter((s) => s.cn0v >= TRACK_TH).length;
+    let read = "追尾中の衛星 <b>" + tracked + " / " + st.sats.length + "</b>" +
+      "<span>AGC <b>" + (st.agc === 0 ? "正常" : st.agc.toFixed(0) + " dB") + "</b></span>";
+    if (st.fix) {
+      read += "<span>位置誤差 <b>" + (st.posErr >= 1000 ? (st.posErr / 1000).toFixed(1) + " km" : Math.round(st.posErr) + " m") + "</b></span>";
+      if (st.timeErr) {
+        const te = st.timeErr;
+        const km = Math.abs(te) * 1e-6 * C / 1000;
+        read += "<span>時刻誤差 <b>" + te.toFixed(1) + " μs</b>（距離に換算すると " + km.toFixed(1) + " km 相当）</span>";
+      }
+    } else {
+      read += "<span>位置 <b>解なし</b></span>";
+    }
+    $("readout").innerHTML = read;
+
+    const v = $("verdict");
+    if (S.mode === "none") {
+      v.className = "ok";
+      v.textContent = "正常 — 全衛星を追尾、位置も安定。これが基準の姿";
+    } else if (S.mode === "jam") {
+      if (!st.fix) { v.className = "bad"; v.textContent = "ジャミング成立 — 追尾衛星 " + tracked + "機で測位不能。カーナビは「GPSを受信できません」状態"; }
+      else if (tracked < st.sats.length) { v.className = "warn"; v.textContent = "妨害の影響あり — 弱い衛星から脱落（残り " + tracked + "機）。精度が悪化し、あと少しで測位不能"; }
+      else { v.className = "ok"; v.textContent = "全機追尾を維持 — ただしC/N₀は " + (SATS[0].cn0 - st.sats[0].cn0v).toFixed(0) + "dB 低下。監視ログには異常として残る"; }
+    } else if (S.mode === "spoof") {
+      if (st.captured) { v.className = "spoof"; v.textContent = "スプーフィング成立 — 受信機は「正常に測位できている」と信じたまま、約3.2km離れた偽の位置を表示"; }
+      else { v.className = "ok"; v.textContent = "偽信号が本物より弱く、受信機は本物にロックしたまま（乗っ取りには本物以上の強さが要る）"; }
+    } else {
+      if (st.captured) { v.className = "warn"; v.textContent = "ミーコニング成立 — 信号は本物なのに、受信機は再放送アンテナの位置（約850m先）と遅れた時刻を報告"; }
+      else { v.className = "ok"; v.textContent = "再放送が弱く、受信機は直接受信した本物を追尾中"; }
+    }
+
+    $("flags").innerHTML = flagsFor(st).map((f) =>
+      '<li class="' + (f.hit ? "hit" : "miss") + '"><span class="mk">' + (f.hit ? "▲" : "・") + "</span>" + f.t + "</li>"
+    ).join("");
+  }
+
+  document.querySelectorAll(".tab-btn").forEach((b) => {
+    b.addEventListener("click", () => {
+      S.mode = b.dataset.m;
+      document.querySelectorAll(".tab-btn").forEach((x) => x.classList.toggle("active", x === b));
+      const cfg = MODES[S.mode];
+      if (cfg.showPow) { $("pow").min = cfg.min; $("pow").max = cfg.max; $("pow").value = cfg.def; S.pow = cfg.def; }
+      update();
+    });
+  });
+  $("pow").addEventListener("input", (e) => { S.pow = +e.target.value; update(); });
+  $("delay").addEventListener("input", (e) => { S.delay = +e.target.value; update(); });
+
+  document.querySelector('.tab-btn[data-m="none"]').classList.add("active");
+  window.addEventListener("resize", update);
+  if (window.ResizeObserver) new ResizeObserver(update).observe(cn0cv);
+  update();
+
+  // animate the scene (signal flow / noise rings)
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    let last = performance.now();
+    const loop = (now) => {
+      const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
+      last = now;
+      sceneT += dt;
+      drawScene();
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  }
+})();
+</script>
+</body>
+</html>

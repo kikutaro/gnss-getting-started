@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>Jamming, Spoofing &amp; Meaconing | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --ok: #10b981;
+    --warn: #d97706;
+    --bad: #dc2626;
+    --spoof: #a855f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --ok: #34d399; --warn: #fbbf24; --bad: #f87171; --spoof: #c084fc;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --ok: #34d399; --warn: #fbbf24; --bad: #f87171; --spoof: #c084fc;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --ok: #10b981; --warn: #d97706; --bad: #dc2626; --spoof: #a855f7;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .lawbox {
+    border: 2px solid var(--bad);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 12px 16px;
+    font-size: .88rem;
+  }
+  .lawbox b { color: var(--bad); }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+
+  .threats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 800px) { .threats { grid-template-columns: 1fr; } }
+  .tcard {
+    border: 1.5px solid var(--tc);
+    border-radius: 10px;
+    padding: 12px 14px;
+    background: var(--surface2);
+  }
+  .tcard h4 { margin: 0 0 2px; font-size: 1rem; color: var(--tc); }
+  .tcard .en { font-size: .72rem; color: var(--muted); letter-spacing: .06em; margin-bottom: 8px; }
+  .tcard svg { width: 100%; height: 76px; display: block; margin-bottom: 8px; }
+  .tcard svg .sat { fill: var(--muted); }
+  .tcard svg .rx { stroke: var(--text); }
+  .tcard svg .ray { stroke: var(--ok); stroke-width: 1.4; stroke-dasharray: 3 3; fill: none; }
+  .tcard svg .ray.dead { stroke: var(--muted); opacity: .4; }
+  .tcard svg .gnd { stroke: var(--border); stroke-width: 1.4; }
+  .tcard svg .atk { stroke: var(--tc); fill: var(--tc); }
+  .tcard svg .atkray { stroke: var(--tc); stroke-width: 1.8; fill: none; }
+  .tcard svg text { font-size: 8px; fill: var(--muted); font-family: ui-monospace, Consolas, monospace; }
+  .tcard p { margin: 0 0 8px; font-size: .84rem; }
+  .tcard .row { font-size: .78rem; color: var(--muted); }
+  .tcard .row b { color: var(--text); }
+
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .tabs .lbl { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+  .tab-btn {
+    appearance: none; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface2); color: var(--text);
+    padding: 6px 14px; cursor: pointer; line-height: 1.3; text-align: center;
+  }
+  .tab-btn b { display: block; font-size: .86rem; }
+  .tab-btn small { display: block; font-size: .68rem; color: var(--muted); }
+  .tab-btn:hover { border-color: var(--accent); }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tab-btn.active small { color: rgba(255,255,255,.85); }
+  .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .simgrid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; }
+  @media (max-width: 820px) { .simgrid { grid-template-columns: 1fr; } }
+
+  .ctl { display: grid; grid-template-columns: 12em 1fr 8em; align-items: center; gap: 10px; padding: 5px 0; }
+  .ctl .name { font-size: .82rem; color: var(--muted); }
+  .ctl output {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .84rem; text-align: right;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  #verdict {
+    padding: 9px 12px; border-radius: 8px;
+    font-weight: 700; font-size: .92rem; margin-top: 10px;
+    background: var(--surface2);
+    border-left: 4px solid var(--muted);
+  }
+  #verdict.ok { border-left-color: var(--ok); color: var(--ok); }
+  #verdict.warn { border-left-color: var(--warn); color: var(--warn); }
+  #verdict.bad { border-left-color: var(--bad); color: var(--bad); }
+  #verdict.spoof { border-left-color: var(--spoof); color: var(--spoof); }
+
+  .readout { display: flex; gap: 8px 24px; flex-wrap: wrap; padding: 8px 2px 0; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .readout b { font-family: ui-monospace, Consolas, monospace; }
+
+  ul.flags { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+  ul.flags li { display: flex; align-items: baseline; gap: 8px; font-size: .84rem; }
+  ul.flags .mk { width: 1.3em; flex: none; text-align: center; font-weight: 700; }
+  ul.flags li.hit { color: var(--bad); font-weight: 600; }
+  ul.flags li.hit .mk { color: var(--bad); }
+  ul.flags li.miss { color: var(--muted); }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 5px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Jamming, Spoofing &amp; Meaconing</h1>
+    <p>Three ways to fool GNSS — what happens inside the receiver, and how to catch each one</p>
+  </header>
+
+  <div class="lawbox">
+    <b>⚠ Where this page stands:</b> this is about <b>detecting and defending against</b> these attacks. Radiating in GNSS bands (jamming or transmitting fake signals) is <b>illegal in virtually every country</b>, and deceiving someone else's receiver is a crime. Any experiment belongs <b>on a cable with attenuators, or inside a shield box</b>, against your own equipment only (see <a href="sdr-gnss-tx.html">Transmitting GNSS with SDR</a>).
+  </div>
+
+  <div class="threats">
+    <div class="tcard" style="--tc: var(--bad)">
+      <h4>Jamming</h4>
+      <div class="en">DENIAL</div>
+      <svg viewBox="0 0 200 76" role="img" aria-label="Satellite signals drowned out by a jammer">
+        <circle class="sat" cx="30" cy="12" r="3.5"/><circle class="sat" cx="100" cy="8" r="3.5"/><circle class="sat" cx="170" cy="14" r="3.5"/>
+        <path class="ray dead" d="M30 16 L92 52"/><path class="ray dead" d="M100 12 L98 52"/><path class="ray dead" d="M170 18 L106 52"/>
+        <circle class="atk" cx="45" cy="56" r="2.5" fill="none" stroke-width="1.5"/>
+        <circle class="atk" cx="45" cy="56" r="9" fill="none" stroke-width="1.3" opacity=".7"/>
+        <circle class="atk" cx="45" cy="56" r="16" fill="none" stroke-width="1.1" opacity=".45"/>
+        <circle class="atk" cx="45" cy="56" r="23" fill="none" stroke-width="1" opacity=".25"/>
+        <line class="atk" x1="45" y1="56" x2="45" y2="66" stroke-width="1.5"/>
+        <path class="rx" d="M100 66 L100 54 M96 52 h8" stroke-width="1.6" fill="none"/>
+        <line class="gnd" x1="8" y1="66" x2="192" y2="66"/>
+        <text x="32" y="75">jammer</text><text x="112" y="60" fill="var(--bad)">✕ can't hear</text>
+      </svg>
+      <p>Floods the GNSS band with noise so the real signal is <strong>buried under interference</strong>. The receiver loses every satellite.</p>
+      <div class="row">Difficulty <b>Low</b> (cheap illegal jammers exist)<br>Goal <b>deny positioning</b><br>Symptom <b>all C/N₀ drop together → no fix</b></div>
+    </div>
+    <div class="tcard" style="--tc: var(--spoof)">
+      <h4>Spoofing</h4>
+      <div class="en">DECEPTION</div>
+      <svg viewBox="0 0 200 76" role="img" aria-label="Fake satellite signals convince the receiver of a false position">
+        <circle class="sat" cx="30" cy="12" r="3.5" opacity=".45"/><circle class="sat" cx="100" cy="8" r="3.5" opacity=".45"/><circle class="sat" cx="170" cy="14" r="3.5" opacity=".45"/>
+        <path class="ray dead" d="M30 16 L96 52"/><path class="ray dead" d="M100 12 L100 52"/><path class="ray dead" d="M170 18 L104 52"/>
+        <path class="atkray" d="M46 50 L96 54" stroke-dasharray="4 3"/>
+        <path class="atkray" d="M46 50 L96 57" stroke-dasharray="4 3"/>
+        <path class="atk" d="M40 56 a8 8 0 0 1 8 -8 l0 8 z" stroke-width="1.2"/>
+        <line class="atk" x1="44" y1="56" x2="44" y2="66" stroke-width="1.5"/>
+        <path class="rx" d="M100 66 L100 54 M96 52 h8" stroke-width="1.6" fill="none"/>
+        <line class="gnd" x1="8" y1="66" x2="192" y2="66"/>
+        <text x="26" y="75">spoofer</text><text x="112" y="60" fill="var(--spoof)">believes the lie</text>
+      </svg>
+      <p><strong>Fabricates convincing satellite signals</strong> so the receiver believes a <strong>false position and time</strong>.</p>
+      <div class="row">Difficulty <b>High</b> (needs signal generation and alignment)<br>Goal <b>make the victim trust a lie</b><br>Symptom <b>looks healthy, but the position is wrong</b></div>
+    </div>
+    <div class="tcard" style="--tc: var(--warn)">
+      <h4>Meaconing</h4>
+      <div class="en">REBROADCAST</div>
+      <svg viewBox="0 0 200 76" role="img" aria-label="Genuine signals captured elsewhere and rebroadcast with a delay">
+        <circle class="sat" cx="26" cy="12" r="3.5"/><circle class="sat" cx="68" cy="8" r="3.5"/><circle class="sat" cx="110" cy="14" r="3.5"/>
+        <path class="ray" d="M26 16 L40 40"/><path class="ray" d="M68 12 L44 40"/><path class="ray" d="M110 18 L48 40"/>
+        <path class="atk" d="M40 44 a6 6 0 0 1 8 0" fill="none" stroke-width="1.4"/>
+        <line class="atk" x1="44" y1="44" x2="44" y2="66" stroke-width="1.5"/>
+        <path class="atkray" d="M50 60 L128 60" stroke-dasharray="5 3"/>
+        <path class="atk" d="M124 57 l6 3 l-6 3 z" stroke="none"/>
+        <text x="62" y="56" fill="var(--warn)">replay, delayed Δt</text>
+        <line class="atk" x1="140" y1="46" x2="140" y2="66" stroke-width="1.5"/>
+        <path class="atk" d="M136 46 a6 6 0 0 1 8 0" fill="none" stroke-width="1.4"/>
+        <path class="atkray" d="M144 50 L164 56" stroke-dasharray="3 2"/>
+        <path class="rx" d="M168 66 L168 58 M164 56 h8" stroke-width="1.6" fill="none"/>
+        <line class="gnd" x1="8" y1="66" x2="192" y2="66"/>
+        <text x="26" y="75">site A</text><text x="150" y="75">victim</text>
+      </svg>
+      <p>Receives <strong>genuine signals elsewhere and rebroadcasts them with a delay</strong>. The signals are authentic, so they're hard to reject.</p>
+      <div class="row">Difficulty <b>Medium</b> (receive, amplify, re-radiate)<br>Goal <b>move the victim to another place/time</b><br>Symptom <b>position collapses onto the relay antenna</b></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>WHAT THE RECEIVER SEES — ATTACK SIMULATOR</h3>
+    <div class="tabs">
+      <span class="lbl">Scenario:</span>
+      <button class="tab-btn" data-m="none"><b>Normal</b><small>no attack</small></button>
+      <button class="tab-btn" data-m="jam"><b>Jamming</b><small>interference</small></button>
+      <button class="tab-btn" data-m="spoof"><b>Spoofing</b><small>fake signals</small></button>
+      <button class="tab-btn" data-m="meacon"><b>Meaconing</b><small>rebroadcast</small></button>
+    </div>
+    <canvas class="dark" id="scene" aria-label="Diagram of the current attack scenario"></canvas>
+    <p class="cap" id="sceneCap"></p>
+    <div class="simgrid">
+      <div>
+        <canvas class="dark" id="cn0" aria-label="Per-satellite C/N0 bar chart"></canvas>
+        <p class="cap">The receiver's per-satellite C/N₀ bars (what u-center shows). Blue = GPS, red = QZSS, purple = fake.</p>
+      </div>
+      <div>
+        <canvas class="dark" id="map" aria-label="True position versus the position the receiver reports"></canvas>
+        <p class="cap">Reported position (○) versus true position (✛).</p>
+      </div>
+    </div>
+    <div class="ctl" id="ctlPow">
+      <span class="name" id="powName">Jammer strength J/S</span>
+      <input type="range" id="pow" min="0" max="60" step="1" value="30">
+      <output id="powOut">30 dB</output>
+    </div>
+    <div class="ctl" id="ctlDelay" style="display:none">
+      <span class="name">Rebroadcast delay</span>
+      <input type="range" id="delay" min="0.1" max="50" step="0.1" value="10">
+      <output id="delayOut">10.0 μs</output>
+    </div>
+    <div class="readout" id="readout"></div>
+    <div id="verdict">—</div>
+    <ul class="flags" id="flags"></ul>
+  </div>
+
+  <div class="panel">
+    <h3>TELLING THEM APART — SYMPTOMS TO DIAGNOSIS</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th></th><th>Jamming</th><th>Spoofing</th><th>Meaconing</th></tr>
+        <tr><th>C/N₀</th><td>All satellites fall together, then vanish</td><td>Unnaturally high and suspiciously uniform</td><td>Genuine signals, so the spread looks natural</td></tr>
+        <tr><th>AGC</th><td>Drops hard (strong input detected)</td><td>Drops slightly</td><td>Drops slightly</td></tr>
+        <tr><th>Position</th><td>No fix at all</td><td>Anywhere the attacker likes — jumps or drifts</td><td>Collapses onto the relay antenna's location</td></tr>
+        <tr><th>Time</th><td>Lost</td><td>Attacker's choice (can be sent into the past)</td><td>Always late by the delay</td></tr>
+        <tr><th>Direction</th><td>One (the jammer)</td><td>One (the transmitter)</td><td>One (the relay)</td></tr>
+        <tr><th>Giveaway</th><td>Noise floor rises, everything drops at once</td><td>Discontinuity in position/time, disagreement between constellations, authentication failure</td><td>A common extra delay on every satellite; position that never moves</td></tr>
+      </table>
+    </div>
+    <p class="cap">One giveaway is shared by all three: <strong>everything arrives from a single direction</strong>. Real satellites are scattered across the sky; an attack comes out of one antenna — which is exactly what multi-element antennas (CRPA) and attitude-aware receivers exploit.</p>
+  </div>
+
+  <details class="note" open>
+    <summary>Why GNSS is such an easy target</summary>
+    <div class="body">
+      <p>As the <a href="db-lab.html">dB page</a> showed, GNSS arrives at about <strong>−130 dBm — more than 20 dB below the thermal noise floor</strong>. It only works thanks to correlation gain, so polluting the input is physically cheap: a few watts of interference can silence receivers for kilometres.</p>
+      <p>On top of that, civil GPS L1 C/A is <strong>publicly specified and unencrypted</strong>. Anyone can generate the same waveform, which is what makes spoofing possible at all (the military P(Y) code is encrypted and far harder to fake). Weak and open — the structural price of a free, universal utility.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>What makes meaconing special — rebroadcasting the real thing</summary>
+    <div class="body">
+      <p>Meaconing fabricates nothing. It picks up genuine GNSS signals in one place (say, outdoors), amplifies them and re-radiates them somewhere else (say, indoors). Because the content is authentic, <strong>even cryptographic authentication passes</strong> — which is what makes it nasty.</p>
+      <p>The outcome is pure geometry: every satellite's signal now travels a <strong>common extra path</strong> through the relay, so the receiver concludes it is standing <strong>at the relay antenna</strong>, with its clock late by the delay. The "GPS repeater" sold to bring signals indoors is exactly this mechanism — and it is illegal in many countries, including Japan.</p>
+      <p>The flip side: it is detectable. A receiver that should be moving reports a position that never budges, and its clock sits at a constant offset.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Defences — what receivers and systems can do</summary>
+    <div class="body">
+      <p><strong>1. Monitor and notice (cheap, immediate)</strong>: log AGC gain and C/N₀ continuously. Interference makes AGC dive and drops every satellite at once — that alone is a solid anomaly detector. Watch for position/time discontinuities too.</p>
+      <p><strong>2. Overwhelm with redundancy</strong>: multi-GNSS (GPS + QZSS + Galileo + BeiDou) and multi-frequency (L1 + L5). Faking all of them consistently is dramatically harder, and disagreement between them is itself the alarm. The spread you saw on the <a href="gnss-bands.html">band map</a> is resilience in disguise.</p>
+      <p><strong>3. Reject it spatially</strong>: a controlled reception pattern antenna (CRPA) steers a null toward "the strong thing coming from one direction". Standard in aviation and defence; cheaper cousins include choke rings and simply siting the antenna where the horizon is blocked.</p>
+      <p><strong>4. Cross-check other sensors</strong>: IMU, odometry, barometric altitude. "GNSS says we moved a kilometre, the IMU says we're parked" collapses the lie instantly — sensor fusion of this kind is standard in aviation and automated driving.</p>
+      <p><strong>5. Signal authentication (the real answer)</strong>: the satellite signs its data. Galileo's OSNMA (navigation message authentication) is operational, GPS has Chimera in development, and Japan's QZSS offers a signal authentication service. It cryptographically proves "a genuine satellite produced this message" — the structural fix for spoofing. (It cannot stop meaconing, whose signals are genuine; pair it with defence 4.)</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Real-world incidents and why the stakes are wide</summary>
+    <div class="body">
+      <p>GNSS interference is an operational reality. Aviation authorities report GPS loss near airports and widespread spoofing around conflict zones (ships displayed far from their true position, aircraft navigation alerts), and ICAO has issued warnings. Reports of GNSS interference in civil aviation have been trending upward in recent years.</p>
+      <p>The impact goes far beyond maps. As the <a href="time-lab.html">Time &amp; Clocks page</a> showed, cellular networks, power grids and financial systems depend on GNSS <strong>time</strong>. Losing GNSS is less "my map broke" than "the infrastructure's clocks drift" — which is why countries debate terrestrial backups (eLoran) and high-stability holdover clocks.</p>
+      <p>Closer to home, cheap <strong>personal privacy jammers</strong> (used to defeat vehicle tracking) are a recurring problem: even tiny output disrupts receivers for hundreds of metres to kilometres, and one famously interfered with an airport augmentation system (the Newark case in the US). Owning or using one is illegal in most jurisdictions.</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  const SATS = [
+    { name: "G02", cn0: 47, sys: "gps" },
+    { name: "G05", cn0: 44, sys: "gps" },
+    { name: "G12", cn0: 41, sys: "gps" },
+    { name: "G15", cn0: 38, sys: "gps" },
+    { name: "G24", cn0: 45, sys: "gps" },
+    { name: "G29", cn0: 36, sys: "gps" },
+    { name: "J01", cn0: 48, sys: "qzs" },
+    { name: "J03", cn0: 43, sys: "qzs" },
+  ];
+  const RC = 1.023e6;
+  const TRACK_TH = 27;
+  const C = 299792458;
+
+  const S = { mode: "none", pow: 30, delay: 10 };
+
+  const MODES = {
+    none: { powLabel: "(no attack)", showPow: false, showDelay: false },
+    jam:  { powLabel: "Jammer strength J/S", showPow: true, showDelay: false, min: 0, max: 60, def: 30, unit: " dB" },
+    spoof:{ powLabel: "Fake signal power (vs real)", showPow: true, showDelay: false, min: -6, max: 20, def: 6, unit: " dB" },
+    meacon:{ powLabel: "Rebroadcast power (vs real)", showPow: true, showDelay: true, min: -6, max: 20, def: 8, unit: " dB" },
+  };
+
+  function jammedCn0(cn0, jsDb) {
+    const js = Math.pow(10, jsDb / 10);
+    const denom = Math.pow(10, -cn0 / 10) + js / RC;
+    return -10 * Math.log10(denom);
+  }
+
+  function state() {
+    const out = { sats: [], posErr: 0, timeErr: 0, fix: true, agc: 0 };
+    if (S.mode === "none") {
+      out.sats = SATS.map((s) => ({ ...s, cn0v: s.cn0, spoofed: false }));
+      out.agc = 0;
+      out.posErr = 3;
+    } else if (S.mode === "jam") {
+      out.sats = SATS.map((s) => ({ ...s, cn0v: jammedCn0(s.cn0, S.pow), spoofed: false }));
+      out.agc = -Math.min(S.pow * 0.55, 33);
+      const tracked = out.sats.filter((s) => s.cn0v >= TRACK_TH).length;
+      out.tracked = tracked;
+      out.fix = tracked >= 4;
+      out.posErr = out.fix ? (tracked <= 5 ? 15 + (6 - tracked) * 20 : 3) : null;
+    } else if (S.mode === "spoof") {
+      const captured = S.pow >= 0;
+      out.sats = SATS.map((s) => captured
+        ? { ...s, cn0v: 46 + (S.pow - 6) * 0.35, spoofed: true }
+        : { ...s, cn0v: s.cn0, spoofed: false });
+      out.agc = captured ? -6 : -2;
+      out.captured = captured;
+      out.fix = true;
+      out.posErr = captured ? 3200 : 3;
+      out.timeErr = captured ? -35 : 0;
+    } else {
+      const captured = S.pow >= 0;
+      out.sats = SATS.map((s) => captured
+        ? { ...s, cn0v: Math.min(s.cn0 + S.pow * 0.25, 52), spoofed: false, replay: true }
+        : { ...s, cn0v: s.cn0, spoofed: false });
+      out.agc = captured ? -7 : -2;
+      out.captured = captured;
+      out.fix = true;
+      out.posErr = captured ? 850 : 3;
+      out.timeErr = captured ? S.delay : 0;
+    }
+    return out;
+  }
+
+  // ---------- scene illustration ----------
+  const scenecv = $("scene");
+  const sctx = scenecv.getContext("2d");
+  let sceneT = 0;
+  const SCENE_CAP = {
+    none: "Genuine satellites, scattered across the sky, deliver their faint signals (green). This is the healthy baseline.",
+    jam: "A jammer (red) floods the receiver's front-end with noise, and the satellite signals disappear beneath it.",
+    spoof: "The attacker transmits fake satellite signals (purple) more strongly than the real ones. The receiver locks onto the fake and believes a false position.",
+    meacon: "Genuine signals captured at site A are rebroadcast near the victim after a delay (orange). The signals are real, yet the receiver concludes it is standing at A.",
+  };
+
+  function drawScene() {
+    const { w, h } = fit(scenecv, 0.34);
+    sctx.clearRect(0, 0, w, h);
+    sctx.fillStyle = "#0a1210";
+    sctx.fillRect(0, 0, w, h);
+    sctx.font = "11px ui-monospace, Consolas, monospace";
+    const groundY = h * 0.8;
+    const rxX = w * 0.72;
+    const flow = -(sceneT * 40) % 16;
+
+    sctx.strokeStyle = "#2e5c48";
+    sctx.lineWidth = 1.4;
+    sctx.beginPath(); sctx.moveTo(0, groundY); sctx.lineTo(w, groundY); sctx.stroke();
+
+    const sats = [0.14, 0.34, 0.55, 0.78].map((f, i) => ({ x: w * f, y: h * (0.24 + (i % 2) * 0.07) }));
+    function drawSat(s, dim) {
+      sctx.save();
+      sctx.globalAlpha = dim ? 0.35 : 1;
+      sctx.fillStyle = "#3b82f6";
+      sctx.fillRect(s.x - 12, s.y - 2.5, 7, 5);
+      sctx.fillRect(s.x + 5, s.y - 2.5, 7, 5);
+      sctx.fillStyle = "#cbd5e1";
+      sctx.fillRect(s.x - 4, s.y - 4, 8, 8);
+      sctx.restore();
+    }
+    function ray(x1, y1, x2, y2, color, width, dash) {
+      sctx.strokeStyle = color;
+      sctx.lineWidth = width;
+      sctx.setLineDash(dash || [6, 6]);
+      sctx.lineDashOffset = flow;
+      sctx.beginPath(); sctx.moveTo(x1, y1); sctx.lineTo(x2, y2); sctx.stroke();
+      sctx.setLineDash([]);
+    }
+    function drawRx(label) {
+      sctx.strokeStyle = "#e2e8f0";
+      sctx.lineWidth = 2;
+      sctx.beginPath();
+      sctx.moveTo(rxX, groundY); sctx.lineTo(rxX, groundY - 16);
+      sctx.stroke();
+      sctx.fillStyle = "#e2e8f0";
+      sctx.beginPath(); sctx.arc(rxX, groundY - 19, 4, 0, Math.PI * 2); sctx.fill();
+      sctx.fillStyle = "rgba(160,190,182,.9)";
+      sctx.fillText(label, rxX - 22, groundY + 15);
+    }
+    function drawTower(x, color, label, dish) {
+      sctx.strokeStyle = color;
+      sctx.lineWidth = 2;
+      sctx.beginPath(); sctx.moveTo(x, groundY); sctx.lineTo(x, groundY - 22); sctx.stroke();
+      if (dish) {
+        sctx.beginPath();
+        sctx.arc(x, groundY - 24, 7, Math.PI * 0.9, Math.PI * 2.1);
+        sctx.stroke();
+      } else {
+        sctx.beginPath(); sctx.arc(x, groundY - 25, 3.5, 0, Math.PI * 2); sctx.fillStyle = color; sctx.fill();
+      }
+      sctx.fillStyle = color;
+      sctx.fillText(label, x - 24, groundY + 15);
+    }
+
+    const st = state();
+
+    if (S.mode === "none") {
+      sats.forEach((s) => { drawSat(s, false); ray(s.x, s.y + 6, rxX, groundY - 19, "rgba(52,211,153,.75)", 1.6); });
+      drawRx("receiver");
+      sctx.fillStyle = "rgba(52,211,153,.9)";
+      sctx.fillText("genuine signals — faint, arriving from all over the sky", 12, 15);
+    } else if (S.mode === "jam") {
+      const jamX = w * 0.22;
+      const strength = Math.min(S.pow / 60, 1);
+      sats.forEach((s) => { drawSat(s, S.pow > 25); ray(s.x, s.y + 6, rxX, groundY - 19, S.pow > 25 ? "rgba(148,180,170,.25)" : "rgba(52,211,153,.5)", 1.4); });
+      for (let k = 0; k < 4; k++) {
+        const rr = Math.max(0, ((sceneT * 55 + k * 34) % 150) * (0.5 + strength));
+        sctx.strokeStyle = "rgba(248,113,113," + Math.max(0.05, (0.5 - rr / 300) * (0.35 + strength)) + ")";
+        sctx.lineWidth = 1.6;
+        sctx.beginPath(); sctx.arc(jamX, groundY - 25, rr, 0, Math.PI * 2); sctx.stroke();
+      }
+      drawTower(jamX, "#f87171", "jammer", false);
+      drawRx("receiver");
+      if (!st.fix) {
+        sctx.strokeStyle = "#f87171";
+        sctx.lineWidth = 2.5;
+        sctx.beginPath();
+        sctx.moveTo(rxX - 9, groundY - 34); sctx.lineTo(rxX + 9, groundY - 16);
+        sctx.moveTo(rxX + 9, groundY - 34); sctx.lineTo(rxX - 9, groundY - 16);
+        sctx.stroke();
+      }
+      sctx.fillStyle = "rgba(248,113,113,.9)";
+      sctx.fillText("noise buries the receiver's input (J/S = " + S.pow + " dB)", 12, 15);
+    } else if (S.mode === "spoof") {
+      const spX = w * 0.22;
+      const cap = st.captured;
+      sats.forEach((s) => { drawSat(s, cap); ray(s.x, s.y + 6, rxX, groundY - 19, cap ? "rgba(148,180,170,.22)" : "rgba(52,211,153,.7)", 1.4); });
+      for (let k = 0; k < 3; k++) {
+        const fx = spX + 16 + k * 15, fy = groundY - 52 - k * 9;
+        sctx.globalAlpha = cap ? 0.9 : 0.35;
+        sctx.fillStyle = "#c084fc";
+        sctx.fillRect(fx - 3, fy - 3, 6, 6);
+        sctx.globalAlpha = 1;
+      }
+      ray(spX + 8, groundY - 26, rxX - 4, groundY - 21, cap ? "#c084fc" : "rgba(192,132,252,.35)", 2.2, [7, 5]);
+      ray(spX + 8, groundY - 22, rxX - 4, groundY - 16, cap ? "#c084fc" : "rgba(192,132,252,.35)", 2.2, [7, 5]);
+      drawTower(spX, "#c084fc", "spoofer", true);
+      drawRx("receiver");
+      sctx.fillStyle = cap ? "rgba(192,132,252,.95)" : "rgba(160,190,182,.7)";
+      sctx.fillText(cap ? "the fake outpowers the real thing — the receiver locks onto it" : "the fake is too weak; the receiver stays on the real satellites", 12, 15);
+    } else {
+      const relayX = w * 0.13, reX = w * 0.45;
+      const cap = st.captured;
+      sats.slice(0, 3).forEach((s) => { drawSat(s, false); ray(s.x, s.y + 6, relayX, groundY - 26, "rgba(52,211,153,.7)", 1.5); });
+      drawSat(sats[3], true);
+      drawTower(relayX, "#fbbf24", "site A", true);
+      sctx.strokeStyle = "rgba(251,191,36,.75)";
+      sctx.lineWidth = 1.8;
+      sctx.setLineDash([6, 5]);
+      sctx.lineDashOffset = flow;
+      sctx.beginPath(); sctx.moveTo(relayX + 8, groundY - 8); sctx.lineTo(reX - 8, groundY - 8); sctx.stroke();
+      sctx.setLineDash([]);
+      sctx.fillStyle = "rgba(251,191,36,.95)";
+      sctx.fillText("delay " + S.delay.toFixed(1) + " μs", (relayX + reX) / 2 - 30, groundY - 13);
+      drawTower(reX, "#fbbf24", "re-radiator", false);
+      ray(reX + 6, groundY - 25, rxX - 4, groundY - 20, cap ? "#fbbf24" : "rgba(251,191,36,.3)", 2.2, [7, 5]);
+      drawRx("receiver");
+      if (cap) {
+        sctx.strokeStyle = "rgba(251,191,36,.6)";
+        sctx.setLineDash([3, 3]);
+        sctx.lineWidth = 1.4;
+        sctx.beginPath(); sctx.arc(relayX, groundY - 12, 15, 0, Math.PI * 2); sctx.stroke();
+        sctx.setLineDash([]);
+        sctx.fillStyle = "rgba(251,191,36,.95)";
+        sctx.fillText("the receiver thinks it is here ↑", 12, 15);
+      } else {
+        sctx.fillStyle = "rgba(160,190,182,.7)";
+        sctx.fillText("the replay is too weak; direct signals still win", 12, 15);
+      }
+    }
+    $("sceneCap").textContent = SCENE_CAP[S.mode];
+  }
+
+  const cn0cv = $("cn0");
+  const cctx = cn0cv.getContext("2d");
+  function fit(cv, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth;
+    const h = Math.round(w * aspect);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      cv.style.height = h + "px";
+    }
+    cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  function drawBars(st) {
+    const { w, h } = fit(cn0cv, 0.55);
+    cctx.clearRect(0, 0, w, h);
+    cctx.fillStyle = "#0a1210";
+    cctx.fillRect(0, 0, w, h);
+    cctx.font = "10px ui-monospace, Consolas, monospace";
+    const padL = 30, padR = 8, padT = 12, padB = 26;
+    const Y = (v) => padT + (55 - v) / 55 * (h - padT - padB);
+    for (let v = 50; v >= 0; v -= 10) {
+      const y = Y(v);
+      cctx.strokeStyle = "rgba(148,180,170,.12)";
+      cctx.beginPath(); cctx.moveTo(padL, y); cctx.lineTo(w - padR, y); cctx.stroke();
+      cctx.fillStyle = "rgba(160,190,182,.6)";
+      cctx.fillText(String(v), 6, y + 3);
+    }
+    const ty = Y(TRACK_TH);
+    cctx.strokeStyle = "rgba(248,113,113,.65)";
+    cctx.setLineDash([5, 4]);
+    cctx.beginPath(); cctx.moveTo(padL, ty); cctx.lineTo(w - padR, ty); cctx.stroke();
+    cctx.setLineDash([]);
+    cctx.fillStyle = "rgba(248,113,113,.9)";
+    cctx.fillText("tracking limit " + TRACK_TH + " dB-Hz", padL + 4, ty - 4);
+    cctx.fillStyle = "rgba(160,190,182,.6)";
+    cctx.fillText("dB-Hz", 4, padT - 2);
+
+    const n = st.sats.length;
+    const bw = (w - padL - padR) / n;
+    st.sats.forEach((s, i) => {
+      const x = padL + i * bw + bw * 0.18;
+      const bwid = bw * 0.64;
+      const v = Math.max(s.cn0v, 0);
+      const y = Y(v);
+      const alive = v >= TRACK_TH;
+      let col = s.sys === "qzs" ? "#ef4444" : "#3b82f6";
+      if (s.spoofed) col = "#a855f7";
+      cctx.fillStyle = col;
+      cctx.globalAlpha = alive ? 0.85 : 0.28;
+      cctx.fillRect(x, y, bwid, h - padB - y);
+      cctx.globalAlpha = 1;
+      cctx.fillStyle = alive ? "rgba(230,238,236,.9)" : "rgba(160,190,182,.5)";
+      cctx.fillText(s.name, x - 1, h - 14);
+      if (v >= 1) cctx.fillText(v.toFixed(0), x + 2, y - 3);
+      else { cctx.fillStyle = "rgba(248,113,113,.8)"; cctx.fillText("✕", x + bwid / 2 - 3, h - padB - 3); }
+    });
+  }
+
+  const mapcv = $("map");
+  const mctx = mapcv.getContext("2d");
+  function drawMap(st) {
+    const { w, h } = fit(mapcv, 0.78);
+    mctx.clearRect(0, 0, w, h);
+    mctx.fillStyle = "#0a1210";
+    mctx.fillRect(0, 0, w, h);
+    mctx.font = "10px ui-monospace, Consolas, monospace";
+    const cx = w * 0.34, cy = h * 0.62;
+    const maxM = 4000;
+    const R = Math.min(w, h) * 0.42;
+    const P = (m) => m / maxM * R;
+    for (const r of [500, 1500, 3000]) {
+      mctx.strokeStyle = "rgba(148,180,170,.14)";
+      mctx.beginPath(); mctx.arc(cx, cy, P(r), 0, Math.PI * 2); mctx.stroke();
+      mctx.fillStyle = "rgba(160,190,182,.45)";
+      mctx.fillText(r >= 1000 ? (r / 1000) + "km" : r + "m", cx + P(r) - 16, cy - 3);
+    }
+    mctx.strokeStyle = "#34d399";
+    mctx.lineWidth = 2;
+    mctx.beginPath();
+    mctx.moveTo(cx - 7, cy); mctx.lineTo(cx + 7, cy);
+    mctx.moveTo(cx, cy - 7); mctx.lineTo(cx, cy + 7);
+    mctx.stroke();
+    mctx.fillStyle = "#34d399";
+    mctx.fillText("true position", cx + 10, cy + 14);
+
+    if (!st.fix) {
+      mctx.fillStyle = "rgba(248,113,113,.9)";
+      mctx.font = "13px sans-serif";
+      mctx.fillText("NO FIX", w * 0.34, h * 0.28);
+      return;
+    }
+    const err = st.posErr || 0;
+    const ang = S.mode === "spoof" ? -0.7 : S.mode === "meacon" ? 2.3 : 0.9;
+    const rx = cx + Math.cos(ang) * P(Math.min(err, maxM));
+    const ry = cy + Math.sin(ang) * P(Math.min(err, maxM));
+    if (err > 20) {
+      mctx.strokeStyle = "rgba(248,113,113,.5)";
+      mctx.setLineDash([4, 4]);
+      mctx.lineWidth = 1.4;
+      mctx.beginPath(); mctx.moveTo(cx, cy); mctx.lineTo(rx, ry); mctx.stroke();
+      mctx.setLineDash([]);
+    }
+    const col = err > 100 ? (S.mode === "spoof" ? "#c084fc" : "#fbbf24") : err > 20 ? "#fbbf24" : "#e2e8f0";
+    mctx.strokeStyle = col;
+    mctx.lineWidth = 2;
+    mctx.beginPath(); mctx.arc(rx, ry, 7, 0, Math.PI * 2); mctx.stroke();
+    mctx.fillStyle = col;
+    mctx.beginPath(); mctx.arc(rx, ry, 2.5, 0, Math.PI * 2); mctx.fill();
+    mctx.fillText("reported", rx + 11, ry + 4);
+    if (err > 20) {
+      mctx.fillStyle = "rgba(248,113,113,.85)";
+      mctx.fillText("error " + (err >= 1000 ? (err / 1000).toFixed(1) + " km" : Math.round(err) + " m"), (cx + rx) / 2 - 20, (cy + ry) / 2 - 6);
+    }
+  }
+
+  function flagsFor(st) {
+    const f = [];
+    const jam = S.mode === "jam";
+    const spoof = S.mode === "spoof" && st.captured;
+    const meacon = S.mode === "meacon" && st.captured;
+    const cn0s = st.sats.map((s) => s.cn0v);
+    const spread = Math.max(...cn0s) - Math.min(...cn0s);
+    f.push({ t: "AGC gain dives (strong input detected)", hit: st.agc <= -10 });
+    f.push({ t: "All satellites lose C/N₀ simultaneously", hit: jam && S.pow >= 15 });
+    f.push({ t: "C/N₀ suspiciously uniform (all satellites high and level)", hit: spread < 3 && Math.min.apply(null, cn0s) > 40 });
+    f.push({ t: "Discontinuous jump in position/time", hit: spoof });
+    f.push({ t: "Common extra delay on every satellite (clock offset)", hit: meacon });
+    f.push({ t: "Position frozen although the receiver is moving", hit: meacon });
+    f.push({ t: "No position solution", hit: !st.fix });
+    f.push({ t: "Navigation message authentication fails (OSNMA etc.)", hit: spoof });
+    return f;
+  }
+
+  function update() {
+    const cfg = MODES[S.mode];
+    $("ctlPow").style.display = cfg.showPow ? "" : "none";
+    $("ctlDelay").style.display = cfg.showDelay ? "" : "none";
+    if (cfg.showPow) {
+      $("powName").textContent = cfg.powLabel;
+      const el = $("pow");
+      if (+el.min !== cfg.min || +el.max !== cfg.max) {
+        el.min = cfg.min; el.max = cfg.max; el.value = cfg.def; S.pow = cfg.def;
+      }
+      $("powOut").textContent = (S.pow > 0 && cfg.min < 0 ? "+" : "") + S.pow + cfg.unit;
+    }
+    $("delayOut").textContent = S.delay.toFixed(1) + " μs";
+
+    const st = state();
+    drawScene();
+    drawBars(st);
+    drawMap(st);
+
+    const tracked = st.sats.filter((s) => s.cn0v >= TRACK_TH).length;
+    let read = "Tracked satellites <b>" + tracked + " / " + st.sats.length + "</b>" +
+      "<span>AGC <b>" + (st.agc === 0 ? "normal" : st.agc.toFixed(0) + " dB") + "</b></span>";
+    if (st.fix) {
+      read += "<span>Position error <b>" + (st.posErr >= 1000 ? (st.posErr / 1000).toFixed(1) + " km" : Math.round(st.posErr) + " m") + "</b></span>";
+      if (st.timeErr) {
+        const te = st.timeErr;
+        const km = Math.abs(te) * 1e-6 * C / 1000;
+        read += "<span>Time error <b>" + te.toFixed(1) + " μs</b> (= " + km.toFixed(1) + " km of range)</span>";
+      }
+    } else {
+      read += "<span>Position <b>no fix</b></span>";
+    }
+    $("readout").innerHTML = read;
+
+    const v = $("verdict");
+    if (S.mode === "none") {
+      v.className = "ok";
+      v.textContent = "Normal — every satellite tracked, position stable. This is your baseline";
+    } else if (S.mode === "jam") {
+      if (!st.fix) { v.className = "bad"; v.textContent = "Jamming succeeds — only " + tracked + " satellites tracked, no fix. This is the \"GPS signal lost\" screen"; }
+      else if (tracked < st.sats.length) { v.className = "warn"; v.textContent = "Degraded — the weakest satellites have dropped out (" + tracked + " left). Accuracy suffers and the fix is close to failing"; }
+      else { v.className = "ok"; v.textContent = "Still tracking all satellites — but C/N₀ is down " + (SATS[0].cn0 - st.sats[0].cn0v).toFixed(0) + " dB. Your monitoring log records the anomaly"; }
+    } else if (S.mode === "spoof") {
+      if (st.captured) { v.className = "spoof"; v.textContent = "Spoofing succeeds — the receiver reports a healthy fix while sitting 3.2 km from where it really is"; }
+      else { v.className = "ok"; v.textContent = "The fake is weaker than the real signal, so tracking stays on the authentic satellites (capture needs more power)"; }
+    } else {
+      if (st.captured) { v.className = "warn"; v.textContent = "Meaconing succeeds — genuine signals, yet the receiver reports the relay antenna's location (~850 m away) and a late clock"; }
+      else { v.className = "ok"; v.textContent = "The rebroadcast is too weak; the receiver stays on directly received signals"; }
+    }
+
+    $("flags").innerHTML = flagsFor(st).map((f) =>
+      '<li class="' + (f.hit ? "hit" : "miss") + '"><span class="mk">' + (f.hit ? "▲" : "・") + "</span>" + f.t + "</li>"
+    ).join("");
+  }
+
+  document.querySelectorAll(".tab-btn").forEach((b) => {
+    b.addEventListener("click", () => {
+      S.mode = b.dataset.m;
+      document.querySelectorAll(".tab-btn").forEach((x) => x.classList.toggle("active", x === b));
+      const cfg = MODES[S.mode];
+      if (cfg.showPow) { $("pow").min = cfg.min; $("pow").max = cfg.max; $("pow").value = cfg.def; S.pow = cfg.def; }
+      update();
+    });
+  });
+  $("pow").addEventListener("input", (e) => { S.pow = +e.target.value; update(); });
+  $("delay").addEventListener("input", (e) => { S.delay = +e.target.value; update(); });
+
+  document.querySelector('.tab-btn[data-m="none"]').classList.add("active");
+  window.addEventListener("resize", update);
+  if (window.ResizeObserver) new ResizeObserver(update).observe(cn0cv);
+  update();
+
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    let last = performance.now();
+    const loop = (now) => {
+      const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
+      last = now;
+      sceneT += dt;
+      drawScene();
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  }
+})();
+</script>
+</body>
+</html>
