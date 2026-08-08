@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>QZSS みちびき | GNSS Getting Started</title>
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --qzs: #ef4444;
+    --geo: #f59e0b;
+    --ok: #10b981;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --qzs: #f87171; --geo: #fbbf24; --ok: #34d399;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --qzs: #f87171; --geo: #fbbf24; --ok: #34d399;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --qzs: #ef4444; --geo: #f59e0b; --ok: #10b981;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+
+  .orbgrid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 14px; }
+  @media (max-width: 860px) { .orbgrid { grid-template-columns: 1fr; } }
+
+  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding-top: 8px; }
+  .btnrow label { display: flex; align-items: center; gap: 6px; font-size: .84rem; color: var(--muted); }
+  .btnrow select {
+    font-family: inherit; font-size: .85rem;
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px;
+  }
+  button.act {
+    appearance: none;
+    border: 1px solid var(--accent);
+    background: var(--accent); color: #fff;
+    border-radius: 8px; font-size: .86rem; font-weight: 600;
+    padding: 6px 16px; cursor: pointer; font-family: inherit;
+  }
+  button.act.ghost { background: transparent; color: var(--accent); }
+  button.act:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .clock {
+    margin-left: auto;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .85rem; color: var(--muted);
+  }
+  .readout { display: flex; gap: 8px 24px; flex-wrap: wrap; padding: 8px 2px 0; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .readout b { font-family: ui-monospace, Consolas, monospace; }
+  .readout .hi { color: var(--ok); font-weight: 700; }
+
+  /* service cards */
+  .svcs { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .svc {
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--sc, var(--accent));
+    border-radius: 10px;
+    padding: 11px 14px;
+    background: var(--surface2);
+  }
+  .svc .band {
+    display: inline-block;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: .7rem; font-weight: 700;
+    color: var(--sc, var(--accent));
+    border: 1px solid var(--sc, var(--accent));
+    border-radius: 999px;
+    padding: 0 8px;
+    margin-bottom: 6px;
+  }
+  .svc h4 { margin: 0 0 4px; font-size: .95rem; }
+  .svc p { margin: 0; font-size: .83rem; color: var(--muted); }
+  .svc p b { color: var(--text); }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 5px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>QZSS みちびき</h1>
+    <p>日本の準天頂衛星システム — 八の字を描いて日本の真上に居座る、地域特化型GNSS</p>
+  </header>
+
+  <div class="panel">
+    <h3>八の字軌道 — 24時間の動きを見る</h3>
+    <div class="orbgrid">
+      <div>
+        <canvas class="dark" id="track" aria-label="QZSS衛星の八の字の地上軌跡"></canvas>
+        <p class="cap">地上軌跡（衛星の真下の点が地表に描く線）。3機の準天頂衛星が<strong>同じ八の字を8時間ずつずれて</strong>回る。橙の◆は静止軌道のJ03。</p>
+      </div>
+      <div>
+        <canvas class="dark" id="elev" aria-label="東京から見た各衛星の仰角の時間変化"></canvas>
+        <p class="cap">東京から見た仰角の24時間変化。緑の帯は「仰角70°以上の衛星が最低1機ある」時間帯 — ほぼ一日中続く。</p>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button class="act" id="playBtn" aria-pressed="true">⏸ 一時停止</button>
+      <label>速さ
+        <select id="speed">
+          <option value="900">1秒 = 15分</option>
+          <option value="1800" selected>1秒 = 30分</option>
+          <option value="3600">1秒 = 1時間</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="showTrail" checked>軌跡を残す</label>
+      <span class="clock">経過 <span id="clk">00:00</span></span>
+    </div>
+    <div class="readout" id="readout"></div>
+  </div>
+
+  <div class="panel">
+    <h3>なぜ八の字になるのか</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>軌道要素</th><th>QZSSの値</th><th>効果</th></tr>
+        <tr><td>周期</td><td class="num">約23時間56分</td><td>地球の自転と同期 → 毎日同じ場所に戻る（＝軌跡が閉じる）</td></tr>
+        <tr><td>軌道傾斜角 i</td><td class="num">約41°</td><td>赤道から南北に振れる → 八の字の<strong>縦の広がり</strong></td></tr>
+        <tr><td>離心率 e</td><td class="num">約0.075</td><td>楕円軌道。遠地点でゆっくり動く → 八の字の<strong>上下非対称</strong></td></tr>
+        <tr><td>近地点引数 ω</td><td class="num">約270°</td><td>遠地点を<strong>北半球側</strong>に置く → 日本上空での滞在が長くなる</td></tr>
+      </table>
+    </div>
+    <p class="cap">静止衛星（傾斜角0°）は空の一点に止まって見えます。そこに傾斜を与えると、衛星は1日かけて赤道の南北を往復し、地上から見ると八の字を描きます。QZSSはさらに楕円にして「北側でゆっくり、南側で素早く」動かすことで、<strong>日本の真上に長く留まる</strong>ように設計されています。1機あたり約8時間、日本上空を担当します。</p>
+  </div>
+
+  <div class="panel">
+    <h3>高仰角であることの価値</h3>
+    <p style="margin:0 0 10px; font-size:.9rem">GPSの衛星は空のどこにいるか選べません。低い仰角の衛星はビルや山に隠れ、<a href="gnss-sim.html">マルチパス</a>も拾いやすくなります。QZSSは<strong>ほぼ真上</strong>にいるので:</p>
+    <div class="svcs">
+      <div class="svc" style="--sc: var(--qzs)"><h4>都市の谷間に強い</h4><p>ビルに挟まれた道でも天頂は見えている。アーバンキャニオンで衛星数を稼げる。</p></div>
+      <div class="svc" style="--sc: var(--qzs)"><h4>山間部・森林でも</h4><p>斜面や樹冠の影響を受けにくい。低仰角の衛星から順に失うので、天頂は最後まで残る。</p></div>
+      <div class="svc" style="--sc: var(--qzs)"><h4>マルチパスが少ない</h4><p>真上から来る信号は反射経路が短く、誤差になりにくい。</p></div>
+      <div class="svc" style="--sc: var(--qzs)"><h4>大気の影響も小さい</h4><p>斜めに入るほど電離層・対流圏の通過距離が長い。天頂は最短距離。</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>QZSS独自のサービス</h3>
+    <div class="svcs">
+      <div class="svc" style="--sc: var(--accent)">
+        <span class="band">L1C/A · L1C · L2C · L5</span>
+        <h4>GPS互換の測位信号</h4>
+        <p>PRN 193〜のGPS互換信号。受信機から見れば<b>「GPS衛星が増えた」</b>のと同じで、対応のための改造は不要。<a href="gnss-navmsg.html">航法メッセージ</a>もGPS互換。</p>
+      </div>
+      <div class="svc" style="--sc: var(--ok)">
+        <span class="band">L1S</span>
+        <h4>サブメータ級測位補強（SLAS）</h4>
+        <p>電子基準点の観測から誤差を推定して放送。単独測位を<b>1m級</b>に改善。L1と同じ周波数なのでアンテナ・RF部はそのまま使える。</p>
+      </div>
+      <div class="svc" style="--sc: var(--geo)">
+        <span class="band">L1S</span>
+        <h4>災害・危機管理通報（災危通報）</h4>
+        <p>気象庁などの防災情報（地震・津波・噴火・気象警報など）を<b>衛星から直接放送</b>。携帯圏外・輻輳時でも届く、測位以外の公共サービス。</p>
+      </div>
+      <div class="svc" style="--sc: #a855f7">
+        <span class="band">L6D</span>
+        <h4>センチメータ級測位補強（CLAS）</h4>
+        <p>PPP-RTK方式の補正情報を放送し、<b>数cm級</b>の測位を実現。基準局への通信契約なしで高精度が得られるのが特徴。自動運転・農機・測量向け。</p>
+      </div>
+      <div class="svc" style="--sc: #a855f7">
+        <span class="band">L6E</span>
+        <h4>MADOCA-PPP</h4>
+        <p>PPP方式の補正をアジア・オセアニアの<b>広域</b>に配信。CLASより広いエリアをカバーする（収束に時間はかかる）。</p>
+      </div>
+      <div class="svc" style="--sc: #06b6d4">
+        <span class="band">S帯</span>
+        <h4>衛星安否確認サービス（Q-ANPI）</h4>
+        <p>災害時、避難所などから<b>衛星経由で安否情報を送る</b>（上り回線）。地上通信が途絶しても情報を届けられる、GNSSとしては珍しい双方向サービス。</p>
+      </div>
+      <div class="svc" style="--sc: #f472b6">
+        <span class="band">認証</span>
+        <h4>信号認証サービス</h4>
+        <p>放送する信号・補強情報に<b>電子署名</b>を付け、受信機が「本物のみちびきが送った情報か」を検証できる。<a href="gnss-threats.html">スプーフィング</a>への直接的な対策。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>リージョナルGNSS — QZSSとNavICという選択</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>種別</th><th>システム</th><th>機数の目安</th><th>カバー範囲</th><th>設計思想</th></tr>
+        <tr><td rowspan="4">グローバル</td><td>GPS（米国）</td><td class="num">約31機</td><td>全世界</td><td rowspan="4">中軌道（MEO）に多数を配置し、地球上どこでも4機以上見えるようにする。膨大な機数と運用コストが必要。</td></tr>
+        <tr><td>GLONASS（ロシア）</td><td class="num">約24機</td><td>全世界</td></tr>
+        <tr><td>Galileo（欧州）</td><td class="num">約28機</td><td>全世界</td></tr>
+        <tr><td>BeiDou（中国）</td><td class="num">約45機</td><td>全世界</td></tr>
+        <tr><td rowspan="2"><strong>リージョナル</strong></td><td><strong>QZSS（日本）</strong></td><td class="num">4機 → 7機へ</td><td>日本・アジアオセアニア</td><td rowspan="2">少数の衛星を自国上空に集中配置。<strong>単独で測位するのではなく、GPS等を補完・補強する</strong>。少ない機数で自国に最適化できるのが強み。</td></tr>
+        <tr><td><strong>NavIC（インド）</strong></td><td class="num">約7機</td><td>インドと周辺</td></tr>
+      </table>
+    </div>
+    <p class="cap">QZSSとNavICはどちらも<strong>リージョナル（地域）システム</strong>です。ただし配置の考え方は対照的: QZSSは準天頂軌道（傾斜した八の字）で天頂の見通しを稼ぐのに対し、NavICは静止衛星と傾斜静止軌道の組み合わせでインド上空をカバーし、さらにL5とS帯という独自の周波数構成を採ります（<a href="gnss-bands.html">周波数帯マップ</a>参照）。「全世界に均等」より「自国に手厚く」を選ぶと、少ない衛星で大きな効果が得られる — これがリージョナルの設計哲学です。</p>
+  </div>
+
+  <details class="note" open>
+    <summary>「補完」と「補強」— QZSSの2つの役割</summary>
+    <div class="body">
+      <p><strong>補完（Complement）</strong>: GPSと同じ形式の信号を出すことで、単純に「見える衛星を増やす」役割。都市部でGPSだけでは4機に足りない状況でも、天頂のQZSSが加われば測位できます。受信機側の対応が容易なのがポイントで、いまどきのスマホはたいてい対応済みです。</p>
+      <p><strong>補強（Augmentation）</strong>: 誤差の補正情報を配る役割。L1SのSLAS（1m級）とL6のCLAS（cm級）がこれにあたります。通常こうした高精度測位には基準局データを受け取るための通信回線（携帯網）が必要ですが、QZSSは<strong>衛星から直接ばらまく</strong>ので、圏外の山間部や海上でも高精度が使えます。</p>
+      <p>この「補完＋補強」というセットは、少数機のリージョナルシステムだからこそ成立する設計です。全世界をカバーする必要がないぶん、日本に必要な機能を厚く積める、というわけです。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>準天頂軌道の設計を数字で追う</summary>
+    <div class="body">
+      <p>周期を<strong>恒星日（23時間56分4秒）</strong>に合わせると、衛星は地球の自転とぴったり同期します。<a href="coord-lab.html">座標のページ</a>で見たケプラー軌道の式でいえば、軌道長半径 a ≈ 42,164 km（静止軌道と同じ）。</p>
+      <p>ここで傾斜角を0にすれば静止衛星ですが、41°傾けると衛星は赤道の南北を1日かけて往復します。地上から見た軌跡が八の字になるのは、この南北運動と地球自転のわずかなズレの合成です。さらに離心率0.075の楕円にして遠地点（＝ゆっくり動く点）を北半球に置くと、北側のループが大きく引き伸ばされ、日本の上に長居する形になります。</p>
+      <p>結果として1機が日本上空（高仰角）にいるのは1日あたり<strong>約8時間</strong>。だから3機を8時間ずつずらして配置すれば、24時間切れ目なく「天頂に1機」が実現します。左の地上軌跡で3機が同じ八の字を追いかけているのは、そのためです。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>体制の拡張と、これから</summary>
+    <div class="body">
+      <p>QZSSは初号機「みちびき」の打ち上げ（2010年）から始まり、2018年に4機体制でサービスを開始しました。現在は準天頂軌道3機＋静止軌道1機の構成です。<strong>7機体制</strong >への拡張が進められており、将来的にはさらに機数を増やす構想もあります。</p>
+      <p>7機になると何が変わるか: 現在の4機体制では、GPSが使えない状況でQZSSだけで測位することはできません（測位には最低4機必要、<a href="gnss-obs.html">擬似距離のページ</a>参照）。7機体制では日本上空で常時4機以上が見える状態に近づき、<strong>QZSS単独での測位（持続測位能力）</strong>に道が開けます。他国のシステムに依存しない測位基盤を持つ、という安全保障上の意味も大きいテーマです。</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  // ---- orbit model ----
+  const A = 42164;              // km, geosynchronous semi-major axis
+  const RE = 6371;              // km
+  const ECC = 0.075;
+  const INC = 41 * Math.PI / 180;
+  const ARGP = 270 * Math.PI / 180;
+  const TSID = 86164;           // sidereal day, s
+  const RX = { lat: 35.68 * Math.PI / 180, lon: 139.77 * Math.PI / 180 };  // Tokyo
+  const GEO_LON = 127;          // J03 geostationary longitude
+
+  const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+  const wrap180 = (d) => { let x = ((d + 180) % 360 + 360) % 360 - 180; return x; };
+
+  function keplerE(M, e) {
+    let E = M;
+    for (let k = 0; k < 8; k++) E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+    return E;
+  }
+
+  // satellite sub-point and radius at mean anomaly M (rad), for a satellite whose
+  // ground track is shared (Omega offset cancels the phase offset)
+  function subPoint(M) {
+    const E = keplerE(M, ECC);
+    const nu = 2 * Math.atan2(Math.sqrt(1 + ECC) * Math.sin(E / 2), Math.sqrt(1 - ECC) * Math.cos(E / 2));
+    const r = A * (1 - ECC * Math.cos(E));
+    const u = nu + ARGP;
+    const lat = Math.asin(Math.sin(INC) * Math.sin(u));
+    const dAlpha = Math.atan2(Math.cos(INC) * Math.sin(u), Math.cos(u));
+    const lonRaw = dAlpha - M;    // earth rotation subtracted; constant offset added later
+    return { lat, lonRaw, r };
+  }
+
+  // center the figure-8 on ~135E
+  const LON0 = (function () {
+    let sx = 0, sy = 0;
+    for (let k = 0; k < 240; k++) {
+      const p = subPoint(k / 240 * 2 * Math.PI);
+      sx += Math.cos(p.lonRaw); sy += Math.sin(p.lonRaw);
+    }
+    return 135 * D2R - Math.atan2(sy, sx);
+  })();
+
+  function satAt(M) {
+    const p = subPoint(M);
+    return { lat: p.lat, lon: p.lonRaw + LON0, r: p.r };
+  }
+
+  function elevationFrom(satLat, satLon, satR) {
+    const cs = Math.cos(satLat), ss = Math.sin(satLat);
+    const s = [satR * cs * Math.cos(satLon), satR * cs * Math.sin(satLon), satR * ss];
+    const cr = Math.cos(RX.lat), sr = Math.sin(RX.lat);
+    const g = [RE * cr * Math.cos(RX.lon), RE * cr * Math.sin(RX.lon), RE * sr];
+    const d = [s[0] - g[0], s[1] - g[1], s[2] - g[2]];
+    const dn = Math.hypot(d[0], d[1], d[2]);
+    const up = [g[0] / RE, g[1] / RE, g[2] / RE];
+    const dot = (d[0] * up[0] + d[1] * up[1] + d[2] * up[2]) / dn;
+    return Math.asin(Math.max(-1, Math.min(1, dot))) * R2D;
+  }
+
+  // 3 QZO satellites, 8 hours (120 deg) apart on the same ground track
+  const QZO = [
+    { name: "J01", phase: 0 },
+    { name: "J02", phase: 2 * Math.PI / 3 },
+    { name: "J04", phase: 4 * Math.PI / 3 },
+  ];
+  const geoElev = elevationFrom(0, GEO_LON * D2R, A);
+
+  const S = { t: 0, playing: true, trail: true };
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) S.playing = false;
+
+  function fit(cv, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth;
+    const h = Math.round(w * aspect);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      cv.style.height = h + "px";
+    }
+    cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  // ---- rough coastlines (schematic) ----
+  const JAPAN = [
+    [130.2, 32.8], [131.5, 31.5], [131.8, 33.3], [133.5, 34.3], [135.5, 33.6],
+    [136.9, 34.7], [138.5, 35.0], [139.8, 35.7], [140.9, 36.9], [141.0, 38.3],
+    [141.6, 40.5], [140.5, 41.5],
+  ];
+  const HOKKAIDO = [[141.0, 42.0], [143.0, 42.3], [145.3, 43.4], [144.5, 45.4], [141.7, 45.5], [140.5, 43.3], [141.0, 42.0]];
+  const AUS = [
+    [113, -22], [114, -28], [118, -35], [129, -32], [135, -35], [140, -38], [147, -38],
+    [150, -35], [153, -28], [146, -19], [142, -11], [136, -12], [130, -12], [125, -14], [117, -20], [113, -22],
+  ];
+  const ASIA = [[100, 20], [105, 18], [110, 21], [117, 23], [121, 30], [122, 37], [126, 34], [129, 35], [128, 38], [130, 42], [135, 48]];
+
+  const trackCv = $("track");
+  const tctx = trackCv.getContext("2d");
+
+  function drawTrack() {
+    const { w, h } = fit(trackCv, 1.05);
+    tctx.clearRect(0, 0, w, h);
+    tctx.fillStyle = "#0a1210";
+    tctx.fillRect(0, 0, w, h);
+    tctx.font = "10px ui-monospace, Consolas, monospace";
+    const pad = 22;
+    const LO = 95, LOX = 175, LA = 55;
+    const X = (lon) => pad + (lon - LO) / (LOX - LO) * (w - pad * 2);
+    const Y = (lat) => pad + (LA - lat) / (2 * LA) * (h - pad * 2);
+
+    // grid
+    for (let lon = 100; lon <= 170; lon += 20) {
+      tctx.strokeStyle = "rgba(148,180,170,.1)";
+      tctx.beginPath(); tctx.moveTo(X(lon), pad); tctx.lineTo(X(lon), h - pad); tctx.stroke();
+      tctx.fillStyle = "rgba(160,190,182,.45)";
+      tctx.fillText(lon + "°E", X(lon) - 12, h - pad + 12);
+    }
+    for (let lat = -40; lat <= 40; lat += 20) {
+      tctx.strokeStyle = lat === 0 ? "rgba(148,180,170,.3)" : "rgba(148,180,170,.1)";
+      tctx.beginPath(); tctx.moveTo(pad, Y(lat)); tctx.lineTo(w - pad, Y(lat)); tctx.stroke();
+      tctx.fillStyle = "rgba(160,190,182,.45)";
+      tctx.fillText((lat > 0 ? "+" : "") + lat + "°", 3, Y(lat) + 3);
+    }
+    tctx.fillStyle = "rgba(160,190,182,.5)";
+    tctx.fillText("赤道", w - pad - 28, Y(0) - 4);
+
+    // land
+    function poly(pts, close) {
+      tctx.beginPath();
+      pts.forEach((p, i) => { const x = X(p[0]), y = Y(p[1]); i ? tctx.lineTo(x, y) : tctx.moveTo(x, y); });
+      if (close) tctx.closePath();
+      tctx.stroke();
+    }
+    tctx.strokeStyle = "rgba(120,160,145,.5)";
+    tctx.lineWidth = 1.2;
+    poly(ASIA, false);
+    poly(AUS, true);
+    tctx.strokeStyle = "rgba(160,210,190,.85)";
+    tctx.lineWidth = 1.6;
+    poly(JAPAN, false);
+    poly(HOKKAIDO, true);
+
+    // figure-8 ground track
+    tctx.strokeStyle = "rgba(248,113,113,.35)";
+    tctx.lineWidth = 1.6;
+    tctx.beginPath();
+    for (let k = 0; k <= 360; k++) {
+      const p = satAt(k / 360 * 2 * Math.PI);
+      const x = X(p.lon * R2D), y = Y(p.lat * R2D);
+      k ? tctx.lineTo(x, y) : tctx.moveTo(x, y);
+    }
+    tctx.closePath();
+    tctx.stroke();
+
+    // trail of each satellite
+    const Mnow = 2 * Math.PI * (S.t % TSID) / TSID;
+    if (S.trail) {
+      QZO.forEach((q) => {
+        tctx.strokeStyle = "rgba(248,113,113,.9)";
+        tctx.lineWidth = 2.4;
+        tctx.beginPath();
+        for (let k = 0; k <= 40; k++) {
+          const p = satAt(Mnow + q.phase - k / 40 * 0.9);
+          const x = X(p.lon * R2D), y = Y(p.lat * R2D);
+          tctx.globalAlpha = 1 - k / 45;
+          if (k === 0) tctx.moveTo(x, y); else tctx.lineTo(x, y);
+        }
+        tctx.stroke();
+        tctx.globalAlpha = 1;
+      });
+    }
+
+    // Tokyo
+    const tx = X(139.77), ty = Y(35.68);
+    tctx.strokeStyle = "#34d399";
+    tctx.lineWidth = 1.6;
+    tctx.beginPath(); tctx.arc(tx, ty, 4.5, 0, Math.PI * 2); tctx.stroke();
+    tctx.fillStyle = "#34d399";
+    tctx.fillText("東京", tx + 7, ty - 5);
+
+    // GEO satellite J03
+    const gx = X(GEO_LON), gy = Y(0);
+    tctx.fillStyle = "#fbbf24";
+    tctx.beginPath();
+    tctx.moveTo(gx, gy - 6); tctx.lineTo(gx + 6, gy); tctx.lineTo(gx, gy + 6); tctx.lineTo(gx - 6, gy);
+    tctx.closePath(); tctx.fill();
+    tctx.fillText("J03 (静止)", gx - 44, gy + 16);
+
+    // QZO satellites
+    QZO.forEach((q) => {
+      const p = satAt(Mnow + q.phase);
+      const x = X(p.lon * R2D), y = Y(p.lat * R2D);
+      const el = elevationFrom(p.lat, p.lon, p.r);
+      const hot = el >= 70;
+      tctx.fillStyle = hot ? "#34d399" : "#f87171";
+      tctx.beginPath(); tctx.arc(x, y, hot ? 6.5 : 5, 0, Math.PI * 2); tctx.fill();
+      if (hot) {
+        tctx.strokeStyle = "rgba(52,211,153,.55)";
+        tctx.lineWidth = 1.4;
+        tctx.beginPath(); tctx.arc(x, y, 11, 0, Math.PI * 2); tctx.stroke();
+      }
+      tctx.fillStyle = "rgba(230,238,236,.95)";
+      tctx.fillText(q.name, x + 8, y + 4 + (QZO.indexOf(q) - 1) * 11);
+    });
+  }
+
+  // ---- elevation chart ----
+  const elevCv = $("elev");
+  const ectx = elevCv.getContext("2d");
+
+  function drawElev() {
+    const { w, h } = fit(elevCv, 0.92);
+    ectx.clearRect(0, 0, w, h);
+    ectx.fillStyle = "#0a1210";
+    ectx.fillRect(0, 0, w, h);
+    ectx.font = "10px ui-monospace, Consolas, monospace";
+    const padL = 30, padR = 10, padT = 16, padB = 24;
+    const X = (hr) => padL + hr / 24 * (w - padL - padR);
+    const Y = (el) => padT + (90 - el) / 90 * (h - padT - padB);
+
+    for (let el = 0; el <= 90; el += 30) {
+      ectx.strokeStyle = "rgba(148,180,170,.12)";
+      ectx.beginPath(); ectx.moveTo(padL, Y(el)); ectx.lineTo(w - padR, Y(el)); ectx.stroke();
+      ectx.fillStyle = "rgba(160,190,182,.5)";
+      ectx.fillText(el + "°", 5, Y(el) + 3);
+    }
+    for (let hr = 0; hr <= 24; hr += 6) {
+      ectx.strokeStyle = "rgba(148,180,170,.1)";
+      ectx.beginPath(); ectx.moveTo(X(hr), padT); ectx.lineTo(X(hr), h - padB); ectx.stroke();
+      ectx.fillStyle = "rgba(160,190,182,.5)";
+      ectx.fillText(hr + "h", X(hr) - 6, h - padB + 12);
+    }
+
+    // shade: at least one QZO above 70 deg
+    const N = 240;
+    ectx.fillStyle = "rgba(52,211,153,.13)";
+    for (let k = 0; k < N; k++) {
+      const M = k / N * 2 * Math.PI;
+      let best = -90;
+      QZO.forEach((q) => {
+        const p = satAt(M + q.phase);
+        best = Math.max(best, elevationFrom(p.lat, p.lon, p.r));
+      });
+      if (best >= 70) ectx.fillRect(X(k / N * 24), padT, (w - padL - padR) / N + 1, h - padT - padB);
+    }
+    ectx.strokeStyle = "rgba(52,211,153,.5)";
+    ectx.setLineDash([4, 4]);
+    ectx.beginPath(); ectx.moveTo(padL, Y(70)); ectx.lineTo(w - padR, Y(70)); ectx.stroke();
+    ectx.setLineDash([]);
+    ectx.fillStyle = "rgba(52,211,153,.85)";
+    ectx.fillText("仰角70°", padL + 4, Y(70) - 4);
+
+    // curves
+    QZO.forEach((q, qi) => {
+      ectx.strokeStyle = ["#f87171", "#fb923c", "#fbcfe8"][qi];
+      ectx.lineWidth = 1.8;
+      ectx.beginPath();
+      for (let k = 0; k <= N; k++) {
+        const M = k / N * 2 * Math.PI;
+        const p = satAt(M + q.phase);
+        const el = Math.max(elevationFrom(p.lat, p.lon, p.r), 0);
+        const x = X(k / N * 24), y = Y(el);
+        k ? ectx.lineTo(x, y) : ectx.moveTo(x, y);
+      }
+      ectx.stroke();
+    });
+    // GEO flat line
+    ectx.strokeStyle = "rgba(251,191,36,.85)";
+    ectx.setLineDash([6, 4]);
+    ectx.lineWidth = 1.6;
+    ectx.beginPath(); ectx.moveTo(padL, Y(geoElev)); ectx.lineTo(w - padR, Y(geoElev)); ectx.stroke();
+    ectx.setLineDash([]);
+    ectx.fillStyle = "rgba(251,191,36,.9)";
+    ectx.fillText("J03 静止 " + geoElev.toFixed(0) + "°", w - padR - 78, Y(geoElev) - 4);
+
+    // now marker
+    const hrNow = (S.t % TSID) / TSID * 24;
+    ectx.strokeStyle = "rgba(230,238,236,.8)";
+    ectx.lineWidth = 1.4;
+    ectx.beginPath(); ectx.moveTo(X(hrNow), padT); ectx.lineTo(X(hrNow), h - padB); ectx.stroke();
+    QZO.forEach((q) => {
+      const p = satAt(2 * Math.PI * (S.t % TSID) / TSID + q.phase);
+      const el = elevationFrom(p.lat, p.lon, p.r);
+      if (el > 0) {
+        ectx.fillStyle = el >= 70 ? "#34d399" : "#f87171";
+        ectx.beginPath(); ectx.arc(X(hrNow), Y(el), 4, 0, Math.PI * 2); ectx.fill();
+      }
+    });
+    ectx.fillStyle = "rgba(160,190,182,.6)";
+    ectx.fillText("東京から見た仰角", padL + 4, padT - 4);
+  }
+
+  function update() {
+    drawTrack();
+    drawElev();
+    const M = 2 * Math.PI * (S.t % TSID) / TSID;
+    const els = QZO.map((q) => {
+      const p = satAt(M + q.phase);
+      return { name: q.name, el: elevationFrom(p.lat, p.lon, p.r) };
+    });
+    const visible = els.filter((e) => e.el > 10);
+    const high = els.filter((e) => e.el >= 70);
+    const best = els.reduce((a, b) => (b.el > a.el ? b : a));
+    const hrNow = (S.t % TSID) / TSID * 24;
+    $("clk").textContent = String(Math.floor(hrNow)).padStart(2, "0") + ":" + String(Math.floor((hrNow % 1) * 60)).padStart(2, "0");
+    $("readout").innerHTML =
+      "最高仰角 <b class='hi'>" + best.name + " " + best.el.toFixed(0) + "°</b>" +
+      "<span>天頂付近（70°以上）<b>" + high.length + " 機</b></span>" +
+      "<span>見えている準天頂衛星 <b>" + visible.length + " / 3 機</b></span>" +
+      "<span>" + els.map((e) => e.name + " " + (e.el > 0 ? e.el.toFixed(0) + "°" : "地平線下")).join(" / ") + "</span>";
+  }
+
+  const playBtn = $("playBtn");
+  function setPlaying(v) {
+    S.playing = v;
+    playBtn.textContent = v ? "⏸ 一時停止" : "▶ 再生";
+    playBtn.classList.toggle("ghost", !v);
+    playBtn.setAttribute("aria-pressed", String(v));
+  }
+  playBtn.addEventListener("click", () => setPlaying(!S.playing));
+  setPlaying(S.playing);
+  $("showTrail").addEventListener("change", (e) => { S.trail = e.target.checked; update(); });
+
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
+    last = now;
+    if (S.playing) {
+      S.t += dt * (+$("speed").value);
+      update();
+    }
+    requestAnimationFrame(loop);
+  }
+  window.addEventListener("resize", update);
+  if (window.ResizeObserver) new ResizeObserver(update).observe(trackCv);
+  update();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
