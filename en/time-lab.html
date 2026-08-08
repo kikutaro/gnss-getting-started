@@ -3,9 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
 <link rel="stylesheet" href="../layout.css">
 <script defer src="../layout.js"></script>
 <title>Time &amp; Clocks | GNSS Getting Started</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Getting Started">
+<meta property="og:title" content="Time &amp; Clocks | GNSS Getting Started">
+<meta property="og:description" content="An interactive GNSS learning site — from wave basics to the inside of a receiver, SDR practice and jamming/spoofing defence.">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/en/time-lab.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Time &amp; Clocks | GNSS Getting Started">
+<meta name="twitter:description" content="An interactive GNSS learning site — from wave basics to the inside of a receiver, SDR practice and jamming/spoofing defence.">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
 <style>
   :root {
     --bg: #f4f7f6;

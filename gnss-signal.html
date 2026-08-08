@@ -3,9 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
 <link rel="stylesheet" href="layout.css">
 <script defer src="layout.js"></script>
 <title>L1 C/A信号の構造 | GNSS Getting Started</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Getting Started">
+<meta property="og:title" content="L1 C/A信号の構造 | GNSS Getting Started">
+<meta property="og:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/gnss-signal.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="L1 C/A信号の構造 | GNSS Getting Started">
+<meta name="twitter:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
 <style>
   :root {
     --bg: #f4f7f6;

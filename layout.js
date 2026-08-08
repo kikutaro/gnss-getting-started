@@ -64,6 +64,10 @@
     var lang = el("a", "lang", isEn ? "日本語" : "English");
     var cur = current || PAGES[0];
     lang.href = isEn ? encodeURI("../" + cur.ja) : encodeURI("en/" + cur.en);
+    // remember the manual choice so first-visit auto-routing won't override it
+    lang.addEventListener("click", function () {
+      try { localStorage.setItem("gnss_lang", isEn ? "ja" : "en"); } catch (e) {}
+    });
     aside.appendChild(lang);
 
     var topbar = el("div", "topbar");
