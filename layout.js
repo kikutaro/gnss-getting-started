@@ -1,4 +1,4 @@
-/* GNSS Getting Started — shared sidebar navigation (load with <script defer>) */
+/* GNSS Study — shared sidebar navigation (load with <script defer>) */
 (function () {
   var PAGES = [
     { ja: "index.html",         en: "index.html",       tja: "ホーム",             ten: "Home",                  grp: 0 },
@@ -22,7 +22,7 @@
     ja: ["", "STEP 1 · 基礎", "STEP 2 · GNSSのしくみ", "STEP 3 · SDR実践", "STEP 4 · 脅威と対策"],
     en: ["", "STEP 1 · BASICS", "STEP 2 · HOW GNSS WORKS", "STEP 3 · SDR IN PRACTICE", "STEP 4 · THREATS & DEFENCE"],
   };
-  var BRAND = "GNSS Getting Started";
+  var BRAND = "GNSS Study";
 
   var isEn = /\/en\//.test(location.pathname);
   var file = decodeURIComponent((location.pathname.split("/").pop() || "index.html")) || "index.html";

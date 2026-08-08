@@ -1,4 +1,4 @@
-/* GNSS Getting Started — shared sidebar layout
+/* GNSS Study — shared sidebar layout
    Relies on each page's CSS custom properties (--surface, --border, etc.) */
 
 body { display: flex; align-items: flex-start; }
