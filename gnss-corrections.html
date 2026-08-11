@@ -183,6 +183,12 @@
   </div>
 
   <div class="panel">
+    <h3>宇宙から地上まで — 誤差はどこで生まれるか</h3>
+    <canvas class="dark" id="cross" aria-label="衛星から地上までの縦断面と、電離層・対流圏の位置を示す図"></canvas>
+    <p class="cap">縦方向は模式図（実際の縮尺ではありません）。信号は衛星（高度約2万km）から降り、<span style="color:var(--c-iono)">電離層</span>と<span style="color:var(--c-tropo)">対流圏</span>を通り抜けて受信機に届きます。下のシミュレーターで補正を切り替えると、除去された層が薄くなり「✓」が付きます。</p>
+  </div>
+
+  <div class="panel">
     <h3>補正シミュレーター — 補正を足すほど誤差が縮む</h3>
     <div class="presets" id="presets">
       <span class="lbl">測位モード:</span>
@@ -402,8 +408,134 @@
     ctx.fillText("枠 = 補正前 / 塗り = 補正後の残差", padL, padT - 8);
   }
 
+  // ---------- cross-section illustration ----------
+  const xcv = $("cross");
+  const xctx = xcv.getContext("2d");
+  let crossT = 0;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function drawCross() {
+    const { w, h } = fit(xcv, 0.62);
+    xctx.clearRect(0, 0, w, h);
+    xctx.fillStyle = "#0a1210";
+    xctx.fillRect(0, 0, w, h);
+    xctx.font = "11px ui-monospace, Consolas, monospace";
+
+    const groundY = h - 28;
+    const rayX = w * 0.30;
+    const satY = 30;
+    const cIono = col("--c-iono"), cTropo = col("--c-tropo"), cClk = col("--c-satclk"), cMp = col("--c-mp");
+
+    // layer bands (schematic)
+    const ionoTop = h * 0.32, ionoBot = h * 0.50;
+    const tropTop = groundY - 46, tropBot = groundY;
+
+    // correction states
+    const clkOK = S.precise || S.broadcast || S.iono === "aug";
+    const ionoState = (S.precise || S.iono === "dual" || S.iono === "aug") ? "gone" : (S.iono === "klob" ? "half" : "none");
+    const tropOK = S.precise || S.tropo;
+
+    function hexA(hex, a) {
+      const m = hex.replace("#", "");
+      const r = parseInt(m.substring(0, 2), 16), g = parseInt(m.substring(2, 4), 16), b = parseInt(m.substring(4, 6), 16);
+      return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+    }
+
+    // ionosphere band
+    const ionoA = ionoState === "gone" ? 0.06 : ionoState === "half" ? 0.15 : 0.26;
+    xctx.fillStyle = hexA(cIono, ionoA);
+    xctx.fillRect(0, ionoTop, w, ionoBot - ionoTop);
+    // troposphere band
+    xctx.fillStyle = hexA(cTropo, tropOK ? 0.07 : 0.24);
+    xctx.fillRect(0, tropTop, w, tropBot - tropTop);
+
+    // altitude axis (left)
+    xctx.fillStyle = "rgba(160,190,182,.5)";
+    xctx.fillText("約2万km", 4, satY + 20);
+    xctx.fillText("~1000km", 4, ionoTop + 11);
+    xctx.fillText("~60km", 4, ionoBot - 3);
+    xctx.fillText("~12km", 4, tropTop + 11);
+    xctx.fillText("0 (地表)", 4, groundY - 3);
+
+    // ground
+    xctx.strokeStyle = "#2e5c48";
+    xctx.lineWidth = 1.6;
+    xctx.beginPath(); xctx.moveTo(0, groundY); xctx.lineTo(w, groundY); xctx.stroke();
+
+    // signal ray (thickened & coloured inside each active layer)
+    const flow = -(crossT * 40) % 12;
+    function raySeg(y1, y2, color, wid) {
+      xctx.strokeStyle = color; xctx.lineWidth = wid;
+      xctx.setLineDash([6, 6]); xctx.lineDashOffset = flow;
+      xctx.beginPath(); xctx.moveTo(rayX, y1); xctx.lineTo(rayX, y2); xctx.stroke();
+      xctx.setLineDash([]);
+    }
+    raySeg(satY + 8, ionoTop, "rgba(148,180,170,.5)", 1.6);
+    raySeg(ionoTop, ionoBot, ionoState === "none" ? cIono : hexA(cIono, ionoState === "half" ? 0.6 : 0.25), ionoState === "none" ? 3 : 2);
+    raySeg(ionoBot, tropTop, "rgba(148,180,170,.5)", 1.6);
+    raySeg(tropTop, tropBot, tropOK ? hexA(cTropo, 0.3) : cTropo, tropOK ? 2 : 3);
+
+    // travelling pulse
+    if (!reduced) {
+      const p = (crossT * 0.35) % 1;
+      const py = satY + 8 + p * (groundY - satY - 8);
+      xctx.fillStyle = "#e6eeec";
+      xctx.beginPath(); xctx.arc(rayX, py, 3, 0, Math.PI * 2); xctx.fill();
+    }
+
+    // satellite
+    xctx.save();
+    xctx.translate(rayX, satY);
+    xctx.fillStyle = "#3b82f6";
+    xctx.fillRect(-20, -4, 12, 8); xctx.fillRect(8, -4, 12, 8);
+    xctx.fillStyle = "#cbd5e1";
+    xctx.fillRect(-6, -6, 12, 12);
+    xctx.restore();
+
+    // receiver antenna
+    xctx.strokeStyle = "#e2e8f0"; xctx.lineWidth = 2;
+    xctx.beginPath(); xctx.moveTo(rayX, groundY); xctx.lineTo(rayX, groundY - 12); xctx.stroke();
+    xctx.fillStyle = "#e2e8f0";
+    xctx.beginPath(); xctx.arc(rayX, groundY - 15, 3.2, 0, Math.PI * 2); xctx.fill();
+    xctx.fillStyle = "rgba(160,190,182,.85)";
+    xctx.fillText("受信機", rayX - 16, groundY + 14);
+
+    // building + multipath reflection
+    const bx = rayX + w * 0.16, bw = 22, bh = 40;
+    xctx.fillStyle = "rgba(60,80,95,.8)";
+    xctx.fillRect(bx, groundY - bh, bw, bh);
+    xctx.strokeStyle = hexA(cMp, 0.85); xctx.lineWidth = 1.6;
+    xctx.setLineDash([4, 4]);
+    xctx.beginPath();
+    xctx.moveTo(bx + bw / 2, tropTop - 6);
+    xctx.lineTo(bx, groundY - bh + 8);
+    xctx.lineTo(rayX + 4, groundY - 14);
+    xctx.stroke();
+    xctx.setLineDash([]);
+
+    // right-side callouts
+    const callX = w * 0.55;
+    function callout(y, color, title, status, ok) {
+      xctx.fillStyle = color;
+      xctx.fillRect(callX, y - 8, 9, 9);
+      xctx.fillStyle = "rgba(230,238,236,.92)";
+      xctx.font = "600 11px sans-serif";
+      xctx.fillText(title, callX + 14, y);
+      xctx.font = "10px sans-serif";
+      xctx.fillStyle = ok === true ? col("--ok") : ok === "half" ? col("--warn") : "rgba(160,190,182,.7)";
+      xctx.fillText(status, callX + 14, y + 13);
+    }
+    callout(satY + 6, cClk, "衛星クロック・軌道の誤差", clkOK ? "✓ 放送暦などで補正" : "未補正（数m〜）", clkOK);
+    callout((ionoTop + ionoBot) / 2 - 2, cIono, "電離層遅延（周波数依存・最大）",
+      ionoState === "gone" ? "✓ 2周波/補強で除去" : ionoState === "half" ? "△ 放送モデルで約半分" : "未補正（数m〜数十m）",
+      ionoState === "gone" ? true : ionoState === "half" ? "half" : false);
+    callout(tropTop + 16, cTropo, "対流圏遅延（周波数非依存）", tropOK ? "✓ モデルで補正" : "未補正（2〜10m）", tropOK);
+    callout(groundY - 6, cMp, "マルチパス（反射）", "消せない残差", false);
+  }
+
   function update() {
     draw();
+    drawCross();
     let ss = 0;
     SRC.forEach((s) => { const r = residual(s.key); ss += r * r; });
     const uere = Math.sqrt(ss);
@@ -440,9 +572,19 @@
     b.addEventListener("click", () => { S.iono = b.dataset.iono; if (S.iono === "dual") {} update(); });
   });
 
-  window.addEventListener("resize", draw);
-  if (window.ResizeObserver) new ResizeObserver(draw).observe(cv);
+  window.addEventListener("resize", () => { draw(); drawCross(); });
+  if (window.ResizeObserver) { new ResizeObserver(draw).observe(cv); new ResizeObserver(drawCross).observe(xcv); }
   update();
+
+  if (!reduced) {
+    let last = performance.now();
+    (function loop(now) {
+      crossT += Math.max(0, Math.min(0.1, (now - last) / 1000));
+      last = now;
+      drawCross();
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
 })();
 </script>
 </body>
