@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>誤差と補正 | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="誤差と補正 | GNSS Study">
+<meta property="og:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/gnss-corrections.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="誤差と補正 | GNSS Study">
+<meta name="twitter:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --ok: #10b981;
+    --warn: #d97706;
+    --c-satclk: #60a5fa;
+    --c-orbit: #38bdf8;
+    --c-iono: #f59e0b;
+    --c-tropo: #10b981;
+    --c-mp: #ec4899;
+    --c-noise: #94a3b8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --ok: #34d399; --warn: #fbbf24;
+      --c-satclk: #60a5fa; --c-orbit: #38bdf8; --c-iono: #fbbf24; --c-tropo: #34d399; --c-mp: #f472b6; --c-noise: #94a3b8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --ok: #34d399; --warn: #fbbf24;
+    --c-satclk: #60a5fa; --c-orbit: #38bdf8; --c-iono: #fbbf24; --c-tropo: #34d399; --c-mp: #f472b6; --c-noise: #94a3b8;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --ok: #10b981; --warn: #d97706;
+    --c-satclk: #60a5fa; --c-orbit: #38bdf8; --c-iono: #f59e0b; --c-tropo: #10b981; --c-mp: #ec4899; --c-noise: #94a3b8;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel p.lead { margin: 0 0 10px; font-size: .9rem; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+  code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .9em;
+  }
+
+  .eqline {
+    background: var(--surface2); border-radius: 8px; padding: 10px 14px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: .84rem; overflow-x: auto; white-space: nowrap;
+  }
+
+  /* controls */
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .presets .lbl { font-size: .82rem; color: var(--muted); margin-right: 2px; }
+  .presets button {
+    appearance: none; font-family: inherit; font-size: .84rem;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text);
+    cursor: pointer;
+  }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .presets button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .presets button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .ctrls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 22px; margin-bottom: 12px; }
+  @media (max-width: 680px) { .ctrls { grid-template-columns: 1fr; } }
+  .ctrls .row { display: flex; align-items: center; gap: 8px; font-size: .86rem; }
+  .ctrls label.sw { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg button {
+    appearance: none; font-family: inherit; font-size: .78rem;
+    padding: 4px 9px; border: none; border-right: 1px solid var(--border);
+    background: var(--surface2); color: var(--muted); cursor: pointer;
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button.on { background: var(--accent); color: #fff; }
+  .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .ctrls .grp-t { font-size: .78rem; color: var(--muted); }
+
+  .totrow {
+    display: flex; gap: 12px 30px; flex-wrap: wrap; align-items: baseline;
+    padding: 10px 14px; margin-top: 4px;
+    background: var(--surface2); border-radius: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .totrow .v { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+  .totrow .u { font-size: .8rem; color: var(--muted); }
+  #verdict {
+    padding: 8px 12px; border-radius: 8px; margin-top: 10px;
+    font-size: .88rem; font-weight: 600;
+    background: var(--surface2); border-left: 4px solid var(--muted);
+  }
+  #verdict.a { border-left-color: var(--warn); color: var(--warn); }
+  #verdict.b { border-left-color: var(--accent); color: var(--accent); }
+  #verdict.c { border-left-color: var(--ok); color: var(--ok); }
+
+  /* source cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .card {
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--cc, var(--accent));
+    border-radius: 10px;
+    padding: 11px 14px;
+    background: var(--surface);
+  }
+  .card h4 { margin: 0 0 2px; font-size: .95rem; color: var(--cc, var(--text)); }
+  .card .mag { font-size: .74rem; color: var(--muted); font-family: ui-monospace, Consolas, monospace; margin-bottom: 6px; }
+  .card p { margin: 0; font-size: .83rem; color: var(--muted); }
+  .card p b { color: var(--text); }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 5px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>誤差と補正</h1>
+    <p>擬似距離に乗る誤差を、わかっているものから順に引き算していく — 数mからcmへ</p>
+  </header>
+
+  <div class="panel">
+    <h3>擬似距離の中身 — 補正とは「既知の誤差を引く」こと</h3>
+    <p class="lead"><a href="gnss-obs.html">擬似距離のページ</a>で見たとおり、受信機が測る距離 ρ は、幾何学的な真の距離 r にいろいろな誤差が積み重なったものです:</p>
+    <div class="eqline">ρ = r + c·δt<sub>受信機</sub> − c·δt<sub>衛星</sub> + I<sub>電離層</sub> + T<sub>対流圏</sub> + マルチパス + 雑音</div>
+    <p class="cap">このうち <b>δt<sub>受信機</sub></b> は測位計算で未知数として解かれます（4機必要な理由）。残りのうち「モデルや観測で値がわかるもの」を引き算するのが<strong>補正</strong>です。衛星クロック δt<sub>衛星</sub> ・電離層 I ・対流圏 T は、放送情報・モデル・2周波観測・外部補強のいずれかで推定して消せます。マルチパスと雑音は「消せずに残る」ランダム誤差です。</p>
+  </div>
+
+  <div class="panel">
+    <h3>補正シミュレーター — 補正を足すほど誤差が縮む</h3>
+    <div class="presets" id="presets">
+      <span class="lbl">測位モード:</span>
+      <button data-preset="raw">補正なし</button>
+      <button data-preset="spp">単独測位（1周波）</button>
+      <button data-preset="dual">2周波</button>
+      <button data-preset="sbas">SBAS補強</button>
+      <button data-preset="clas">RTK / PPP / CLAS</button>
+    </div>
+    <div class="ctrls">
+      <div class="row"><label class="sw"><input type="checkbox" id="cBroadcast" checked>衛星クロック・軌道の補正（放送暦 af0/af1/af2）</label></div>
+      <div class="row"><label class="sw"><input type="checkbox" id="cTropo" checked>対流圏モデル補正</label></div>
+      <div class="row">
+        <span class="grp-t">電離層:</span>
+        <span class="seg" id="ionoSeg">
+          <button data-iono="none">補正なし</button>
+          <button data-iono="klob" class="on">放送モデル</button>
+          <button data-iono="dual">2周波除去</button>
+          <button data-iono="aug">補強データ</button>
+        </span>
+      </div>
+      <div class="row"><label class="sw"><input type="checkbox" id="cPrecise">精密補強（搬送波位相＋RTK/PPP/CLAS）</label></div>
+    </div>
+    <canvas class="dark" id="chart" aria-label="誤差要因ごとの残差バーグラフ"></canvas>
+    <div class="totrow">
+      <span><span class="v" id="uere">–</span> <span class="u">UERE（1σ・1衛星あたりの距離誤差）</span></span>
+      <span>水平位置誤差の目安 <span class="v" id="hpos" style="font-size:1.1rem">–</span> <span class="u">(2drms, 95%)</span></span>
+    </div>
+    <div id="verdict">—</div>
+    <p class="cap">数値は教材用の代表値（1σ）。実際は仰角・時間帯・地域で大きく変わります。UERE（User Equivalent Range Error）は各衛星の距離誤差の総合値で、位置誤差は概ね <code>UERE × DOP</code>。「補正なし」の衛星クロックは代表値で示していますが、放送暦で補正しなければ実際はさらに桁違いに大きくなります。</p>
+  </div>
+
+  <div class="panel">
+    <h3>補正の中身 — 誤差ごとの正体と消し方</h3>
+    <div class="cards">
+      <div class="card" style="--cc: var(--c-satclk)">
+        <h4>衛星クロック補正</h4>
+        <div class="mag">数m（未補正なら桁違い）</div>
+        <p>衛星の原子時計も完璧ではなく、少しずつずれます。管制局が監視し、ずれの係数 <b>af0/af1/af2</b> を<a href="gnss-navmsg.html">航法メッセージ</a>で放送。受信機はこれを使って時計誤差を引きます。<a href="time-lab.html">1μs=300m</a>の世界なので必須。</p>
+      </div>
+      <div class="card" style="--cc: var(--c-orbit)">
+        <h4>衛星軌道（暦）補正</h4>
+        <div class="mag">1〜2 m</div>
+        <p>衛星の「本当の位置」も予報値とわずかにずれます。エフェメリス（放送暦）で衛星位置を計算しますが、これ自体に誤差が残る。精密暦（IGSやCLAS）を使うとcm級まで詰められます。</p>
+      </div>
+      <div class="card" style="--cc: var(--c-iono)">
+        <h4>電離層補正</h4>
+        <div class="mag">数m〜数十m（最大の誤差源）</div>
+        <p>上空の電離層が電波を遅らせます。遅れは<strong>周波数によって違う</strong>のが鍵。1周波なら放送のKlobucharモデルで約半分だけ除去。<strong>2周波（L1+L5）なら差から遅延を計算してほぼ完全に消せます</strong>。</p>
+      </div>
+      <div class="card" style="--cc: var(--c-tropo)">
+        <h4>対流圏補正</h4>
+        <div class="mag">2〜10 m（低仰角ほど大）</div>
+        <p>地表付近の大気（乾燥大気＋水蒸気）による遅延。<strong>周波数に依存しない</strong>ので2周波では消せず、モデル（Saastamoinenなど）＋仰角のマッピングで補正します。乾燥成分はよく当たり、水蒸気が残差。</p>
+      </div>
+      <div class="card" style="--cc: var(--c-mp)">
+        <h4>マルチパス（残る誤差）</h4>
+        <div class="mag">数十cm〜数m</div>
+        <p>ビルや地面の反射波。環境依存で予測できず、モデル補正できません。アンテナ設計・設置・<a href="gnss-bands.html">L5の広帯域</a>・搬送波平滑化で減らすしかない残差です。</p>
+      </div>
+      <div class="card" style="--cc: var(--c-noise)">
+        <h4>受信機雑音（残る誤差）</h4>
+        <div class="mag">数十cm〜</div>
+        <p>相関・追尾に伴うランダムな測定ばらつき。コード擬似距離では大きめ、搬送波位相を使うと桁違いに小さくなります（RTK/PPPがcm級になる一因）。</p>
+      </div>
+    </div>
+    <p class="cap">このほか、相対論効果（軌道の楕円性による周期変動）・TGD（信号間の機器遅延）・地球自転（Sagnac効果）も補正されますが、いずれも計算式が確定していて残差はごく小さいので、上のシミュレーターでは省略しています。</p>
+  </div>
+
+  <div class="panel">
+    <h3>補正はどこから来るのか — 3つの供給源</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>供給源</th><th>対象</th><th>届き方</th><th>精度の目安</th></tr>
+        <tr><td><b>放送（航法メッセージ）</b></td><td>衛星クロック・軌道、電離層(Klobuchar)</td><td>衛星の信号に同梱</td><td class="num">単独測位 数m</td></tr>
+        <tr><td><b>受信機内モデル</b></td><td>対流圏、（2周波なら）電離層除去</td><td>受信機が計算</td><td class="num">2周波 1〜2m</td></tr>
+        <tr><td><b>外部補強 — 広域</b><br>SBAS / MADOCA-PPP</td><td>衛星クロック・軌道・電離層グリッド</td><td>静止衛星やQZSSから放送</td><td class="num">SBAS 約1m</td></tr>
+        <tr><td><b>外部補強 — 高精度</b><br>RTK / PPP / CLAS</td><td>すべて＋搬送波位相の整数解</td><td>基準局通信網、または<a href="qzss.html">QZSS L6</a></td><td class="num">数cm</td></tr>
+      </table>
+    </div>
+    <p class="cap">通常RTKは基準局からの補正データを携帯回線で受け取りますが、QZSSの<a href="qzss.html">CLAS（L6）</a>は補正情報を衛星から直接放送するので、通信契約なしでcm級が得られます。「補正データをどう届けるか」がGNSS高精度化の主戦場です。</p>
+  </div>
+
+  <details class="note" open>
+    <summary>2周波でなぜ電離層を消せるのか</summary>
+    <div class="body">
+      <p>電離層による遅延は、周波数 f の2乗に反比例します（<code>遅延 ∝ 1/f²</code>）。だからL1（1575.42MHz）とL5（1176.45MHz）で同じ衛星を測ると、遅延の量が違うぶんだけ2つの擬似距離に差が出ます。この差は<strong>電離層遅延そのものが原因</strong>なので、逆算すれば遅延量が計算でき、両方から引き去れば電離層フリーの距離が得られます。</p>
+      <p>1周波受信機は差が取れないので、放送されたKlobucharモデル（大まかな形の関数）で推定するしかなく、平均して<strong>半分程度</strong>しか消せません。<a href="gnss-bands.html">周波数帯マップ</a>で見た「なぜ複数周波数か」の答えが、まさにこれです。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>対流圏は2周波で消せない — だからモデルで殴る</summary>
+    <div class="body">
+      <p>対流圏（地表〜約十数kmの中性大気）の遅延は<strong>周波数に依存しません</strong>。L1でもL5でも同じだけ遅れるので、2周波の差分では消えません。そこで大気の物理モデル（Saastamoinen法やHopfield法）で天頂方向の遅延を推定し、仰角に応じたマッピング関数で斜め方向に換算して引きます。</p>
+      <p>遅延は「乾燥大気成分（約90%）」と「水蒸気成分（約10%）」に分かれ、乾燥成分は気圧からよく決まります。厄介なのは水蒸気で、時々刻々変わるため残差になります。逆にこの性質を利用して、GNSSで大気中の水蒸気量を測る「GNSS気象学」という応用もあります。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>補強システムの見取り図 — DGPSからPPP-RTKまで</summary>
+    <div class="body">
+      <p><strong>DGPS</strong>: 近くの基準局が「今この誤差が出ている」と補正量を放送。距離が離れると効かなくなる古典的手法。</p>
+      <p><strong>SBAS</strong>（日本のMSAS、米WAASなど）: 静止衛星から広域の補正（衛星クロック・軌道と電離層グリッド）を放送。約1m級で、航空分野の定番。</p>
+      <p><strong>RTK</strong>: 基準局の搬送波位相データを使い、整数値バイアスを解いてcm級を実現。基準局から数十km以内が目安。</p>
+      <p><strong>PPP</strong>: 基準局なしで、精密な衛星クロック・軌道の全球補正だけを使う方式。世界中どこでも使えるが、収束（初期化）に時間がかかる。</p>
+      <p><strong>PPP-RTK / CLAS</strong>: PPPに地域の大気補正を足して、RTK並みの精度を短時間で。QZSSの<a href="qzss.html">CLAS</a>はこれを<strong>L6で衛星から直接放送</strong>する日本独自の実装で、基準局への通信なしにcm級が得られます。</p>
+      <p>この流れは<a href="gnss-rx.html">受信の流れ</a>の「補正処理」ブロックに直結します。どの補強を使うかで、同じ受信機でも数mからcmまで精度が変わります。</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  const SRC = [
+    { key: "satclk", ja: "衛星クロック",   base: 8.0, color: "--c-satclk" },
+    { key: "orbit",  ja: "衛星軌道（暦）", base: 3.0, color: "--c-orbit" },
+    { key: "iono",   ja: "電離層遅延",     base: 6.0, color: "--c-iono" },
+    { key: "tropo",  ja: "対流圏遅延",     base: 2.8, color: "--c-tropo" },
+    { key: "mp",     ja: "マルチパス",     base: 1.0, color: "--c-mp" },
+    { key: "noise",  ja: "受信機雑音",     base: 0.5, color: "--c-noise" },
+  ];
+
+  const S = { broadcast: true, tropo: true, iono: "klob", precise: false };
+
+  const PRESETS = {
+    raw:  { broadcast: false, tropo: false, iono: "none", precise: false },
+    spp:  { broadcast: true,  tropo: true,  iono: "klob", precise: false },
+    dual: { broadcast: true,  tropo: true,  iono: "dual", precise: false },
+    sbas: { broadcast: true,  tropo: true,  iono: "aug",  precise: false },
+    clas: { broadcast: true,  tropo: true,  iono: "dual", precise: true  },
+  };
+
+  function residual(key) {
+    if (S.precise) {
+      return { satclk: 0.05, orbit: 0.05, iono: 0.02, tropo: 0.02, mp: 0.2, noise: 0.03 }[key];
+    }
+    switch (key) {
+      case "satclk": return S.iono === "aug" ? 0.5 : (S.broadcast ? 1.1 : 8.0);
+      case "orbit":  return S.iono === "aug" ? 0.4 : (S.broadcast ? 0.8 : 3.0);
+      case "iono":   return { none: 6.0, klob: 3.0, dual: 0.1, aug: 0.3 }[S.iono];
+      case "tropo":  return S.tropo ? 0.3 : 2.8;
+      case "mp":     return 1.0;
+      case "noise":  return 0.5;
+    }
+    return 0;
+  }
+
+  const cv = $("chart");
+  const ctx = cv.getContext("2d");
+  const cs = getComputedStyle(document.documentElement);
+  function col(v) { return cs.getPropertyValue(v).trim() || "#888"; }
+
+  function fit(c, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = c.clientWidth;
+    const h = Math.round(w * aspect);
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+      c.width = Math.round(w * dpr);
+      c.height = Math.round(h * dpr);
+      c.style.height = h + "px";
+    }
+    c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  const MAXV = 8;
+  const sq = (v) => Math.sqrt(Math.max(v, 0));
+
+  function draw() {
+    const { w, h } = fit(cv, 0.6);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#0a1210";
+    ctx.fillRect(0, 0, w, h);
+    ctx.font = "11px ui-monospace, Consolas, monospace";
+    const padL = 96, padR = 62, padT = 20, padB = 26;
+    const plotW = w - padL - padR;
+    const rowH = (h - padT - padB) / SRC.length;
+    const X = (v) => padL + sq(v) / sq(MAXV) * plotW;
+
+    // scale ticks
+    [0, 0.5, 1, 2, 4, 8].forEach((t) => {
+      const x = X(t);
+      ctx.strokeStyle = "rgba(148,180,170,.12)";
+      ctx.beginPath(); ctx.moveTo(x, padT - 4); ctx.lineTo(x, h - padB + 2); ctx.stroke();
+      ctx.fillStyle = "rgba(160,190,182,.55)";
+      ctx.fillText(t + "m", x - 6, h - padB + 16);
+    });
+
+    SRC.forEach((s, i) => {
+      const cy = padT + i * rowH + rowH / 2;
+      const bh = Math.min(rowH * 0.5, 18);
+      const res = residual(s.key);
+      const c = col(s.color);
+      // label
+      ctx.fillStyle = "rgba(230,238,236,.9)";
+      ctx.textAlign = "right";
+      ctx.fillText(s.ja, padL - 8, cy + 4);
+      ctx.textAlign = "left";
+      // base outline (before correction)
+      ctx.strokeStyle = "rgba(148,180,170,.3)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(padL, cy - bh / 2, X(s.base) - padL, bh);
+      // residual bar
+      ctx.fillStyle = c;
+      ctx.globalAlpha = 0.9;
+      const bw = Math.max(X(res) - padL, res > 0 ? 2 : 0);
+      ctx.fillRect(padL, cy - bh / 2, bw, bh);
+      ctx.globalAlpha = 1;
+      // value
+      ctx.fillStyle = "rgba(230,238,236,.9)";
+      ctx.fillText(res.toFixed(2) + " m", Math.max(padL + bw + 5, X(s.base) + 5), cy + 4);
+    });
+
+    // legend
+    ctx.fillStyle = "rgba(160,190,182,.6)";
+    ctx.fillText("枠 = 補正前 / 塗り = 補正後の残差", padL, padT - 8);
+  }
+
+  function update() {
+    draw();
+    let ss = 0;
+    SRC.forEach((s) => { const r = residual(s.key); ss += r * r; });
+    const uere = Math.sqrt(ss);
+    const hpos = uere * 2.6; // 2drms rough
+    $("uere").textContent = uere.toFixed(2) + " m";
+    $("hpos").textContent = hpos >= 1 ? hpos.toFixed(1) + " m" : (hpos * 100).toFixed(0) + " cm";
+
+    const v = $("verdict");
+    if (S.precise) { v.className = "c"; v.textContent = "精密補強: 搬送波位相と高精度補正で cm 級 — 自動運転・測量・農機の世界"; }
+    else if (S.iono === "aug") { v.className = "b"; v.textContent = "広域補強（SBAS等）: 衛星クロック・軌道・電離層を広域補正し、約1m。航空やスマホの高精度モード相当"; }
+    else if (S.iono === "dual") { v.className = "b"; v.textContent = "2周波: 最大の敵だった電離層を除去。単独でも1〜2mの良好な精度"; }
+    else if (S.broadcast && S.tropo && S.iono === "klob") { v.className = "a"; v.textContent = "単独測位: 放送補正＋モデルで数m。普通のカーナビ・スマホの標準的な状態"; }
+    else { v.className = "a"; v.textContent = "補正が不十分: 誤差が積み上がり精度が悪化。補正を足していこう"; }
+
+    // sync preset highlight
+    const cur = JSON.stringify(S);
+    document.querySelectorAll("#presets button").forEach((b) => {
+      b.classList.toggle("active", JSON.stringify(Object.assign({ broadcast: true, tropo: true, iono: "klob", precise: false }, PRESETS[b.dataset.preset])) === cur);
+    });
+    // sync controls
+    $("cBroadcast").checked = S.broadcast;
+    $("cTropo").checked = S.tropo;
+    $("cPrecise").checked = S.precise;
+    document.querySelectorAll("#ionoSeg button").forEach((b) => b.classList.toggle("on", b.dataset.iono === S.iono));
+  }
+
+  document.querySelectorAll("#presets button").forEach((b) => {
+    b.addEventListener("click", () => { Object.assign(S, PRESETS[b.dataset.preset]); update(); });
+  });
+  $("cBroadcast").addEventListener("change", (e) => { S.broadcast = e.target.checked; update(); });
+  $("cTropo").addEventListener("change", (e) => { S.tropo = e.target.checked; update(); });
+  $("cPrecise").addEventListener("change", (e) => { S.precise = e.target.checked; update(); });
+  document.querySelectorAll("#ionoSeg button").forEach((b) => {
+    b.addEventListener("click", () => { S.iono = b.dataset.iono; if (S.iono === "dual") {} update(); });
+  });
+
+  window.addEventListener("resize", draw);
+  if (window.ResizeObserver) new ResizeObserver(draw).observe(cv);
+  update();
+})();
+</script>
+</body>
+</html>

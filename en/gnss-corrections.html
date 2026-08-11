@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>Errors &amp; Corrections | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="Errors &amp; Corrections | GNSS Study">
+<meta property="og:description" content="An interactive GNSS learning site — from wave basics to the inside of a receiver, SDR practice and jamming/spoofing defence.">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/en/gnss-corrections.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Errors &amp; Corrections | GNSS Study">
+<meta name="twitter:description" content="An interactive GNSS learning site — from wave basics to the inside of a receiver, SDR practice and jamming/spoofing defence.">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --ok: #10b981;
+    --warn: #d97706;
+    --c-satclk: #60a5fa;
+    --c-orbit: #38bdf8;
+    --c-iono: #f59e0b;
+    --c-tropo: #10b981;
+    --c-mp: #ec4899;
+    --c-noise: #94a3b8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --ok: #34d399; --warn: #fbbf24;
+      --c-satclk: #60a5fa; --c-orbit: #38bdf8; --c-iono: #fbbf24; --c-tropo: #34d399; --c-mp: #f472b6; --c-noise: #94a3b8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --ok: #34d399; --warn: #fbbf24;
+    --c-satclk: #60a5fa; --c-orbit: #38bdf8; --c-iono: #fbbf24; --c-tropo: #34d399; --c-mp: #f472b6; --c-noise: #94a3b8;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --ok: #10b981; --warn: #d97706;
+    --c-satclk: #60a5fa; --c-orbit: #38bdf8; --c-iono: #f59e0b; --c-tropo: #10b981; --c-mp: #ec4899; --c-noise: #94a3b8;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel p.lead { margin: 0 0 10px; font-size: .9rem; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+  code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .9em;
+  }
+
+  .eqline {
+    background: var(--surface2); border-radius: 8px; padding: 10px 14px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: .84rem; overflow-x: auto; white-space: nowrap;
+  }
+
+  /* controls */
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .presets .lbl { font-size: .82rem; color: var(--muted); margin-right: 2px; }
+  .presets button {
+    appearance: none; font-family: inherit; font-size: .84rem;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text);
+    cursor: pointer;
+  }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .presets button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .presets button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .ctrls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 22px; margin-bottom: 12px; }
+  @media (max-width: 680px) { .ctrls { grid-template-columns: 1fr; } }
+  .ctrls .row { display: flex; align-items: center; gap: 8px; font-size: .86rem; }
+  .ctrls label.sw { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg button {
+    appearance: none; font-family: inherit; font-size: .78rem;
+    padding: 4px 9px; border: none; border-right: 1px solid var(--border);
+    background: var(--surface2); color: var(--muted); cursor: pointer;
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button.on { background: var(--accent); color: #fff; }
+  .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .ctrls .grp-t { font-size: .78rem; color: var(--muted); }
+
+  .totrow {
+    display: flex; gap: 12px 30px; flex-wrap: wrap; align-items: baseline;
+    padding: 10px 14px; margin-top: 4px;
+    background: var(--surface2); border-radius: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .totrow .v { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+  .totrow .u { font-size: .8rem; color: var(--muted); }
+  #verdict {
+    padding: 8px 12px; border-radius: 8px; margin-top: 10px;
+    font-size: .88rem; font-weight: 600;
+    background: var(--surface2); border-left: 4px solid var(--muted);
+  }
+  #verdict.a { border-left-color: var(--warn); color: var(--warn); }
+  #verdict.b { border-left-color: var(--accent); color: var(--accent); }
+  #verdict.c { border-left-color: var(--ok); color: var(--ok); }
+
+  /* source cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .card {
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--cc, var(--accent));
+    border-radius: 10px;
+    padding: 11px 14px;
+    background: var(--surface);
+  }
+  .card h4 { margin: 0 0 2px; font-size: .95rem; color: var(--cc, var(--text)); }
+  .card .mag { font-size: .74rem; color: var(--muted); font-family: ui-monospace, Consolas, monospace; margin-bottom: 6px; }
+  .card p { margin: 0; font-size: .83rem; color: var(--muted); }
+  .card p b { color: var(--text); }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 5px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Errors &amp; Corrections</h1>
+    <p>Subtracting the known errors from the pseudorange, one by one — from metres to centimetres</p>
+  </header>
+
+  <div class="panel">
+    <h3>INSIDE THE PSEUDORANGE — A CORRECTION IS "SUBTRACT A KNOWN ERROR"</h3>
+    <p class="lead">As the <a href="gnss-obs.html">Pseudorange page</a> showed, the range ρ a receiver measures is the true geometric distance r plus a stack of errors:</p>
+    <div class="eqline">ρ = r + c·δt<sub>receiver</sub> − c·δt<sub>satellite</sub> + I<sub>iono</sub> + T<sub>tropo</sub> + multipath + noise</div>
+    <p class="cap">Of these, <b>δt<sub>receiver</sub></b> is solved as an unknown in the position fix (that's why 4 satellites are needed). A <strong>correction</strong> is subtracting the remaining terms whose value we can figure out. The satellite clock δt<sub>satellite</sub>, ionosphere I and troposphere T can each be estimated — from broadcast data, a model, dual-frequency observation, or external augmentation — and removed. Multipath and noise are random errors that simply remain.</p>
+  </div>
+
+  <div class="panel">
+    <h3>CORRECTION SIMULATOR — EACH CORRECTION SHRINKS THE ERROR</h3>
+    <div class="presets" id="presets">
+      <span class="lbl">Positioning mode:</span>
+      <button data-preset="raw">No correction</button>
+      <button data-preset="spp">Standalone (single-freq)</button>
+      <button data-preset="dual">Dual-frequency</button>
+      <button data-preset="sbas">SBAS augmentation</button>
+      <button data-preset="clas">RTK / PPP / CLAS</button>
+    </div>
+    <div class="ctrls">
+      <div class="row"><label class="sw"><input type="checkbox" id="cBroadcast" checked>Satellite clock &amp; orbit (broadcast af0/af1/af2)</label></div>
+      <div class="row"><label class="sw"><input type="checkbox" id="cTropo" checked>Tropospheric model</label></div>
+      <div class="row">
+        <span class="grp-t">Ionosphere:</span>
+        <span class="seg" id="ionoSeg">
+          <button data-iono="none">none</button>
+          <button data-iono="klob" class="on">broadcast model</button>
+          <button data-iono="dual">dual-freq removal</button>
+          <button data-iono="aug">augmentation</button>
+        </span>
+      </div>
+      <div class="row"><label class="sw"><input type="checkbox" id="cPrecise">Precise augmentation (carrier phase + RTK/PPP/CLAS)</label></div>
+    </div>
+    <canvas class="dark" id="chart" aria-label="Residual error per source as a bar chart"></canvas>
+    <div class="totrow">
+      <span><span class="v" id="uere">–</span> <span class="u">UERE (1σ range error per satellite)</span></span>
+      <span>rough horizontal error <span class="v" id="hpos" style="font-size:1.1rem">–</span> <span class="u">(2drms, 95%)</span></span>
+    </div>
+    <div id="verdict">—</div>
+    <p class="cap">Educational representative values (1σ). Real figures vary greatly with elevation, time of day and region. UERE (User Equivalent Range Error) is the combined per-satellite range error; position error is roughly <code>UERE × DOP</code>. The "no correction" satellite clock is shown at a representative size — uncorrected it is in fact orders of magnitude larger.</p>
+  </div>
+
+  <div class="panel">
+    <h3>WHAT EACH CORRECTION IS — THE ERROR AND HOW IT'S REMOVED</h3>
+    <div class="cards">
+      <div class="card" style="--cc: var(--c-satclk)">
+        <h4>Satellite clock</h4>
+        <div class="mag">a few m (far more if uncorrected)</div>
+        <p>Even the satellite's atomic clock drifts slightly. Ground control monitors it and broadcasts the drift coefficients <b>af0/af1/af2</b> in the <a href="gnss-navmsg.html">navigation message</a>; the receiver subtracts the clock error. In a <a href="time-lab.html">1 µs = 300 m</a> world, this is essential.</p>
+      </div>
+      <div class="card" style="--cc: var(--c-orbit)">
+        <h4>Satellite orbit (ephemeris)</h4>
+        <div class="mag">1–2 m</div>
+        <p>The satellite's true position differs slightly from the predicted one. The broadcast ephemeris gives the position, but it carries residual error. Precise orbits (from IGS or CLAS) push this down to centimetres.</p>
+      </div>
+      <div class="card" style="--cc: var(--c-iono)">
+        <h4>Ionosphere</h4>
+        <div class="mag">m to tens of m (the biggest source)</div>
+        <p>The ionosphere delays the signal, and crucially the delay <strong>depends on frequency</strong>. Single-frequency removes only about half via the broadcast Klobuchar model. <strong>Dual-frequency (L1+L5) computes the delay from the difference and removes it almost completely.</strong></p>
+      </div>
+      <div class="card" style="--cc: var(--c-tropo)">
+        <h4>Troposphere</h4>
+        <div class="mag">2–10 m (larger at low elevation)</div>
+        <p>Delay from the lower atmosphere (dry air + water vapour). It is <strong>frequency-independent</strong>, so dual-frequency can't remove it; instead a model (Saastamoinen etc.) plus an elevation mapping function corrects it. The dry part fits well; water vapour is the residual.</p>
+      </div>
+      <div class="card" style="--cc: var(--c-mp)">
+        <h4>Multipath (remains)</h4>
+        <div class="mag">tens of cm to a few m</div>
+        <p>Reflections off buildings and the ground. It's environment-dependent and unpredictable, so no model can correct it. You can only reduce it — antenna design and siting, <a href="gnss-bands.html">L5's wide band</a>, carrier smoothing.</p>
+      </div>
+      <div class="card" style="--cc: var(--c-noise)">
+        <h4>Receiver noise (remains)</h4>
+        <div class="mag">tens of cm and up</div>
+        <p>Random measurement scatter from correlation and tracking. Larger for code pseudorange, and orders of magnitude smaller with carrier phase — one reason RTK/PPP reach centimetres.</p>
+      </div>
+    </div>
+    <p class="cap">Relativity (the periodic effect from orbit eccentricity), TGD (inter-signal hardware delay) and Earth rotation (the Sagnac effect) are also corrected, but their formulas are fixed and the residuals tiny, so the simulator above omits them.</p>
+  </div>
+
+  <div class="panel">
+    <h3>WHERE CORRECTIONS COME FROM — THREE SOURCES</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>Source</th><th>Covers</th><th>Delivery</th><th>Typical accuracy</th></tr>
+        <tr><td><b>Broadcast (nav message)</b></td><td>Satellite clock &amp; orbit, ionosphere (Klobuchar)</td><td>bundled in the satellite signal</td><td class="num">standalone: a few m</td></tr>
+        <tr><td><b>Receiver-side model</b></td><td>Troposphere; (with dual-freq) ionosphere removal</td><td>computed in the receiver</td><td class="num">dual-freq: 1–2 m</td></tr>
+        <tr><td><b>External — wide area</b><br>SBAS / MADOCA-PPP</td><td>Satellite clock &amp; orbit, ionosphere grid</td><td>broadcast from GEO/QZSS</td><td class="num">SBAS: ~1 m</td></tr>
+        <tr><td><b>External — high precision</b><br>RTK / PPP / CLAS</td><td>Everything + carrier-phase integer fix</td><td>base-station network, or <a href="qzss.html">QZSS L6</a></td><td class="num">a few cm</td></tr>
+      </table>
+    </div>
+    <p class="cap">RTK usually receives base-station corrections over a cellular link, but QZSS <a href="qzss.html">CLAS (L6)</a> broadcasts the corrections straight from the satellite, so you get centimetres with no data plan. "How to deliver the corrections" is the main battleground of high-precision GNSS.</p>
+  </div>
+
+  <details class="note" open>
+    <summary>Why dual-frequency removes the ionosphere</summary>
+    <div class="body">
+      <p>Ionospheric delay is inversely proportional to the square of frequency (<code>delay ∝ 1/f²</code>). So measuring the same satellite on L1 (1575.42 MHz) and L5 (1176.45 MHz) yields two pseudoranges that differ by exactly the delay difference. Since that difference is <strong>caused by the ionospheric delay itself</strong>, you can back out the delay and subtract it from both, giving an ionosphere-free range.</p>
+      <p>A single-frequency receiver can't take that difference, so it must estimate with the broadcast Klobuchar model (a rough functional shape) and removes only about <strong>half</strong> on average. This is the answer to "why multiple frequencies" from the <a href="gnss-bands.html">Frequency Band Map</a>.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Troposphere can't be removed by dual-frequency — so you model it</summary>
+    <div class="body">
+      <p>Tropospheric delay (from the neutral atmosphere, surface to ~a dozen km) is <strong>frequency-independent</strong>. L1 and L5 are delayed equally, so the dual-frequency difference cancels it out. Instead you estimate the zenith delay with a physical model (Saastamoinen or Hopfield), then map it to the slant direction with an elevation-dependent mapping function.</p>
+      <p>The delay splits into a "dry component" (~90%), well-determined from surface pressure, and a "wet component" (~10%). Water vapour is the troublesome part — it changes moment to moment and becomes the residual. Turned around, this very property lets GNSS measure atmospheric water vapour, a field called "GNSS meteorology".</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>The augmentation landscape — from DGPS to PPP-RTK</summary>
+    <div class="body">
+      <p><strong>DGPS</strong>: a nearby base station broadcasts "here is the error right now". A classic method that fades with distance.</p>
+      <p><strong>SBAS</strong> (Japan's MSAS, the US WAAS, etc.): geostationary satellites broadcast wide-area corrections (satellite clock/orbit and an ionosphere grid). ~1 m class, a staple of aviation.</p>
+      <p><strong>RTK</strong>: uses a base station's carrier-phase data to resolve the integer ambiguity, reaching centimetres — typically within tens of km of the base.</p>
+      <p><strong>PPP</strong>: no base station, using only precise global satellite clock/orbit corrections. Usable anywhere on Earth, but slow to converge (initialize).</p>
+      <p><strong>PPP-RTK / CLAS</strong>: PPP plus regional atmospheric corrections, for RTK-like accuracy in a short time. QZSS's <a href="qzss.html">CLAS</a> is Japan's implementation that <strong>broadcasts it straight from the satellite on L6</strong>, giving centimetres with no base-station link.</p>
+      <p>All of this feeds directly into the "corrections" block of the <a href="gnss-rx.html">Receive Chain</a>. Which augmentation you use takes the same receiver from metres to centimetres.</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  const SRC = [
+    { key: "satclk", ja: "Sat clock",   base: 8.0, color: "--c-satclk" },
+    { key: "orbit",  ja: "Sat orbit",   base: 3.0, color: "--c-orbit" },
+    { key: "iono",   ja: "Ionosphere",  base: 6.0, color: "--c-iono" },
+    { key: "tropo",  ja: "Troposphere", base: 2.8, color: "--c-tropo" },
+    { key: "mp",     ja: "Multipath",   base: 1.0, color: "--c-mp" },
+    { key: "noise",  ja: "RX noise",    base: 0.5, color: "--c-noise" },
+  ];
+
+  const S = { broadcast: true, tropo: true, iono: "klob", precise: false };
+
+  const PRESETS = {
+    raw:  { broadcast: false, tropo: false, iono: "none", precise: false },
+    spp:  { broadcast: true,  tropo: true,  iono: "klob", precise: false },
+    dual: { broadcast: true,  tropo: true,  iono: "dual", precise: false },
+    sbas: { broadcast: true,  tropo: true,  iono: "aug",  precise: false },
+    clas: { broadcast: true,  tropo: true,  iono: "dual", precise: true  },
+  };
+
+  function residual(key) {
+    if (S.precise) {
+      return { satclk: 0.05, orbit: 0.05, iono: 0.02, tropo: 0.02, mp: 0.2, noise: 0.03 }[key];
+    }
+    switch (key) {
+      case "satclk": return S.iono === "aug" ? 0.5 : (S.broadcast ? 1.1 : 8.0);
+      case "orbit":  return S.iono === "aug" ? 0.4 : (S.broadcast ? 0.8 : 3.0);
+      case "iono":   return { none: 6.0, klob: 3.0, dual: 0.1, aug: 0.3 }[S.iono];
+      case "tropo":  return S.tropo ? 0.3 : 2.8;
+      case "mp":     return 1.0;
+      case "noise":  return 0.5;
+    }
+    return 0;
+  }
+
+  const cv = $("chart");
+  const ctx = cv.getContext("2d");
+  const cs = getComputedStyle(document.documentElement);
+  function col(v) { return cs.getPropertyValue(v).trim() || "#888"; }
+
+  function fit(c, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = c.clientWidth;
+    const h = Math.round(w * aspect);
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+      c.width = Math.round(w * dpr);
+      c.height = Math.round(h * dpr);
+      c.style.height = h + "px";
+    }
+    c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  const MAXV = 8;
+  const sq = (v) => Math.sqrt(Math.max(v, 0));
+
+  function draw() {
+    const { w, h } = fit(cv, 0.6);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#0a1210";
+    ctx.fillRect(0, 0, w, h);
+    ctx.font = "11px ui-monospace, Consolas, monospace";
+    const padL = 96, padR = 62, padT = 20, padB = 26;
+    const plotW = w - padL - padR;
+    const rowH = (h - padT - padB) / SRC.length;
+    const X = (v) => padL + sq(v) / sq(MAXV) * plotW;
+
+    // scale ticks
+    [0, 0.5, 1, 2, 4, 8].forEach((t) => {
+      const x = X(t);
+      ctx.strokeStyle = "rgba(148,180,170,.12)";
+      ctx.beginPath(); ctx.moveTo(x, padT - 4); ctx.lineTo(x, h - padB + 2); ctx.stroke();
+      ctx.fillStyle = "rgba(160,190,182,.55)";
+      ctx.fillText(t + "m", x - 6, h - padB + 16);
+    });
+
+    SRC.forEach((s, i) => {
+      const cy = padT + i * rowH + rowH / 2;
+      const bh = Math.min(rowH * 0.5, 18);
+      const res = residual(s.key);
+      const c = col(s.color);
+      // label
+      ctx.fillStyle = "rgba(230,238,236,.9)";
+      ctx.textAlign = "right";
+      ctx.fillText(s.ja, padL - 8, cy + 4);
+      ctx.textAlign = "left";
+      // base outline (before correction)
+      ctx.strokeStyle = "rgba(148,180,170,.3)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(padL, cy - bh / 2, X(s.base) - padL, bh);
+      // residual bar
+      ctx.fillStyle = c;
+      ctx.globalAlpha = 0.9;
+      const bw = Math.max(X(res) - padL, res > 0 ? 2 : 0);
+      ctx.fillRect(padL, cy - bh / 2, bw, bh);
+      ctx.globalAlpha = 1;
+      // value
+      ctx.fillStyle = "rgba(230,238,236,.9)";
+      ctx.fillText(res.toFixed(2) + " m", Math.max(padL + bw + 5, X(s.base) + 5), cy + 4);
+    });
+
+    // legend
+    ctx.fillStyle = "rgba(160,190,182,.6)";
+    ctx.fillText("outline = before correction / fill = residual after", padL, padT - 8);
+  }
+
+  function update() {
+    draw();
+    let ss = 0;
+    SRC.forEach((s) => { const r = residual(s.key); ss += r * r; });
+    const uere = Math.sqrt(ss);
+    const hpos = uere * 2.6; // 2drms rough
+    $("uere").textContent = uere.toFixed(2) + " m";
+    $("hpos").textContent = hpos >= 1 ? hpos.toFixed(1) + " m" : (hpos * 100).toFixed(0) + " cm";
+
+    const v = $("verdict");
+    if (S.precise) { v.className = "c"; v.textContent = "Precise augmentation: carrier phase + high-precision corrections give centimetres — automated driving, surveying, farm machinery"; }
+    else if (S.iono === "aug") { v.className = "b"; v.textContent = "Wide-area augmentation (SBAS etc.): satellite clock, orbit and ionosphere corrected over a wide area, ~1 m. Like aviation or a phone's high-accuracy mode"; }
+    else if (S.iono === "dual") { v.className = "b"; v.textContent = "Dual-frequency: the ionosphere — the biggest enemy — is removed. 1–2 m even standalone"; }
+    else if (S.broadcast && S.tropo && S.iono === "klob") { v.className = "a"; v.textContent = "Standalone: broadcast corrections + models give a few metres. The everyday car-nav / phone baseline"; }
+    else { v.className = "a"; v.textContent = "Corrections incomplete: errors pile up and accuracy suffers — keep adding corrections"; }
+
+    // sync preset highlight
+    const cur = JSON.stringify(S);
+    document.querySelectorAll("#presets button").forEach((b) => {
+      b.classList.toggle("active", JSON.stringify(Object.assign({ broadcast: true, tropo: true, iono: "klob", precise: false }, PRESETS[b.dataset.preset])) === cur);
+    });
+    // sync controls
+    $("cBroadcast").checked = S.broadcast;
+    $("cTropo").checked = S.tropo;
+    $("cPrecise").checked = S.precise;
+    document.querySelectorAll("#ionoSeg button").forEach((b) => b.classList.toggle("on", b.dataset.iono === S.iono));
+  }
+
+  document.querySelectorAll("#presets button").forEach((b) => {
+    b.addEventListener("click", () => { Object.assign(S, PRESETS[b.dataset.preset]); update(); });
+  });
+  $("cBroadcast").addEventListener("change", (e) => { S.broadcast = e.target.checked; update(); });
+  $("cTropo").addEventListener("change", (e) => { S.tropo = e.target.checked; update(); });
+  $("cPrecise").addEventListener("change", (e) => { S.precise = e.target.checked; update(); });
+  document.querySelectorAll("#ionoSeg button").forEach((b) => {
+    b.addEventListener("click", () => { S.iono = b.dataset.iono; if (S.iono === "dual") {} update(); });
+  });
+
+  window.addEventListener("resize", draw);
+  if (window.ResizeObserver) new ResizeObserver(draw).observe(cv);
+  update();
+})();
+</script>
+</body>
+</html>

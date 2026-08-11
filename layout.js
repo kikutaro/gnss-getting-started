@@ -12,6 +12,7 @@
     { ja: "gnss-signal.html",   en: "gnss-signal.html", tja: "信号の構造",         ten: "Signal Structure",      grp: 2 },
     { ja: "gnss-navmsg.html",   en: "gnss-navmsg.html", tja: "航法メッセージ",     ten: "Nav Messages",          grp: 2 },
     { ja: "gnss-obs.html",      en: "gnss-obs.html",    tja: "擬似距離・ドップラー", ten: "Pseudorange & Doppler", grp: 2 },
+    { ja: "gnss-corrections.html", en: "gnss-corrections.html", tja: "誤差と補正", ten: "Errors & Corrections", grp: 2 },
     { ja: "gnss-rx.html",       en: "gnss-rx.html",     tja: "受信の流れ",         ten: "Receive Chain",         grp: 2 },
     { ja: "qzss.html",          en: "qzss.html",        tja: "QZSS みちびき",      ten: "QZSS Michibiki",        grp: 2 },
     { ja: "sdr-intro.html",     en: "sdr-intro.html",   tja: "SDR入門",            ten: "SDR Basics",            grp: 3 },
