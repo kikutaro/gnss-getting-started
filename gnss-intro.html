@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>そもそもGNSSとは？ | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="そもそもGNSSとは？ | GNSS Study">
+<meta property="og:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/gnss-intro.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="そもそもGNSSとは？ | GNSS Study">
+<meta name="twitter:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --gps: #3b82f6;
+    --glo: #ef4444;
+    --gal: #a855f7;
+    --bds: #eab308;
+    --qzs: #ec4899;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --gps: #60a5fa; --glo: #f87171; --gal: #c084fc; --bds: #facc15; --qzs: #f472b6;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --gps: #60a5fa; --glo: #f87171; --gal: #c084fc; --bds: #facc15; --qzs: #f472b6;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --gps: #3b82f6; --glo: #ef4444; --gal: #a855f7; --bds: #eab308; --qzs: #ec4899;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+  .herogrid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 16px; align-items: center; }
+  @media (max-width: 820px) { .herogrid { grid-template-columns: 1fr; } }
+  .lede { font-size: .95rem; }
+  .lede b { color: var(--text); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: .78rem; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+  /* GPS ⊂ GNSS set diagram */
+  .setbox {
+    border: 2px dashed var(--accent); border-radius: 14px; padding: 14px 14px 16px;
+    position: relative; margin-top: 8px; background: var(--surface2);
+  }
+  .setbox .tag {
+    position: absolute; top: -11px; left: 14px;
+    background: var(--surface); color: var(--accent);
+    font-size: .78rem; font-weight: 700; padding: 0 8px; border-radius: 6px;
+    border: 1px solid var(--accent);
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .chip {
+    border: 1px solid var(--sc, var(--border));
+    border-left: 4px solid var(--sc, var(--accent));
+    background: var(--surface); border-radius: 8px; padding: 6px 11px; min-width: 118px;
+  }
+  .chip b { display: block; font-size: .9rem; }
+  .chip small { color: var(--muted); font-size: .74rem; }
+  .chip.is-gps { box-shadow: 0 0 0 2px color-mix(in srgb, var(--gps) 45%, transparent); }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 6px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.sys { font-weight: 700; white-space: nowrap; }
+  table.cmp td.sys i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+  .card {
+    border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; background: var(--surface2);
+  }
+  .card .ico { font-size: 1.25rem; line-height: 1; }
+  .card h4 { margin: 6px 0 3px; font-size: .92rem; }
+  .card p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  .why { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .why div {
+    border: 1px solid var(--border); border-left: 4px solid var(--accent);
+    border-radius: 10px; padding: 10px 13px; background: var(--surface2);
+  }
+  .why h4 { margin: 0 0 3px; font-size: .9rem; }
+  .why p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  .steps { counter-reset: s; display: grid; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
+  .steps li { position: relative; padding-left: 34px; font-size: .88rem; }
+  .steps li::before {
+    counter-increment: s; content: counter(s);
+    position: absolute; left: 0; top: 1px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-size: .78rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .next {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; font-size: .9rem;
+  }
+  .next a {
+    margin-left: auto; color: #fff; background: var(--accent);
+    text-decoration: none; font-weight: 600; font-size: .86rem;
+    padding: 7px 16px; border-radius: 8px;
+  }
+  @media (max-width: 560px) { .next a { margin-left: 0; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>そもそもGNSSとは？</h1>
+    <p>「GPSは知ってるけど、GNSSって何？」から始める、衛星測位のはじめの一歩</p>
+  </header>
+
+  <div class="panel">
+    <div class="herogrid">
+      <div>
+        <canvas class="dark" id="sky" aria-label="地球のまわりを回る各国の測位衛星と、地上の受信機が電波を受け取る様子"></canvas>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div>
+        <p class="lede">スマホの地図が「今ここ」を表示できるのは、<b>宇宙の衛星が出す電波</b>を受け取っているからです。</p>
+        <p class="lede">その衛星は1つの国だけのものではありません。アメリカの<b>GPS</b>、ヨーロッパの<b>Galileo</b>、中国の<b>BeiDou（北斗）</b>、ロシアの<b>GLONASS</b>、日本の<b>QZSS（みちびき）</b>…と、いくつもの「衛星測位システム」が地球を回っています。</p>
+        <p class="lede">それらをまとめて呼ぶ言葉が <b>GNSS</b>（Global Navigation Satellite System＝<b>全球測位衛星システム</b>）。あなたのスマホは、実はこれらを<b>同時に</b>使って位置を割り出しています。</p>
+      </div>
+    </div>
+    <p class="cap">※ 図は仕組みを分かりやすくした模式です。衛星の数・軌道・大きさは実際とは異なります。</p>
+  </div>
+
+  <div class="panel">
+    <h3>GPS と GNSS はどう違う？</h3>
+    <p>日本では衛星測位をまとめて「GPS」と呼びがちですが、<b>GPSは数あるシステムのうちの1つ</b>（アメリカ製）にすぎません。全部をひっくるめた総称が <b>GNSS</b> です。ティッシュを「ティッシュ」ではなく商品名で呼ぶのに似ています。</p>
+    <div class="setbox">
+      <span class="tag">GNSS ＝ 衛星測位システムの総称</span>
+      <div class="chips">
+        <div class="chip is-gps" style="--sc: var(--gps)"><b>GPS</b><small>アメリカ ・全世界</small></div>
+        <div class="chip" style="--sc: var(--glo)"><b>GLONASS</b><small>ロシア ・全世界</small></div>
+        <div class="chip" style="--sc: var(--gal)"><b>Galileo</b><small>EU（欧州） ・全世界</small></div>
+        <div class="chip" style="--sc: var(--bds)"><b>BeiDou 北斗</b><small>中国 ・全世界</small></div>
+        <div class="chip" style="--sc: var(--qzs)"><b>QZSS みちびき</b><small>日本 ・地域</small></div>
+        <div class="chip" style="--sc: var(--accent)"><b>NavIC</b><small>インド ・地域</small></div>
+      </div>
+    </div>
+    <p class="cap">「全世界」＝地球のどこでも使えるシステム。「地域」＝特定のエリア（日本周辺やインド周辺）に特化したシステム。QZSSはGPSを補い、日本の真上に長く居座るのが特徴です（→ <a href="qzss.html">QZSS みちびき</a>）。</p>
+  </div>
+
+  <div class="panel">
+    <h3>世界のGNSS 早わかり表</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>システム</th><th>運用</th><th>種別</th><th>衛星数の目安</th><th>ひとこと</th></tr>
+        <tr><td class="sys"><i style="background:var(--gps)"></i>GPS</td><td>アメリカ</td><td>全世界</td><td class="num">約31機</td><td>元祖。1990年代から運用され、「GPS」が衛星測位の代名詞になった</td></tr>
+        <tr><td class="sys"><i style="background:var(--glo)"></i>GLONASS</td><td>ロシア</td><td>全世界</td><td class="num">約24機</td><td>GPSとほぼ同時期に整備された、もう一つの全球システム</td></tr>
+        <tr><td class="sys"><i style="background:var(--gal)"></i>Galileo</td><td>EU（欧州）</td><td>全世界</td><td class="num">約28機</td><td>民生用途で高精度を志向。比較的新しい世代</td></tr>
+        <tr><td class="sys"><i style="background:var(--bds)"></i>BeiDou（北斗）</td><td>中国</td><td>全世界</td><td class="num">約35機+</td><td>近年フル運用に。衛星数は最多クラス</td></tr>
+        <tr><td class="sys"><i style="background:var(--qzs)"></i>QZSS（みちびき）</td><td>日本</td><td>地域</td><td class="num">4→7機へ</td><td>日本＋アジア・オセアニア向け。GPSを補強し高精度化</td></tr>
+        <tr><td class="sys"><i style="background:var(--accent)"></i>NavIC</td><td>インド</td><td>地域</td><td class="num">約7機</td><td>インド周辺地域に特化したシステム</td></tr>
+      </table>
+    </div>
+    <p class="cap">衛星数は運用状況で変わるおおよその値です。周波数帯の違いは <a href="gnss-bands.html">周波数帯マップ</a> で見られます。</p>
+  </div>
+
+  <div class="panel">
+    <h3>どうやって「今ここ」が分かるの？</h3>
+    <p>衛星は「<b>今の正確な時刻</b>」と「<b>自分が宇宙のどこにいるか</b>」を電波にのせて放送し続けています。受信機（スマホ）は、その電波が<b>届くまでにかかった時間</b>から衛星までの距離を測ります。電波は光の速さなので、時間が分かれば距離が分かるわけです。</p>
+    <ol class="steps">
+      <li>衛星1機との距離が分かると、自分は「その衛星を中心とした球面のどこか」に絞られる</li>
+      <li>2機、3機と増やすと、球面どうしが交わって候補がぐっと狭まる</li>
+      <li><b>4機目</b>で受信機の時計のズレも一緒に解け、空間の1点（緯度・経度・高さ）が定まる</li>
+    </ol>
+    <p class="cap" style="margin-top:10px">だから測位には<b>最低4機</b>の衛星が必要です。仕組みを動かして試すなら → <a href="gnss-sim.html">GNSS衛星信号シミュレーター</a>、距離の測り方は → <a href="gnss-obs.html">擬似距離・ドップラー</a>。</p>
+  </div>
+
+  <div class="panel">
+    <h3>なぜ複数のシステムを使うの？</h3>
+    <p>今どきのスマホやカーナビは、GPSだけでなく Galileo・BeiDou・QZSS…を<b>いっぺんに</b>使います。見える衛星が増えると、いいことがたくさんあります。</p>
+    <div class="why">
+      <div><h4>ビル街・山でもつながる</h4><p>建物や山に隠れて何機か見えなくても、システムが多ければ「見えている衛星」を確保しやすい。</p></div>
+      <div><h4>測位が速く・安定する</h4><p>候補の衛星が多いほど、電源を入れてから位置が決まるまでが速く、値もブレにくい。</p></div>
+      <div><h4>精度が上がる</h4><p>四方八方に散らばった衛星を使えるほど、位置の計算がしっかり定まる（→ <a href="gnss-obs.html">DOP</a>）。</p></div>
+      <div><h4>1つ止まっても大丈夫</h4><p>あるシステムに障害や<a href="gnss-threats.html">妨害</a>が起きても、別のシステムで補える。</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>身近な使われ方</h3>
+    <div class="cards">
+      <div class="card"><div class="ico">🗺️</div><h4>地図・経路案内</h4><p>スマホの現在地表示、徒歩・車のナビ。</p></div>
+      <div class="card"><div class="ico">🚗</div><h4>配車・配達・物流</h4><p>タクシー配車、宅配やフードデリバリーの追跡。</p></div>
+      <div class="card"><div class="ico">📷</div><h4>写真の位置情報</h4><p>撮った場所を記録するジオタグ。</p></div>
+      <div class="card"><div class="ico">🕐</div><h4>時刻の同期</h4><p>通信網・金融・電力網が使う正確な時刻の配信も、実はGNSSの重要な役目。</p></div>
+      <div class="card"><div class="ico">🚜</div><h4>農業・測量・建設</h4><p>トラクターの自動運転や、土地の測量に高精度測位を活用。</p></div>
+      <div class="card"><div class="ico">🆘</div><h4>防災</h4><p>QZSSは災害・危機管理の情報を衛星から直接届ける（災危通報）。</p></div>
+    </div>
+  </div>
+
+  <div class="next">
+    <span>イメージがつかめたら、電波や信号の基礎から一歩ずつ見ていきましょう。</span>
+    <a href="wave-lab.html">STEP 1 · 波の基礎へ →</a>
+  </div>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const cv = $("sky");
+  const ctx = cv.getContext("2d");
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const css = getComputedStyle(document.documentElement);
+  const col = (v) => css.getPropertyValue(v).trim() || "#888";
+
+  // constellations (schematic): color var, orbit radius factor, count, angular speed, phase
+  const CONS = [
+    { key: "--gps", name: "GPS",     r: 0.52, n: 3, sp: 0.22,  ph: 0.3 },
+    { key: "--glo", name: "GLONASS", r: 0.66, n: 3, sp: -0.17, ph: 1.1 },
+    { key: "--gal", name: "Galileo", r: 0.80, n: 3, sp: 0.14,  ph: 2.0 },
+    { key: "--bds", name: "BeiDou",  r: 0.94, n: 3, sp: -0.11, ph: 0.7 },
+    { key: "--qzs", name: "QZSS",    r: 0.60, n: 1, sp: 0.19,  ph: 4.4 },
+  ];
+
+  $("legend").innerHTML = CONS.map(c =>
+    "<span><i style='background:" + col(c.key) + "'></i>" + c.name + "</span>"
+  ).join("") + "<span><i style='background:#e6eeec'></i>受信機（あなた）</span>";
+
+  function fit(canvas, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth;
+    const h = Math.round(w * aspect);
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      canvas.style.height = h + "px";
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  let t = 0;
+
+  function draw() {
+    const { w, h } = fit(cv, 0.82);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#0a1210";
+    ctx.fillRect(0, 0, w, h);
+
+    const cx = w / 2, cy = h / 2 + h * 0.04;
+    const maxR = Math.min(w, h) * 0.46;
+    const rE = maxR * 0.30;                 // earth radius
+
+    // starfield (static-ish, seeded by index)
+    ctx.fillStyle = "rgba(200,220,214,.35)";
+    for (let i = 0; i < 46; i++) {
+      const a = i * 2.399963, rr = (i * 97 % 100) / 100;
+      const sx = (Math.sin(a * 3.1 + i) * 0.5 + 0.5) * w;
+      const sy = (Math.cos(a * 2.3 + i * 1.7) * 0.5 + 0.5) * h;
+      ctx.globalAlpha = 0.15 + rr * 0.4;
+      ctx.fillRect(sx, sy, 1.4, 1.4);
+    }
+    ctx.globalAlpha = 1;
+
+    // orbit rings
+    CONS.forEach(c => {
+      ctx.strokeStyle = "rgba(148,180,170,.10)";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, c.r * maxR, 0, Math.PI * 2); ctx.stroke();
+    });
+
+    // earth
+    const g = ctx.createRadialGradient(cx - rE * 0.4, cy - rE * 0.4, rE * 0.2, cx, cy, rE);
+    g.addColorStop(0, "#2a6d8a");
+    g.addColorStop(1, "#0f3a4d");
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(cx, cy, rE, 0, Math.PI * 2); ctx.fill();
+    // schematic land blobs
+    ctx.fillStyle = "rgba(90,150,110,.7)";
+    for (let i = 0; i < 5; i++) {
+      const a = i * 1.9 + t * 0.05;
+      const bx = cx + Math.cos(a) * rE * 0.5;
+      const by = cy + Math.sin(a * 1.3) * rE * 0.45;
+      ctx.beginPath(); ctx.ellipse(bx, by, rE * 0.28, rE * 0.18, a, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, rE, 0, Math.PI * 2); ctx.clip();
+    ctx.strokeStyle = "rgba(200,230,240,.12)";
+    for (let k = -2; k <= 2; k++) { ctx.beginPath(); ctx.moveTo(cx - rE, cy + k * rE * 0.4); ctx.lineTo(cx + rE, cy + k * rE * 0.4); ctx.stroke(); }
+    ctx.restore();
+
+    // receiver on the "top" surface of earth
+    const rxAng = -Math.PI / 2;
+    const rx = cx + Math.cos(rxAng) * rE;
+    const ry = cy + Math.sin(rxAng) * rE;
+
+    // satellites + signal beams
+    const sats = [];
+    CONS.forEach(c => {
+      for (let i = 0; i < c.n; i++) {
+        const ang = c.ph + i * (Math.PI * 2 / c.n) + t * c.sp;
+        const R = c.r * maxR;
+        const x = cx + Math.cos(ang) * R;
+        const y = cy + Math.sin(ang) * R;
+        sats.push({ x, y, c });
+      }
+    });
+
+    // beams from satellites in the upper hemisphere (visible to the receiver)
+    sats.forEach(s => {
+      if (s.y < ry + rE * 0.35) {
+        const pulse = (Math.sin(t * 2.2 - (s.x + s.y) * 0.01) + 1) / 2;
+        ctx.strokeStyle = col(s.c.key);
+        ctx.globalAlpha = 0.20 + pulse * 0.45;
+        ctx.lineWidth = 1.1;
+        ctx.setLineDash([3, 4]);
+        ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(rx, ry); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      }
+    });
+
+    // draw satellites
+    sats.forEach(s => {
+      ctx.fillStyle = col(s.c.key);
+      ctx.beginPath(); ctx.arc(s.x, s.y, 5, 0, Math.PI * 2); ctx.fill();
+      // little solar panels
+      ctx.strokeStyle = col(s.c.key);
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(s.x - 9, s.y); ctx.lineTo(s.x + 9, s.y); ctx.stroke();
+      ctx.globalAlpha = 1;
+    });
+
+    // receiver marker + ripple
+    const rp = (t * 0.6) % 1;
+    ctx.strokeStyle = "rgba(230,238,236,.5)";
+    ctx.lineWidth = 1.2;
+    ctx.globalAlpha = 1 - rp;
+    ctx.beginPath(); ctx.arc(rx, ry, 4 + rp * 12, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "#e6eeec";
+    ctx.beginPath(); ctx.arc(rx, ry, 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(230,238,236,.85)";
+    ctx.font = "11px ui-monospace, Consolas, monospace";
+    ctx.fillText("あなた", rx + 9, ry - 6);
+  }
+
+  function loop(now) {
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  fit(cv, 0.82);
+  draw();
+  window.addEventListener("resize", draw);
+  if (window.ResizeObserver) new ResizeObserver(draw).observe(cv);
+
+  if (!reduced) {
+    let last = performance.now();
+    (function anim(now) {
+      t += Math.max(0, Math.min(0.1, (now - last) / 1000));
+      last = now;
+      draw();
+      requestAnimationFrame(anim);
+    })(performance.now());
+  }
+})();
+</script>
+</body>
+</html>
