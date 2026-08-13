@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>SDRとスペクトル（LimeSDR XTRX） | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="SDRとスペクトル（LimeSDR XTRX） | GNSS Study">
+<meta property="og:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/sdr-spectrum.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SDRとスペクトル（LimeSDR XTRX） | GNSS Study">
+<meta name="twitter:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --sig: #34d399;
+    --noise: #6b7280;
+    --ca: #22d3ee;
+    --py: #f59e0b;
+    --clip: #f87171;
+    --fs: #f472b6;
+    --ok: #10b981;
+    --warn: #d97706;
+    --bad: #dc2626;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --ok: #34d399; --warn: #fbbf24; --bad: #f87171;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --ok: #34d399; --warn: #fbbf24; --bad: #f87171;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --ok: #10b981; --warn: #d97706; --bad: #dc2626;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .lawbox {
+    border: 2px solid var(--bad); border-radius: 10px; background: var(--surface);
+    padding: 12px 16px; font-size: .88rem;
+  }
+  .lawbox b { color: var(--bad); }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+  code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .9em;
+  }
+
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .presets .lbl { font-size: .82rem; color: var(--muted); margin-right: 2px; }
+  .presets button {
+    appearance: none; font-family: inherit; font-size: .84rem;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface2); color: var(--text); cursor: pointer;
+  }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .presets button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .ctl { display: grid; grid-template-columns: 12em 1fr 8em; align-items: center; gap: 10px; padding: 5px 0; }
+  .ctl .name { font-size: .82rem; color: var(--muted); }
+  .ctl output {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums; font-size: .84rem; text-align: right;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .selrow { display: flex; align-items: center; gap: 8px; font-size: .84rem; color: var(--muted); padding: 5px 0; }
+  .selrow select {
+    font-family: inherit; font-size: .85rem;
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px;
+  }
+
+  .lb-read { display: flex; gap: 8px 22px; flex-wrap: wrap; padding: 8px 2px 0; font-size: .84rem; font-variant-numeric: tabular-nums; }
+  .lb-read b { font-family: ui-monospace, Consolas, monospace; }
+  #verdict {
+    padding: 9px 12px; border-radius: 8px; font-weight: 700; font-size: .92rem; margin-top: 10px;
+    background: var(--surface2); border-left: 4px solid var(--muted);
+  }
+  #verdict.ok { border-left-color: var(--ok); color: var(--ok); }
+  #verdict.warn { border-left-color: var(--warn); color: var(--warn); }
+  #verdict.bad { border-left-color: var(--bad); color: var(--bad); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .8rem; color: var(--muted); padding-top: 4px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 5px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>SDRとスペクトル — LimeSDR XTRXでGPS L1を見る</h1>
+    <p><a href="gnss-spectrum.html">スペクトルのページ</a>のSDR版。信号源・アッテネータ・RXゲインを変えて、SDRの画面にGPS L1がどう映るかを見る</p>
+  </header>
+
+  <div class="lawbox">
+    <b>⚠ 前提:</b> 実験はGPS信号源（<a href="opensource.html">gps-sdr-sim</a>等でSDR送信、または校正用の信号発生器）と受信用LimeSDRを<b>同軸ケーブル＋アッテネータで直結</b>して行う想定です。GNSS帯を空間に放射するのは電波法違反です（<a href="sdr-gnss-tx.html">SDRでGNSS送信</a>参照）。
+  </div>
+
+  <div class="panel">
+    <h3>受信スペクトル @ 1575.42 MHz</h3>
+    <div class="presets" id="presets">
+      <span class="lbl">プリセット:</span>
+      <button data-preset="good">適正</button>
+      <button data-preset="weak">埋もれる（ATT大）</button>
+      <button data-preset="clip">クリップ（ゲイン過大）</button>
+      <button data-preset="realsat">実衛星相当</button>
+    </div>
+    <canvas class="dark" id="spec" aria-label="LimeSDRで受信したGPS L1のスペクトル"></canvas>
+    <div class="legend" id="legend"></div>
+    <div class="ctl">
+      <span class="name">信号源の出力</span>
+      <input type="range" id="src" min="-40" max="5" step="1" value="0">
+      <output id="srcOut">0 dBm</output>
+    </div>
+    <div class="ctl">
+      <span class="name">アッテネータ ATT</span>
+      <input type="range" id="att" min="0" max="120" step="1" value="50">
+      <output id="attOut">−50 dB</output>
+    </div>
+    <div class="ctl">
+      <span class="name">LimeSDR RXゲイン</span>
+      <input type="range" id="gain" min="0" max="66" step="1" value="40">
+      <output id="gainOut">40 dB</output>
+    </div>
+    <div class="selrow">
+      <label>サンプルレート / 分解能帯域幅(RBW)
+        <select id="fs">
+          <option value="2.5">2.5 Msps（RBW 狭・弱信号向き）</option>
+          <option value="10" selected>10 Msps</option>
+          <option value="30">30 Msps（RBW 広）</option>
+        </select>
+      </label>
+    </div>
+    <div class="lb-read" id="readout"></div>
+    <div id="verdict">—</div>
+    <p class="cap">縦軸はアンテナ端（入力）換算のパワー[dBm]。数値はLMS7002M/XTRXの代表値を用いた<strong>教材用モデル</strong>で、実機の設定・個体で変わります。GPS L1（C/A＋P(Y)）は幅約2/20MHzの <code>sinc²</code> の裾で、受信機入力＝<b>信号源＋ATT</b>。</p>
+  </div>
+
+  <div class="panel">
+    <h3>LimeSDR XTRX（LMS7002M）の受信諸元（目安）</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>項目</th><th>目安</th><th>スペクトルへの効き方</th></tr>
+        <tr><td>周波数範囲</td><td class="num">30 MHz – 3.8 GHz</td><td>L1 1575.42 MHz を含む（L2/L5/L6も）</td></tr>
+        <tr><td>RX雑音指数 NF</td><td class="num">約 3.5 dB</td><td>雑音床を決める（低いほど弱信号が見える）</td></tr>
+        <tr><td>RXゲイン</td><td class="num">0 – 約66 dB</td><td>低いとADC雑音に埋もれ、高いとクリップ</td></tr>
+        <tr><td>ADC分解能</td><td class="num">12 bit</td><td>ダイナミックレンジ ~74 dB。強弱の同時扱い</td></tr>
+        <tr><td>基準クロック</td><td class="num">VCTCXO ±0.5ppm級</td><td>L1で±0.8kHz程度の周波数ずれ（<a href="sdr-gnss-tx.html">TXページ</a>）</td></tr>
+        <tr><td>帯域幅</td><td class="num">最大 ~120 MHz(PCIe)</td><td>本例は数MHz。広いほどRBWも広がる</td></tr>
+      </table>
+    </div>
+    <p class="cap">出典の目安: <a href="https://limemicro.com/sdr/limesdr-xtrx/" target="_blank" rel="noopener">LimeSDR XTRX 製品ページ</a> / <a href="https://github.com/myriadrf/LMS7002M-docs" target="_blank" rel="noopener">LMS7002M データシート</a>。NF・ゲイン・最大入力はゲイン配分や周波数で変わるため、正確な設計は必ずデータシートで確認してください。</p>
+  </div>
+
+  <details class="note" open>
+    <summary>ゲインの「ちょうどいい」を探す — 弱すぎ / 強すぎの間</summary>
+    <div class="body">
+      <p>SDRのスペクトルは、生の電波そのものではなく「フロントエンド＋ADCを通した後」の姿です。ここには2つの壁があります。</p>
+      <p><strong>下の壁（雑音床）</strong>: ゲインが低いとADCの量子化雑音が入力換算で高くなり、弱い信号がその下に沈みます。ゲインを上げると量子化雑音は下がり、やがて<strong>フロントエンドの熱雑音（NF）で決まる本来の床</strong>に到達します。ここが弱信号を見る限界。</p>
+      <p><strong>上の壁（ADCフルスケール）</strong>: ゲインを上げすぎると強い成分がADCの上限を超え、<strong>クリップ（飽和）</strong>して波形が潰れ、スペクトルに偽のスプリアスが立ちます。ゲイン下げかATT追加が必要。</p>
+      <p>だから正解は「<strong>クリップしない範囲でできるだけゲインを上げ、熱雑音床まで下げきる</strong>」。上のシミュレーターでゲインを動かすと、雑音床（紫）とフルスケール線（ピンク）の間にGPSの台形を収める感覚がつかめます。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>RBW（サンプルレート）で見え方が変わる</summary>
+    <div class="body">
+      <p>スペクトルの1本1本（ビン）の雑音は、その幅（分解能帯域幅 RBW）に比例します: <code>雑音 = −174 dBm/Hz + NF + 10log₁₀(RBW)</code>。RBWを狭くする（サンプルレートを下げる/FFT点数を増やす）ほど1ビンあたりの雑音が下がり、<strong>弱い信号が浮かびやすく</strong>なります。</p>
+      <p>ただしGPSは拡散信号なので、狭いRBWでも「鋭いピーク」にはならず、なだらかな台形のまま床がわずかに持ち上がる程度です。実衛星（−130dBm級）の生をSDRの単発スペクトルで見るのはやはり困難で、はっきり見たいなら受信機で<strong>相関（逆拡散）</strong>して処理利得を得ます（<a href="gnss-spectrum.html">スペクトルのページ</a>・<a href="gnss-obs.html">擬似距離</a>参照）。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>実際の手順（LimeSuite / GQRX などで）</summary>
+    <div class="body">
+      <p>① 中心周波数を <code>1575.42 MHz</code> に、サンプルレートを数Msps（例2.5〜10）に設定。② RXゲインを低めから上げていき、雑音床が持ち上がり始める手前（熱雑音床に到達したあたり）で止める。③ 信号源（<a href="opensource.html">gps-sdr-sim</a>＋SDR TX や信号発生器）を有線でつなぎ、ATTで −50dB 前後に落として入力する。④ 信号が強すぎてクリップ（スプリアス多発・床が全体的に上昇）したらゲインかATTで下げる。</p>
+      <p>受信して<strong>測位まで</strong>やるなら、スペクトル確認のあと <a href="opensource.html">GNSS-SDR / PocketSDR</a> に生I/Qを流し込み、相関・追尾・復調させます。<a href="gnss-rx.html">受信の流れ</a>の各ブロックが実際に動きます。</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  // LimeSDR XTRX / LMS7002M representative values (educational)
+  const NF = 3.5;         // dB, RX noise figure at L-band (typ)
+  const ENOB = 10.5;      // effective bits (12-bit ADC)
+  const FS0 = 0;          // dBm input that reaches ADC full scale at 0 dB gain (approx)
+  const NFFT = 1024;      // FFT bins for display
+  const SIG_BW_CA = 2.046e6, SIG_BW_PY = 20.46e6;
+
+  const S = { src: 0, att: 50, gain: 40, fs: 10, t: 0 };
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const PRESETS = {
+    good:    { src: 0,   att: 50,  gain: 40, fs: 10 },
+    weak:    { src: 0,   att: 110, gain: 40, fs: 10 },
+    clip:    { src: 0,   att: 20,  gain: 60, fs: 10 },
+    realsat: { src: -40, att: 90,  gain: 60, fs: 2.5 },
+  };
+
+  const cv = $("spec");
+  const ctx = cv.getContext("2d");
+  const cs = getComputedStyle(document.documentElement);
+  const col = (v) => cs.getPropertyValue(v).trim() || "#888";
+
+  function fit(c, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = c.clientWidth;
+    const h = Math.round(w * aspect);
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+      c.width = Math.round(w * dpr);
+      c.height = Math.round(h * dpr);
+      c.style.height = h + "px";
+    }
+    c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  function sinc2(offMHz, chipMHz) {
+    const x = offMHz / chipMHz;
+    if (Math.abs(x) < 1e-4) return 0;
+    const s = Math.sin(Math.PI * x) / (Math.PI * x);
+    return 10 * Math.log10(Math.max(s * s, 1e-6));
+  }
+
+  function model() {
+    const rxIn = S.src - S.att;                 // dBm at RX input (source + attenuation)
+    const rbw = S.fs * 1e6 / NFFT;              // Hz
+    const thermal = -174 + NF + 10 * Math.log10(rbw);           // input-referred noise floor / bin
+    const fsIn = FS0 - S.gain;                  // input level that clips ADC now
+    const adcSnr = 6.02 * ENOB + 1.76;          // dB over Nyquist
+    const adcFloor = fsIn - adcSnr - 10 * Math.log10(NFFT / 2); // input-referred per bin
+    const floor = Math.max(thermal, adcFloor);
+    const clipping = rxIn > fsIn;
+    // per-bin spectral peaks of spread signal (split ~ equal power C/A vs P(Y))
+    const caPeak = (rxIn - 3) - 10 * Math.log10(SIG_BW_CA / rbw);
+    const pyPeak = (rxIn - 3) - 10 * Math.log10(SIG_BW_PY / rbw);
+    const cn0 = rxIn + 174 - NF;                // dB-Hz (roughly)
+    return { rxIn, rbw, thermal, fsIn, adcFloor, floor, clipping, caPeak, pyPeak, cn0 };
+  }
+
+  function draw() {
+    const m = model();
+    const { w, h } = fit(cv, 0.5);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#0a1210";
+    ctx.fillRect(0, 0, w, h);
+    ctx.font = "10px ui-monospace, Consolas, monospace";
+    const padL = 42, padR = 10, padT = 14, padB = 26;
+    const plotW = w - padL - padR, plotH = h - padT - padB;
+    const DB_TOP = 10, DB_BOT = -170;
+    const spanMHz = 30;
+    const half = spanMHz / 2;
+    const X = (off) => padL + (off + half) / spanMHz * plotW;
+    const Y = (db) => padT + (DB_TOP - db) / (DB_TOP - DB_BOT) * plotH;
+
+    for (let db = DB_TOP; db >= DB_BOT; db -= 30) {
+      const y = Y(db);
+      ctx.strokeStyle = "rgba(148,180,170,.1)";
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke();
+      ctx.fillStyle = "rgba(160,190,182,.55)";
+      ctx.fillText(db + "", 4, y + 3);
+    }
+    ctx.fillStyle = "rgba(160,190,182,.55)";
+    ctx.fillText("dBm", 4, padT - 2);
+    for (let o = -half; o <= half + 0.01; o += spanMHz / 6) {
+      const x = X(o);
+      ctx.strokeStyle = "rgba(148,180,170,.1)";
+      ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, h - padB); ctx.stroke();
+      ctx.fillStyle = "rgba(160,190,182,.55)";
+      ctx.fillText((1575.42 + o).toFixed(0), x - 12, h - padB + 14);
+    }
+    ctx.fillStyle = "rgba(160,190,182,.5)";
+    ctx.fillText("MHz", w - padR - 24, h - 6);
+
+    // ADC full-scale line
+    if (m.fsIn <= DB_TOP) {
+      ctx.strokeStyle = "rgba(244,114,182,.7)";
+      ctx.setLineDash([6, 3]);
+      ctx.beginPath(); ctx.moveTo(padL, Y(m.fsIn)); ctx.lineTo(w - padR, Y(m.fsIn)); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "rgba(244,114,182,.9)";
+      ctx.fillText("ADCフルスケール " + m.fsIn.toFixed(0) + "dBm", padL + 4, Y(m.fsIn) - 4);
+    }
+
+    // noise floor with jitter
+    ctx.strokeStyle = "rgba(107,114,128,.55)";
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(padL, Y(m.floor)); ctx.lineTo(w - padR, Y(m.floor)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(148,163,175,.85)";
+    ctx.fillText("雑音床 " + m.floor.toFixed(0) + "dBm/bin" + (m.floor === m.adcFloor ? "（ADC制限）" : "（熱雑音制限）"), padL + 4, Y(m.floor) - 4);
+
+    function totalDbAt(off) {
+      const linCa = Math.pow(10, (m.caPeak + sinc2(off, 1.023)) / 10);
+      const linPy = Math.pow(10, (m.pyPeak + sinc2(off, 10.23)) / 10);
+      const jr = Math.sin(off * 91.7 + S.t * 3) * 43758.5;
+      const jit = (jr - Math.floor(jr) - 0.5) * 5;
+      const linN = Math.pow(10, (m.floor + jit) / 10);
+      let d = 10 * Math.log10(linCa + linPy + linN);
+      if (m.clipping) d = Math.min(d, m.fsIn) + (jr - Math.floor(jr)) * 6; // flat-topped + spurs
+      return d;
+    }
+
+    // fill + curve
+    ctx.beginPath();
+    for (let px = 0; px <= plotW; px++) {
+      const off = px / plotW * spanMHz - half;
+      const y = Y(totalDbAt(off));
+      px === 0 ? ctx.moveTo(padL + px, y) : ctx.lineTo(padL + px, y);
+    }
+    ctx.lineTo(w - padR, h - padB); ctx.lineTo(padL, h - padB); ctx.closePath();
+    ctx.fillStyle = m.clipping ? "rgba(248,113,113,.12)" : "rgba(52,211,153,.10)";
+    ctx.fill();
+
+    ctx.strokeStyle = m.clipping ? col("--clip") : col("--sig");
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    for (let px = 0; px <= plotW; px++) {
+      const off = px / plotW * spanMHz - half;
+      const y = Y(totalDbAt(off));
+      px === 0 ? ctx.moveTo(padL + px, y) : ctx.lineTo(padL + px, y);
+    }
+    ctx.stroke();
+
+    // center marker
+    ctx.strokeStyle = "rgba(230,238,236,.3)";
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(X(0), padT); ctx.lineTo(X(0), h - padB); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(230,238,236,.7)";
+    ctx.fillText("1575.42", X(0) - 20, padT + 9);
+
+    // sweep
+    if (!reduced) {
+      const sx = padL + ((S.t * 0.35) % 1) * plotW;
+      ctx.strokeStyle = "rgba(230,238,236,.5)";
+      ctx.beginPath(); ctx.moveTo(sx, padT); ctx.lineTo(sx, h - padB); ctx.stroke();
+    }
+
+    // readout + verdict
+    $("readout").innerHTML =
+      "受信入力 <b>" + m.rxIn.toFixed(0) + " dBm</b>" +
+      "<span>雑音床 <b>" + m.floor.toFixed(0) + " dBm/bin</b></span>" +
+      "<span>ADC上限 <b>" + m.fsIn.toFixed(0) + " dBm</b></span>" +
+      "<span>C/N₀ <b>" + (m.cn0 > 60 ? "60+" : m.cn0.toFixed(0)) + " dB-Hz</b></span>";
+    const v = $("verdict");
+    const peakVis = m.caPeak - m.floor;
+    if (m.clipping) { v.className = "bad"; v.textContent = "ADCクリップ — 入力(" + m.rxIn.toFixed(0) + "dBm)がフルスケール(" + m.fsIn.toFixed(0) + "dBm)超え。ゲインを下げるかATTを増やす"; }
+    else if (peakVis < -1) { v.className = "warn"; v.textContent = "台形が雑音に埋もれて見えない（ピークが床より" + (-peakVis).toFixed(0) + "dB下）— ATTを減らすかRBWを狭く。実衛星の生はこの状態"; }
+    else if (m.floor > m.thermal + 3) { v.className = "warn"; v.textContent = "見えるが雑音床がADC制限で高い — ゲインを上げると床が下がりS/N改善"; }
+    else { v.className = "ok"; v.textContent = "適正 — GPS L1の台形が熱雑音床の上に見える。クリップもなし"; }
+
+    $("legend").innerHTML =
+      "<span><i style='background:" + (m.clipping ? col("--clip") : col("--sig")) + "'></i>受信スペクトル</span>" +
+      "<span><i style='background:" + col("--noise") + "'></i>雑音床</span>" +
+      "<span><i style='background:" + col("--fs") + "'></i>ADCフルスケール</span>";
+  }
+
+  function syncOut() {
+    $("srcOut").textContent = (S.src > 0 ? "+" : "") + S.src + " dBm";
+    $("attOut").textContent = "−" + S.att + " dB";
+    $("gainOut").textContent = S.gain + " dB";
+    $("src").value = S.src; $("att").value = S.att; $("gain").value = S.gain; $("fs").value = String(S.fs);
+  }
+
+  document.querySelectorAll("#presets button").forEach((b) => {
+    b.addEventListener("click", () => { Object.assign(S, PRESETS[b.dataset.preset]); syncOut(); draw(); });
+  });
+  $("src").addEventListener("input", (e) => { S.src = +e.target.value; syncOut(); draw(); });
+  $("att").addEventListener("input", (e) => { S.att = +e.target.value; syncOut(); draw(); });
+  $("gain").addEventListener("input", (e) => { S.gain = +e.target.value; syncOut(); draw(); });
+  $("fs").addEventListener("change", (e) => { S.fs = +e.target.value; draw(); });
+
+  syncOut();
+  window.addEventListener("resize", draw);
+  if (window.ResizeObserver) new ResizeObserver(draw).observe(cv);
+  draw();
+
+  if (!reduced) {
+    let last = performance.now();
+    (function loop(now) {
+      S.t += Math.max(0, Math.min(0.1, (now - last) / 1000));
+      last = now;
+      draw();
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+})();
+</script>
+</body>
+</html>

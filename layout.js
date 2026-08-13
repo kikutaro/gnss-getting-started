@@ -17,6 +17,7 @@
     { ja: "gnss-rx.html",       en: "gnss-rx.html",     tja: "受信の流れ",         ten: "Receive Chain",         grp: 2 },
     { ja: "qzss.html",          en: "qzss.html",        tja: "QZSS みちびき",      ten: "QZSS Michibiki",        grp: 2 },
     { ja: "sdr-intro.html",     en: "sdr-intro.html",   tja: "SDR入門",            ten: "SDR Basics",            grp: 3 },
+    { ja: "sdr-spectrum.html",  en: "sdr-spectrum.html",tja: "SDRとスペクトル",    ten: "SDR & Spectrum",        grp: 3 },
     { ja: "sdr-gnss-tx.html",   en: "sdr-gnss-tx.html", tja: "SDRでGNSS送信",      ten: "GNSS TX with SDR",      grp: 3 },
     { ja: "gnss-threats.html",  en: "gnss-threats.html", tja: "妨害と偽装",        ten: "Jamming & Spoofing",    grp: 4 },
     { ja: "opensource.html",    en: "opensource.html",  tja: "オープンソース",     ten: "Open Source",           grp: 5 },
