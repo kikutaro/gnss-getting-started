@@ -171,26 +171,31 @@
       </li>
       <li>
         <span class="no">09</span>
+        <a class="t" href="gnss-spectrum.html">GPS on a Spectrum Analyzer</a>
+        <p>What GPS looks like on a spectrum analyzer: a sinc² trapezoid sinking into the noise, C/A over P(Y), and how it differs from an FM station.</p>
+      </li>
+      <li>
+        <span class="no">10</span>
         <a class="t" href="gnss-navmsg.html">Navigation Messages</a>
         <p>LNAV/CNAV/CNAV-2 bit by bit — clock, ephemeris and almanac, with GPS and QZSS side by side.</p>
       </li>
       <li>
-        <span class="no">10</span>
+        <span class="no">11</span>
         <a class="t" href="gnss-obs.html">Pseudorange &amp; Doppler</a>
         <p>Find the delay yourself with code correlation, see how clock bias makes ranges "pseudo", and watch the Doppler S-curve.</p>
       </li>
       <li>
-        <span class="no">11</span>
+        <span class="no">12</span>
         <a class="t" href="gnss-corrections.html">Errors &amp; Corrections</a>
         <p>Erase satellite-clock, ionosphere and troposphere errors with broadcast, dual-frequency, SBAS and RTK/PPP/CLAS toggles. Feel the correction take you from metres to centimetres.</p>
       </li>
       <li>
-        <span class="no">12</span>
+        <span class="no">13</span>
         <a class="t" href="gnss-rx.html">Receive Chain — Satellite to PC</a>
         <p>Antenna, LNA, inside the GNSS module (acquisition, tracking, decoding, corrections, PVT) to NMEA output — the grand tour.</p>
       </li>
       <li>
-        <span class="no">13</span>
+        <span class="no">14</span>
         <a class="t" href="qzss.html">QZSS Michibiki</a>
         <p>An animated figure-8 orbit shows how it loiters above Japan. Its own services — signal authentication, disaster reports, CLAS — and its place alongside NavIC as a regional GNSS.</p>
       </li>
@@ -201,12 +206,12 @@
     <h2><span class="tag">STEP 3</span>SDR in practice — handling GNSS signals yourself</h2>
     <ol class="path">
       <li>
-        <span class="no">14</span>
+        <span class="no">15</span>
         <a class="t" href="sdr-intro.html">SDR Basics &amp; Boards</a>
         <p>What software-defined radio is, plus the classic boards — USRP, bladeRF, ADALM-Pluto, LimeSDR, HackRF One — on a frequency-coverage chart and comparison table.</p>
       </li>
       <li>
-        <span class="no">15</span>
+        <span class="no">16</span>
         <a class="t" href="sdr-gnss-tx.html">Transmitting GNSS with SDR</a>
         <p>Generate GPS/QZSS L1 C/A with LimeSDR XTRX / Mini 2.0. Design the attenuation that lands at the real-satellite −130 dBm, and learn the legal cautions.</p>
       </li>
@@ -217,9 +222,20 @@
     <h2><span class="tag">STEP 4</span>Threats &amp; defence — how GNSS gets fooled</h2>
     <ol class="path">
       <li>
-        <span class="no">16</span>
+        <span class="no">17</span>
         <a class="t" href="gnss-threats.html">Jamming, Spoofing &amp; Meaconing</a>
         <p>Watch what each attack does to a receiver in the simulator, learn to diagnose them from C/N₀, AGC and position symptoms, and see the defences — multi-frequency, CRPA antennas, signal authentication.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="step">
+    <h2><span class="tag">STEP 5</span>Open source — tools to get hands-on</h2>
+    <ol class="path">
+      <li>
+        <span class="no">18</span>
+        <a class="t" href="opensource.html">GNSS Open-Source Catalog</a>
+        <p>GNSS-SDR, PocketSDR, RTKLIB, gps-sdr-sim and more — the classic receive / positioning / signal-generation tools, grouped by purpose so you can see at a glance what each does.</p>
       </li>
     </ol>
   </section>

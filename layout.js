@@ -10,6 +10,7 @@
     { ja: "gnss-sim.html",      en: "gnss-sim.html",    tja: "GNSS衛星信号",       ten: "GNSS Signals",          grp: 2 },
     { ja: "gnss-bands.html",    en: "gnss-bands.html",  tja: "周波数帯マップ",     ten: "Frequency Bands",       grp: 2 },
     { ja: "gnss-signal.html",   en: "gnss-signal.html", tja: "信号の構造",         ten: "Signal Structure",      grp: 2 },
+    { ja: "gnss-spectrum.html", en: "gnss-spectrum.html", tja: "スペクトル",       ten: "Spectrum",              grp: 2 },
     { ja: "gnss-navmsg.html",   en: "gnss-navmsg.html", tja: "航法メッセージ",     ten: "Nav Messages",          grp: 2 },
     { ja: "gnss-obs.html",      en: "gnss-obs.html",    tja: "擬似距離・ドップラー", ten: "Pseudorange & Doppler", grp: 2 },
     { ja: "gnss-corrections.html", en: "gnss-corrections.html", tja: "誤差と補正", ten: "Errors & Corrections", grp: 2 },
@@ -18,10 +19,11 @@
     { ja: "sdr-intro.html",     en: "sdr-intro.html",   tja: "SDR入門",            ten: "SDR Basics",            grp: 3 },
     { ja: "sdr-gnss-tx.html",   en: "sdr-gnss-tx.html", tja: "SDRでGNSS送信",      ten: "GNSS TX with SDR",      grp: 3 },
     { ja: "gnss-threats.html",  en: "gnss-threats.html", tja: "妨害と偽装",        ten: "Jamming & Spoofing",    grp: 4 },
+    { ja: "opensource.html",    en: "opensource.html",  tja: "オープンソース",     ten: "Open Source",           grp: 5 },
   ];
   var GRPS = {
-    ja: ["", "STEP 1 · 基礎", "STEP 2 · GNSSのしくみ", "STEP 3 · SDR実践", "STEP 4 · 脅威と対策"],
-    en: ["", "STEP 1 · BASICS", "STEP 2 · HOW GNSS WORKS", "STEP 3 · SDR IN PRACTICE", "STEP 4 · THREATS & DEFENCE"],
+    ja: ["", "STEP 1 · 基礎", "STEP 2 · GNSSのしくみ", "STEP 3 · SDR実践", "STEP 4 · 脅威と対策", "STEP 5 · オープンソース"],
+    en: ["", "STEP 1 · BASICS", "STEP 2 · HOW GNSS WORKS", "STEP 3 · SDR IN PRACTICE", "STEP 4 · THREATS & DEFENCE", "STEP 5 · OPEN SOURCE"],
   };
   var BRAND = "GNSS Study";
 

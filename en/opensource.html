@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>GNSS Open-Source Catalog | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="GNSS Open-Source Catalog | GNSS Study">
+<meta property="og:description" content="An interactive GNSS learning site — from wave basics to the inside of a receiver, SDR practice and jamming/spoofing defence.">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/en/opensource.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="GNSS Open-Source Catalog | GNSS Study">
+<meta name="twitter:description" content="An interactive GNSS learning site — from wave basics to the inside of a receiver, SDR practice and jamming/spoofing defence.">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --rx: #22d3ee;
+    --pos: #34d399;
+    --gen: #f59e0b;
+    --lib: #a855f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --rx: #22d3ee; --pos: #34d399; --gen: #fbbf24; --lib: #c084fc;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --rx: #22d3ee; --pos: #34d399; --gen: #fbbf24; --lib: #c084fc;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --rx: #0891b2; --pos: #10b981; --gen: #d97706; --lib: #9333ea;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .intro {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; font-size: .9rem;
+  }
+  .intro p { margin: 0; }
+
+  section.cat { }
+  section.cat > h2 {
+    display: flex; align-items: center; gap: 9px;
+    margin: 6px 2px 10px; font-size: 1.05rem;
+  }
+  section.cat > h2 .dot { width: 11px; height: 11px; border-radius: 3px; background: var(--cc); flex: none; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .tool {
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--cc, var(--accent));
+    border-radius: 10px;
+    padding: 12px 15px;
+    background: var(--surface);
+    display: flex; flex-direction: column;
+  }
+  .tool .th { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .tool h3 { margin: 0; font-size: 1rem; }
+  .tool .chip {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: .66rem; font-weight: 700; letter-spacing: .04em;
+    color: var(--cc, var(--accent));
+    border: 1px solid var(--cc, var(--accent));
+    border-radius: 999px; padding: 0 8px;
+  }
+  .tool .sum { margin: 0 0 8px; font-size: .86rem; }
+  .tool ul { margin: 0 0 8px; padding-left: 1.15em; font-size: .83rem; color: var(--muted); }
+  .tool ul li { margin-bottom: 2px; }
+  .tool ul li b { color: var(--text); }
+  .tool .meta {
+    margin-top: auto; display: flex; gap: 8px 14px; flex-wrap: wrap; align-items: center;
+    font-size: .76rem; color: var(--muted);
+    border-top: 1px solid var(--border); padding-top: 8px;
+  }
+  .tool .meta .kv { font-family: ui-monospace, Consolas, monospace; }
+  .tool .meta a { margin-left: auto; color: var(--accent); text-decoration: none; font-weight: 600; }
+  .tool .meta a:hover { text-decoration: underline; }
+  .tool .meta a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note a { color: var(--accent); }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>GNSS Open-Source Catalog</h1>
+    <p>The go-to open-source tools for getting hands-on with GNSS — a quick sense of what each one does</p>
+  </header>
+
+  <div class="intro">
+    <p>Commercial receivers are black boxes, but with open source you can run each stage — <strong>receiving, analysis, signal generation, position computation</strong> — yourself. This page groups the classic tools by purpose. Licenses and versions change, so check each official repository for the latest before you adopt one.</p>
+  </div>
+
+  <section class="cat" style="--cc: var(--rx)">
+    <h2><span class="dot"></span>Receivers &amp; signal processing — receive and demodulate with SDR</h2>
+    <div class="grid">
+      <div class="tool" style="--cc: var(--rx)">
+        <div class="th"><h3>GNSS-SDR</h3><span class="chip">receiver</span></div>
+        <p class="sum">A full software GNSS receiver. From raw I/Q samples it does <strong>acquisition → tracking → nav-message decoding → PVT</strong>, all in software.</p>
+        <ul>
+          <li><b>Multi-constellation, multi-frequency</b> (GPS/Galileo/GLONASS/BeiDou, L1/L5, etc.)</li>
+          <li>Works with RTL-SDR, USRP and other SDRs</li>
+          <li>RINEX/KML output to bridge into other analysis tools</li>
+        </ul>
+        <div class="meta"><span class="kv">C++</span><span class="kv">Apache-2.0</span><a href="https://github.com/gnss-sdr/gnss-sdr" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--rx)">
+        <div class="th"><h3>PocketSDR</h3><span class="chip">receiver</span></div>
+        <p class="sum">A lightweight software GNSS receiver (+ a small front-end) by RTKLIB's author. It <strong>visualizes acquisition and tracking</strong> from raw I/Q — popular for research and teaching.</p>
+        <ul>
+          <li><b>See and learn</b> the 2-D acquisition search and correlation</li>
+          <li>Supports many GNSS signals, including new ones</li>
+          <li>An open small RF front-end design is published too</li>
+        </ul>
+        <div class="meta"><span class="kv">Python/C</span><span class="kv">open</span><a href="https://github.com/tomojitakasu/PocketSDR" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--rx)">
+        <div class="th"><h3>GNU Radio</h3><span class="chip">SDR framework</span></div>
+        <p class="sum">A general-purpose SDR signal-processing framework. <strong>Wire blocks together</strong> to build a receiver or transmitter — the foundation of SDR work.</p>
+        <ul>
+          <li>Draw flow graphs in the GUI (GRC) to process signals</li>
+          <li>Not just GNSS — FM and radio in general</li>
+          <li>GNSS-SDR and friends run on/around it</li>
+        </ul>
+        <div class="meta"><span class="kv">C++/Python</span><span class="kv">GPLv3</span><a href="https://github.com/gnuradio/gnuradio" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--rx)">
+        <div class="th"><h3>SoapySDR</h3><span class="chip">SDR framework</span></div>
+        <p class="sum">An abstraction layer that exposes SDR hardware through a <strong>common API</strong>. Drive RTL-SDR / HackRF / LimeSDR / USRP the same way from your app.</p>
+        <ul>
+          <li>A driver layer that hides per-board differences</li>
+          <li>Used internally by many receive/generate tools</li>
+          <li>Handles the boards from <a href="sdr-intro.html">SDR Basics</a> uniformly</li>
+        </ul>
+        <div class="meta"><span class="kv">C/C++</span><span class="kv">Boost</span><a href="https://github.com/pothosware/SoapySDR" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cat" style="--cc: var(--pos)">
+    <h2><span class="dot"></span>Positioning, corrections &amp; post-processing — compute the fix / raise accuracy</h2>
+    <div class="grid">
+      <div class="tool" style="--cc: var(--pos)">
+        <div class="th"><h3>RTKLIB</h3><span class="chip">positioning</span></div>
+        <p class="sum">The classic for high-precision GNSS. From observations it does <strong>standalone, DGPS, RTK and PPP</strong>, both real-time and post-processing — a Swiss-army toolset.</p>
+        <ul>
+          <li><b>cm-level with RTK/PPP</b> (an implementation of <a href="gnss-corrections.html">corrections</a>)</li>
+          <li>RINEX conversion, base-station data handling, many formats</li>
+          <li>GUI (RTKNAVI etc.) and CLI (rtkrcv / rnx2rtkp)</li>
+        </ul>
+        <div class="meta"><span class="kv">C</span><span class="kv">BSD-2</span><a href="https://github.com/tomojitakasu/RTKLIB" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--pos)">
+        <div class="th"><h3>gnsstk (ex-GPSTk)</h3><span class="chip">library</span></div>
+        <p class="sum">A parts-box library for GNSS processing — <strong>orbit computation, time systems, coordinate transforms, RINEX handling</strong> — the base for building your own positioning app.</p>
+        <ul>
+          <li>Functions to compute satellite position from ephemeris</li>
+          <li>Coordinate transforms like <a href="coord-lab.html">ECEF ↔ lat/lon</a></li>
+          <li>C++ core with Python bindings</li>
+        </ul>
+        <div class="meta"><span class="kv">C++/Python</span><span class="kv">LGPL</span><a href="https://github.com/SGL-UT/gnsstk" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--pos)">
+        <div class="th"><h3>laika</h3><span class="chip">library</span></div>
+        <p class="sum">A Python GNSS library from comma.ai. <strong>Pseudorange correction and positioning</strong> in readable code — good for research and experiments.</p>
+        <ul>
+          <li>Implements ionosphere, troposphere and satellite-clock corrections</li>
+          <li>From raw observations to a position, in Python</li>
+          <li>A practical library from the self-driving world</li>
+        </ul>
+        <div class="meta"><span class="kv">Python</span><span class="kv">MIT</span><a href="https://github.com/commaai/laika" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--pos)">
+        <div class="th"><h3>georinex</h3><span class="chip">data</span></div>
+        <p class="sum">A Python tool to <strong>read RINEX (observation &amp; navigation)</strong>, GNSS's standard data format — the classic entry point for analysis.</p>
+        <ul>
+          <li>RINEX 2/3 obs/nav files into xarray/pandas</li>
+          <li>Handy for pre-processing large observation logs</li>
+          <li>A base for your own analysis and plotting</li>
+        </ul>
+        <div class="meta"><span class="kv">Python</span><span class="kv">MIT</span><a href="https://github.com/geospace-code/georinex" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--pos)">
+        <div class="th"><h3>RINGO</h3><span class="chip">data</span></div>
+        <p class="sum">A Go-based <strong>RINEX toolkit</strong> published by GSI (Japan's Geospatial Information Authority). Convert, edit, merge and quality-check observation/navigation data from the command line.</p>
+        <ul>
+          <li>RINEX <b>conversion, editing, merging, quality check (QC)</b></li>
+          <li>Handy for Japan's GEONET reference-station data</li>
+          <li>A single-binary, practical tool from a public agency</li>
+        </ul>
+        <div class="meta"><span class="kv">Go</span><span class="kv">GSI</span><a href="https://github.com/search?q=RINGO+RINEX" target="_blank" rel="noopener">Find on GitHub →</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cat" style="--cc: var(--gen)">
+    <h2><span class="dot"></span>Signal generation &amp; testing — build a GNSS signal</h2>
+    <div class="grid">
+      <div class="tool" style="--cc: var(--gen)">
+        <div class="th"><h3>gps-sdr-sim</h3><span class="chip">generator</span></div>
+        <p class="sum">The classic that <strong>generates an I/Q file of GPS L1 C/A</strong> for any position and time, replayed through an SDR to test receivers.</p>
+        <ul>
+          <li>Give it nav data (RINEX) + a location to synthesize I/Q</li>
+          <li>Replay via LimeSDR etc. (see <a href="sdr-gnss-tx.html">GNSS TX with SDR</a>)</li>
+          <li><b>Radiating is illegal</b>: cable + attenuators, your device only</li>
+        </ul>
+        <div class="meta"><span class="kv">C</span><span class="kv">MIT</span><a href="https://github.com/osqzss/gps-sdr-sim" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--gen)">
+        <div class="th"><h3>Derived simulators</h3><span class="chip">generator</span></div>
+        <p class="sum">Various generators derived from gps-sdr-sim, some adding <strong>Galileo, QZSS, multi-GNSS</strong> or dynamic scenarios.</p>
+        <ul>
+          <li>Multi-GNSS variants (e.g. galileo-sdr-sim)</li>
+          <li>Some accept a moving trajectory (NMEA/motion) input</li>
+          <li>All assume a <b>closed, wired setup</b></li>
+        </ul>
+        <div class="meta"><span class="kv">C/C++</span><span class="kv">various</span><a href="https://github.com/topics/gnss-simulator" target="_blank" rel="noopener">GitHub topics →</a></div>
+      </div>
+    </div>
+  </section>
+
+  <details class="note" open>
+    <summary>Where should I start? — recommended entry points</summary>
+    <div class="body">
+      <p><strong>Experience receiving first</strong>: an RTL-SDR (TCXO version) + a patch antenna + <code>GNSS-SDR</code> or <code>PocketSDR</code>. Acquiring and tracking real L1 and watching the blocks from the <a href="gnss-rx.html">Receive Chain</a> actually run is a genuine thrill.</p>
+      <p><strong>Try high-precision positioning</strong>: public reference-station RINEX data + <code>RTKLIB</code>. Run post-processing (rnx2rtkp) with RTK/PPP first and watch the error shrink to cm on your own data, exactly as on the <a href="gnss-corrections.html">Corrections</a> page.</p>
+      <p><strong>Build the signal itself</strong>: generate I/Q with <code>gps-sdr-sim</code> → replay via SDR. But as on <a href="sdr-gnss-tx.html">GNSS TX with SDR</a>, <strong>always use a cable + attenuators</strong> — radiating over the air is illegal.</p>
+      <p><strong>Analyze in code</strong>: read RINEX with <code>georinex</code>, then compute satellite positions, corrections and fixes with <code>gnsstk</code> or <code>laika</code>. You can follow the whole flow in Python.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Notes on licenses and use</summary>
+    <div class="body">
+      <p>The licenses and support noted here are <strong>approximate</strong> as of writing. When you actually use a tool, check each repository's LICENSE and README (commercial-use and redistribution terms vary by license).</p>
+      <p>Signal <strong>generation</strong> tools need special care. Radiating in the GNSS bands over the air is illegal in virtually every country, and deceiving someone else's receiver is a crime. Always test over a direct coax cable + generous attenuation, or inside a shield box, against your own equipment only (see the <a href="gnss-threats.html">Jamming &amp; Spoofing</a> page too).</p>
+    </div>
+  </details>
+</main>
+</body>
+</html>

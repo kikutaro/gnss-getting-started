@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>測位系オープンソース一覧 | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="測位系オープンソース一覧 | GNSS Study">
+<meta property="og:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/opensource.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="測位系オープンソース一覧 | GNSS Study">
+<meta name="twitter:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --rx: #22d3ee;
+    --pos: #34d399;
+    --gen: #f59e0b;
+    --lib: #a855f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --rx: #22d3ee; --pos: #34d399; --gen: #fbbf24; --lib: #c084fc;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --rx: #22d3ee; --pos: #34d399; --gen: #fbbf24; --lib: #c084fc;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --rx: #0891b2; --pos: #10b981; --gen: #d97706; --lib: #9333ea;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .intro {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; font-size: .9rem;
+  }
+  .intro p { margin: 0; }
+
+  section.cat { }
+  section.cat > h2 {
+    display: flex; align-items: center; gap: 9px;
+    margin: 6px 2px 10px; font-size: 1.05rem;
+  }
+  section.cat > h2 .dot { width: 11px; height: 11px; border-radius: 3px; background: var(--cc); flex: none; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .tool {
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--cc, var(--accent));
+    border-radius: 10px;
+    padding: 12px 15px;
+    background: var(--surface);
+    display: flex; flex-direction: column;
+  }
+  .tool .th { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .tool h3 { margin: 0; font-size: 1rem; }
+  .tool .chip {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: .66rem; font-weight: 700; letter-spacing: .04em;
+    color: var(--cc, var(--accent));
+    border: 1px solid var(--cc, var(--accent));
+    border-radius: 999px; padding: 0 8px;
+  }
+  .tool .sum { margin: 0 0 8px; font-size: .86rem; }
+  .tool ul { margin: 0 0 8px; padding-left: 1.15em; font-size: .83rem; color: var(--muted); }
+  .tool ul li { margin-bottom: 2px; }
+  .tool ul li b { color: var(--text); }
+  .tool .meta {
+    margin-top: auto; display: flex; gap: 8px 14px; flex-wrap: wrap; align-items: center;
+    font-size: .76rem; color: var(--muted);
+    border-top: 1px solid var(--border); padding-top: 8px;
+  }
+  .tool .meta .kv { font-family: ui-monospace, Consolas, monospace; }
+  .tool .meta a { margin-left: auto; color: var(--accent); text-decoration: none; font-weight: 600; }
+  .tool .meta a:hover { text-decoration: underline; }
+  .tool .meta a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note a { color: var(--accent); }
+  details.note code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em;
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>測位系オープンソース一覧</h1>
+    <p>GNSSを自分で触るための定番オープンソース — 何ができるソフトなのかをざっくり掴む</p>
+  </header>
+
+  <div class="intro">
+    <p>市販の受信機は中身がブラックボックスですが、オープンソースを使えば<strong>受信・解析・生成・測位計算</strong>の各段を自分の手で動かせます。このページでは用途別に定番ツールを整理しました。ライセンスやバージョンは変わることがあるので、導入時は各公式リポジトリで最新情報を確認してください。</p>
+  </div>
+
+  <section class="cat" style="--cc: var(--rx)">
+    <h2><span class="dot"></span>受信機・信号処理 — SDRで受信して復調する</h2>
+    <div class="grid">
+      <div class="tool" style="--cc: var(--rx)">
+        <div class="th"><h3>GNSS-SDR</h3><span class="chip">受信機</span></div>
+        <p class="sum">本格的なソフトウェアGNSS受信機。生のI/Qサンプルから<strong>捕捉→追尾→航法メッセージ復調→測位（PVT）</strong>まで全部ソフトで行う。</p>
+        <ul>
+          <li><b>多コンステレーション・多周波</b>（GPS/Galileo/GLONASS/BeiDou、L1/L5等）</li>
+          <li>RTL-SDRやUSRPなど各種SDRに対応</li>
+          <li>RINEX/KML出力、他の解析ソフトへ橋渡し</li>
+        </ul>
+        <div class="meta"><span class="kv">C++</span><span class="kv">Apache-2.0</span><a href="https://github.com/gnss-sdr/gnss-sdr" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--rx)">
+        <div class="th"><h3>PocketSDR</h3><span class="chip">受信機</span></div>
+        <p class="sum">RTKLIB作者による軽量ソフトGNSS受信機（＋小型フロントエンド）。生I/Qから<strong>捕捉・追尾を可視化</strong>でき、研究・教育に人気。</p>
+        <ul>
+          <li>捕捉の2次元サーチや相関を<b>見て学べる</b></li>
+          <li>多くのGNSS信号・新しい信号にも対応</li>
+          <li>専用の小型RFフロントエンド設計も公開</li>
+        </ul>
+        <div class="meta"><span class="kv">Python/C</span><span class="kv">オープン</span><a href="https://github.com/tomojitakasu/PocketSDR" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--rx)">
+        <div class="th"><h3>GNU Radio</h3><span class="chip">SDR基盤</span></div>
+        <p class="sum">汎用のSDR信号処理フレームワーク。<strong>ブロックを線でつなぐ</strong>だけで受信機や送信機を組み立てられる、SDRの土台。</p>
+        <ul>
+          <li>GUI（GRC）でフロー図を描いて信号処理</li>
+          <li>GNSSに限らずFM・無線全般に使える</li>
+          <li>GNSS-SDR等もこの上や周辺で動く</li>
+        </ul>
+        <div class="meta"><span class="kv">C++/Python</span><span class="kv">GPLv3</span><a href="https://github.com/gnuradio/gnuradio" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--rx)">
+        <div class="th"><h3>SoapySDR</h3><span class="chip">SDR基盤</span></div>
+        <p class="sum">SDRハードウェアを<strong>共通API</strong>で扱うための抽象化層。RTL-SDR/HackRF/LimeSDR/USRPなどをアプリ側から同じ書き方で。</p>
+        <ul>
+          <li>ボードごとの差異を吸収するドライバ層</li>
+          <li>多くの受信・生成ツールが内部で利用</li>
+          <li><a href="sdr-intro.html">SDR入門</a>で挙げたボード群をまとめて扱える</li>
+        </ul>
+        <div class="meta"><span class="kv">C/C++</span><span class="kv">Boost</span><a href="https://github.com/pothosware/SoapySDR" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cat" style="--cc: var(--pos)">
+    <h2><span class="dot"></span>測位・補正・後処理 — 位置を計算する / 精度を上げる</h2>
+    <div class="grid">
+      <div class="tool" style="--cc: var(--pos)">
+        <div class="th"><h3>RTKLIB</h3><span class="chip">測位</span></div>
+        <p class="sum">GNSS高精度測位の定番。観測データから<strong>単独測位・DGPS・RTK・PPP</strong>まで、リアルタイムと後処理の両方を扱える万能ツール群。</p>
+        <ul>
+          <li><b>RTK/PPPでcm級</b>の測位（<a href="gnss-corrections.html">補正</a>の実装）</li>
+          <li>RINEX変換、基準局データ処理、各種フォーマット対応</li>
+          <li>GUI（RTKNAVI等）とCLI（rtkrcv/rnx2rtkp）</li>
+        </ul>
+        <div class="meta"><span class="kv">C</span><span class="kv">BSD-2</span><a href="https://github.com/tomojitakasu/RTKLIB" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--pos)">
+        <div class="th"><h3>gnsstk（旧GPSTk）</h3><span class="chip">ライブラリ</span></div>
+        <p class="sum">GNSS処理の部品箱ライブラリ。<strong>軌道計算・時刻系・座標変換・RINEX処理</strong>など、測位アプリを自作するための土台。</p>
+        <ul>
+          <li>エフェメリスから衛星位置を計算する関数群</li>
+          <li><a href="coord-lab.html">ECEF↔緯度経度</a>など座標変換</li>
+          <li>C++本体＋Pythonバインディング</li>
+        </ul>
+        <div class="meta"><span class="kv">C++/Python</span><span class="kv">LGPL</span><a href="https://github.com/SGL-UT/gnsstk" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--pos)">
+        <div class="th"><h3>laika</h3><span class="chip">ライブラリ</span></div>
+        <p class="sum">comma.ai製のPython GNSSライブラリ。<strong>擬似距離の補正と測位</strong>を素直なコードで書けて、研究・実験向き。</p>
+        <ul>
+          <li>電離層・対流圏・衛星クロックの補正を実装</li>
+          <li>生の観測から位置を出すまでをPythonで</li>
+          <li>自動運転文脈での実用ライブラリ</li>
+        </ul>
+        <div class="meta"><span class="kv">Python</span><span class="kv">MIT</span><a href="https://github.com/commaai/laika" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--pos)">
+        <div class="th"><h3>georinex</h3><span class="chip">データ</span></div>
+        <p class="sum">GNSSの標準データ形式<strong>RINEX（観測・航法）を読み込む</strong>Pythonツール。解析の入口として定番。</p>
+        <ul>
+          <li>RINEX 2/3 の観測・航法ファイルをxarray/pandasへ</li>
+          <li>大きな観測ログの前処理に便利</li>
+          <li>自作解析やグラフ化の土台に</li>
+        </ul>
+        <div class="meta"><span class="kv">Python</span><span class="kv">MIT</span><a href="https://github.com/geospace-code/georinex" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--pos)">
+        <div class="th"><h3>RINGO</h3><span class="chip">データ</span></div>
+        <p class="sum">国土地理院（GSI）が公開するGo製の<strong>RINEXツールキット</strong>。観測・航法データの変換・編集・結合・品質チェックをコマンドラインで。</p>
+        <ul>
+          <li>RINEXの<b>変換・編集・マージ・品質チェック（QC）</b></li>
+          <li>日本の電子基準点（GEONET）データの扱いに便利</li>
+          <li>単一バイナリで動く、公的機関製の実用ツール</li>
+        </ul>
+        <div class="meta"><span class="kv">Go</span><span class="kv">GSI公開</span><a href="https://github.com/search?q=RINGO+RINEX" target="_blank" rel="noopener">GitHubで探す →</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cat" style="--cc: var(--gen)">
+    <h2><span class="dot"></span>信号生成・テスト — GNSS信号を作る</h2>
+    <div class="grid">
+      <div class="tool" style="--cc: var(--gen)">
+        <div class="th"><h3>gps-sdr-sim</h3><span class="chip">信号生成</span></div>
+        <p class="sum">任意の位置・時刻の<strong>GPS L1 C/A信号のI/Qファイルを生成</strong>し、SDRで再生して受信機をテストする定番ツール。</p>
+        <ul>
+          <li>航法データ（RINEX）＋座標を指定してI/Q生成</li>
+          <li>LimeSDR等で再生（<a href="sdr-gnss-tx.html">SDRでGNSS送信</a>参照）</li>
+          <li><b>空間放射は違法</b>。有線＋減衰器で自機のみに</li>
+        </ul>
+        <div class="meta"><span class="kv">C</span><span class="kv">MIT</span><a href="https://github.com/osqzss/gps-sdr-sim" target="_blank" rel="noopener">GitHub →</a></div>
+      </div>
+      <div class="tool" style="--cc: var(--gen)">
+        <div class="th"><h3>派生シミュレータ</h3><span class="chip">信号生成</span></div>
+        <p class="sum">gps-sdr-simから派生した各種生成ツール。<strong>Galileo・QZSS・マルチGNSS</strong>や動的シナリオに対応するものも。</p>
+        <ul>
+          <li>マルチGNSS対応版（galileo-sdr-sim 等）</li>
+          <li>移動軌跡（NMEA/モーション）入力に対応するものも</li>
+          <li>いずれも<b>閉じた有線環境</b>での利用が前提</li>
+        </ul>
+        <div class="meta"><span class="kv">C/C++</span><span class="kv">各種</span><a href="https://github.com/topics/gnss-simulator" target="_blank" rel="noopener">GitHub topics →</a></div>
+      </div>
+    </div>
+  </section>
+
+  <details class="note" open>
+    <summary>どれから触ればいい? — おすすめの入り口</summary>
+    <div class="body">
+      <p><strong>まず受信を体験したい</strong>: RTL-SDR（TCXO版）＋パッチアンテナ＋<code>GNSS-SDR</code> か <code>PocketSDR</code>。本物のL1を捕捉・追尾して、<a href="gnss-rx.html">受信の流れ</a>で見たブロックが実際に動くのは感動があります。</p>
+      <p><strong>高精度測位を試したい</strong>: 公開されている基準局のRINEXデータ＋<code>RTKLIB</code>。まず後処理（rnx2rtkp）でRTK/PPPを回すと、<a href="gnss-corrections.html">補正</a>で誤差がcmまで縮む様子を自分のデータで確認できます。</p>
+      <p><strong>信号の中身を作りたい</strong>: <code>gps-sdr-sim</code>でI/Qを生成 → SDRで再生。ただし<a href="sdr-gnss-tx.html">SDRでGNSS送信</a>のとおり、<strong>必ず有線＋減衰器</strong>で。空間に出すと電波法違反です。</p>
+      <p><strong>プログラムで解析したい</strong>: <code>georinex</code>でRINEXを読み、<code>gnsstk</code>や<code>laika</code>で衛星位置・補正・測位を計算。Pythonで一連の流れを追えます。</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>ライセンスと使い方の注意</summary>
+    <div class="body">
+      <p>掲載したライセンスや対応状況は執筆時点の<strong>目安</strong>です。実際に使うときは各リポジトリのLICENSEとREADMEを確認してください（商用利用・再配布の条件はライセンスごとに異なります）。</p>
+      <p>信号<strong>生成</strong>系は特に注意が必要です。GNSS帯の電波を空間に放射することは日本の電波法で禁止されており、他人の受信機を欺けば犯罪になります。テストは必ず同軸ケーブル直結＋十分な減衰器、またはシールドボックス内で、自分の機器に対してのみ行ってください（<a href="gnss-threats.html">妨害と偽装</a>のページも参照）。</p>
+    </div>
+  </details>
+</main>
+</body>
+</html>

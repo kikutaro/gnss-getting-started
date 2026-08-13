@@ -171,26 +171,31 @@
       </li>
       <li>
         <span class="no">09</span>
+        <a class="t" href="gnss-spectrum.html">スペクトルで見るGPS信号</a>
+        <p>スペアナにGPSを映すとどう見えるか。sinc²の台形が雑音に沈む様子、C/AとP(Y)の重なり、FM放送との違いをグラフで。</p>
+      </li>
+      <li>
+        <span class="no">10</span>
         <a class="t" href="gnss-navmsg.html">航法メッセージ</a>
         <p>LNAV/CNAV/CNAV-2をビット単位で表示。時計・エフェメリス・アルマナックをGPSとQZSSで並べて比較。</p>
       </li>
       <li>
-        <span class="no">10</span>
+        <span class="no">11</span>
         <a class="t" href="gnss-obs.html">擬似距離とドップラー</a>
         <p>コード相関で遅延を自分で見つけ、時計誤差が「擬似」距離を生む様子と、通過衛星のドップラーS字カーブを体験。</p>
       </li>
       <li>
-        <span class="no">11</span>
+        <span class="no">12</span>
         <a class="t" href="gnss-corrections.html">誤差と補正</a>
         <p>衛星クロック・電離層・対流圏などの誤差を、放送暦・2周波・SBAS・RTK/PPP/CLASのトグルで消していく。数mからcmまで、補正の効きを体感。</p>
       </li>
       <li>
-        <span class="no">12</span>
+        <span class="no">13</span>
         <a class="t" href="gnss-rx.html">受信の流れ — 衛星からPCまで</a>
         <p>アンテナ・LNA・GNSSモジュール内部（捕捉・追尾・復号・補正・PVT）からNMEA出力まで、データの旅の総まとめ。</p>
       </li>
       <li>
-        <span class="no">13</span>
+        <span class="no">14</span>
         <a class="t" href="qzss.html">QZSS みちびき</a>
         <p>八の字軌道のアニメーションで日本の真上に居座る仕組みを見る。信号認証・災危通報・CLASなど独自サービスと、NavICと並ぶリージョナルGNSSの位置づけ。</p>
       </li>
@@ -201,12 +206,12 @@
     <h2><span class="tag">STEP 3</span>SDR実践 — 自分の手でGNSS信号を扱う</h2>
     <ol class="path">
       <li>
-        <span class="no">14</span>
+        <span class="no">15</span>
         <a class="t" href="sdr-intro.html">SDR入門とボード図鑑</a>
         <p>ソフトウェア無線とは何か。USRP・bladeRF・ADALM-Pluto・LimeSDR・HackRF Oneなど定番ボードを周波数カバレッジ図と比較表で知る。</p>
       </li>
       <li>
-        <span class="no">15</span>
+        <span class="no">16</span>
         <a class="t" href="sdr-gnss-tx.html">SDRでGNSS信号を送る</a>
         <p>LimeSDR XTRX / Mini 2.0 でGPS・QZSSのL1 C/Aを生成。送信リンクバジェットで「実衛星相当の−130dBm」に落とす減衰設計と法令上の注意を学ぶ。</p>
       </li>
@@ -217,9 +222,20 @@
     <h2><span class="tag">STEP 4</span>脅威と対策 — GNSSはどう騙されるか</h2>
     <ol class="path">
       <li>
-        <span class="no">16</span>
+        <span class="no">17</span>
         <a class="t" href="gnss-threats.html">ジャミング・スプーフィング・ミーコニング</a>
         <p>3つの脅威で受信機に何が起きるかをシミュレーターで観察し、C/N₀・AGC・位置の症状から攻撃を見分ける方法と、多周波・CRPA・信号認証などの対策を学ぶ。</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="step">
+    <h2><span class="tag">STEP 5</span>オープンソース — 自分で触るための道具</h2>
+    <ol class="path">
+      <li>
+        <span class="no">18</span>
+        <a class="t" href="opensource.html">測位系オープンソース一覧</a>
+        <p>GNSS-SDR・PocketSDR・RTKLIB・gps-sdr-simなど、受信・測位・信号生成の定番ツールを用途別に整理。何ができるソフトかがひと目でわかる。</p>
       </li>
     </ol>
   </section>

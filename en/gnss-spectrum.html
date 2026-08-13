@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>GPS on a Spectrum Analyzer | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="GPS on a Spectrum Analyzer | GNSS Study">
+<meta property="og:description" content="An interactive GNSS learning site — from wave basics to the inside of a receiver, SDR practice and jamming/spoofing defence.">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/en/gnss-spectrum.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="GPS on a Spectrum Analyzer | GNSS Study">
+<meta name="twitter:description" content="An interactive GNSS learning site — from wave basics to the inside of a receiver, SDR practice and jamming/spoofing defence.">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --sig: #34d399;
+    --noise: #6b7280;
+    --ca: #22d3ee;
+    --py: #f59e0b;
+    --l1c: #f472b6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+  code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .9em;
+  }
+
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .tabs .lbl { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+  .tab-btn {
+    appearance: none; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface2); color: var(--text);
+    padding: 6px 14px; cursor: pointer; line-height: 1.3; text-align: center;
+  }
+  .tab-btn b { display: block; font-size: .86rem; }
+  .tab-btn small { display: block; font-size: .68rem; color: var(--muted); }
+  .tab-btn:hover { border-color: var(--accent); }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tab-btn.active small { color: rgba(255,255,255,.85); }
+  .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .ctl { display: grid; grid-template-columns: 10em 1fr 7em; align-items: center; gap: 10px; padding: 5px 0; }
+  .ctl .name { font-size: .82rem; color: var(--muted); }
+  .ctl output {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .84rem; text-align: right;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .checks { display: flex; gap: 16px; flex-wrap: wrap; padding: 6px 0 2px; font-size: .84rem; }
+  .checks label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .8rem; color: var(--muted); padding-top: 4px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .card {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cc, var(--accent));
+    border-radius: 10px; padding: 11px 14px; background: var(--surface2);
+  }
+  .card h4 { margin: 0 0 4px; font-size: .95rem; }
+  .card p { margin: 0; font-size: .83rem; color: var(--muted); }
+  .card p b { color: var(--text); }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 5px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>GPS on a Spectrum Analyzer</h1>
+    <p>What GPS looks like on a spectrum analyzer — not a spike, but a trapezoid sunk beneath the noise</p>
+  </header>
+
+  <div class="panel">
+    <h3>SPECTRUM DISPLAY — POWER PER FREQUENCY</h3>
+    <div class="tabs">
+      <span class="lbl">Signal:</span>
+      <button class="tab-btn" data-sig="l1"><b>GPS L1</b><small>C/A + P(Y)</small></button>
+      <button class="tab-btn" data-sig="l5"><b>GPS L5</b><small>wideband</small></button>
+      <button class="tab-btn" data-sig="fm"><b>Ref: FM radio</b><small>sharp spike</small></button>
+    </div>
+    <canvas class="dark" id="spec" aria-label="Frequency spectrum display"></canvas>
+    <div class="legend" id="legend"></div>
+    <div class="ctl">
+      <span class="name">Signal strength</span>
+      <input type="range" id="pow" min="-40" max="20" step="1" value="0">
+      <output id="powOut">nominal</output>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="showNoise" checked>Show noise floor</label>
+      <label><input type="checkbox" id="showParts" checked>Colour the components</label>
+      <label><input type="checkbox" id="logSweep" checked>Sweep animation</label>
+    </div>
+    <div id="readout" class="cap"></div>
+    <p class="cap">X-axis = frequency, Y-axis = power [dBm]. On a real analyzer a white sweep line runs left to right and its trace draws the curve. Figures are educational approximations.</p>
+  </div>
+
+  <div class="panel">
+    <h3>WHAT TO NOTICE ABOUT GPS ON A SPECTRUM</h3>
+    <div class="cards">
+      <div class="card" style="--cc: var(--noise)">
+        <h4>The signal is buried in noise</h4>
+        <p>GPS at the ground is about <b>−130 dBm</b>, roughly <b>20 dB below</b> the thermal noise floor (~−111 dBm). Look normally and you <b>can't tell it from noise</b> — as on the <a href="db-lab.html">dB page</a>.</p>
+      </div>
+      <div class="card" style="--cc: var(--ca)">
+        <h4>A gentle trapezoid, not a spike</h4>
+        <p>A spread-code (BPSK) spectrum has a <code>sinc²</code> shape. The C/A code is a soft hump about <b>2 MHz</b> wide — nothing like the sharp peak of an FM station.</p>
+      </div>
+      <div class="card" style="--cc: var(--py)">
+        <h4>Signals of different widths overlap</h4>
+        <p>L1 stacks the narrow <b>C/A (±1 MHz)</b> and the wider <b>P(Y) (±10 MHz)</b> on the same center frequency. You see a broad skirt sitting under the narrow hump.</p>
+      </div>
+      <div class="card" style="--cc: var(--sig)">
+        <h4>Seeing it takes effort</h4>
+        <p>Because it sinks into noise, in practice you need long <b>averaging</b>, or the receiver's post-correlation <a href="gnss-signal.html">processing gain</a>, before any hump appears.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>GPS SPECTRAL PARAMETERS (APPROXIMATE)</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>Signal</th><th>Center freq.</th><th>Modulation / chip rate</th><th>Main-lobe width</th><th>Spectral shape</th></tr>
+        <tr><td>L1 C/A</td><td class="num">1575.42 MHz</td><td class="num">BPSK 1.023 Mcps</td><td class="num">±1.023 MHz</td><td>sinc² (gentle)</td></tr>
+        <tr><td>L1 P(Y)</td><td class="num">1575.42 MHz</td><td class="num">BPSK 10.23 Mcps</td><td class="num">±10.23 MHz</td><td>wide sinc²</td></tr>
+        <tr><td>L1C (new)</td><td class="num">1575.42 MHz</td><td class="num">BOC(1,1)</td><td class="num">dip at center, side humps</td><td>two lobes</td></tr>
+        <tr><td>L5</td><td class="num">1176.45 MHz</td><td class="num">BPSK 10.23 Mcps</td><td class="num">±10.23 MHz</td><td>wideband sinc²</td></tr>
+        <tr><td>(ref) FM radio</td><td class="num">76–95 MHz</td><td class="num">FM</td><td class="num">~±100 kHz</td><td>sharp peak</td></tr>
+      </table>
+    </div>
+    <p class="cap">The faster the chip rate, the wider the spectrum spreads (see <a href="gnss-signal.html">Signal Structure</a> and the <a href="gnss-bands.html">Frequency Band Map</a>). L1C's BOC modulation pushes power away from the center into two side humps, letting it coexist on the same frequency as C/A.</p>
+  </div>
+
+  <details class="note" open>
+    <summary>Why a spread signal has a sinc² shape</summary>
+    <div class="body">
+      <p>A spectrum (power vs frequency) is the Fourier transform of the time waveform. The GPS C/A code is a train of square chips of width <code>Tc ≈ 0.98 µs</code> (BPSK). The Fourier transform of one square pulse is the <code>sinc</code> function (<code>sin(x)/x</code>), and power is its square, <code>sinc²</code>.</p>
+      <p>Its main lobe (the central hump) is "twice the chip rate" wide ≈ 2 MHz. The "faster chips → wider band" from <a href="gnss-signal.html">Signal Structure</a> shows up here as "the trapezoid skirt spreads sideways". It isn't a sharp peak precisely because the information is deliberately smeared across a wide band (spread spectrum) instead of concentrated at one frequency.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>How to visualize a signal buried in noise</summary>
+    <div class="body">
+      <p>On a single sweep, GPS is completely hidden in the noise. To actually see a hump:</p>
+      <p><strong>1. Long averaging (trace averaging, narrow RBW)</strong>: random noise averages flat, so only the always-same-shaped signal component faintly emerges — still only a few dB.</p>
+      <p><strong>2. View it after correlation</strong>: multiply by the known PRN code (despread) as a receiver does, and the wide, faint signal folds back onto the center frequency into a sharp peak. That is the ~43 dB <a href="db-lab.html">processing gain</a>, and it is exactly the correlation peak on the <a href="gnss-obs.html">Pseudorange page</a>.</p>
+      <p>So "raw on a spectrum analyzer" and "correlated in a receiver" are completely different pictures: the first a hint of a trapezoid, the second a sharp peak.</p>
+    </div>
+  </details>
+  <details class="note">
+    <summary>Jamming and interference show up too</summary>
+    <div class="body">
+      <p>A spectrum analyzer is also used for GNSS health checks. If a <a href="gnss-threats.html">jammer</a> is nearby, an unnaturally strong feature appears in the GNSS band (a sharp peak for a continuous-wave jammer, a moving hump for a sweep jammer). You notice "something strong is riding on" the otherwise flat noise floor. Airports and reference stations use exactly this kind of spectrum monitoring to catch interference early.</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  const S = { sig: "l1", pow: 0, noise: true, parts: true, sweep: true, t: 0 };
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) S.sweep = false;
+
+  const cv = $("spec");
+  const ctx = cv.getContext("2d");
+  const cs = getComputedStyle(document.documentElement);
+  const col = (v) => cs.getPropertyValue(v).trim() || "#888";
+
+  function fit(c, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = c.clientWidth;
+    const h = Math.round(w * aspect);
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+      c.width = Math.round(w * dpr);
+      c.height = Math.round(h * dpr);
+      c.style.height = h + "px";
+    }
+    c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  // sinc^2 in dB, normalized so peak=0 dB; xr = offset/mainlobe-half
+  function sincDb(offMHz, chipMHz) {
+    const x = offMHz / chipMHz; // zeros at integer x
+    if (Math.abs(x) < 1e-4) return 0;
+    const s = Math.sin(Math.PI * x) / (Math.PI * x);
+    return 10 * Math.log10(Math.max(s * s, 1e-6));
+  }
+  // BOC(1,1): two lobes offset by +-1.023 MHz
+  function bocDb(offMHz) {
+    const a = sincDb(offMHz - 1.023, 1.023);
+    const b = sincDb(offMHz + 1.023, 1.023);
+    const la = Math.pow(10, a / 10), lb = Math.pow(10, b / 10);
+    return 10 * Math.log10(Math.max(la + lb, 1e-6)) - 3;
+  }
+
+  const CONFIG = {
+    l1: {
+      center: 1575.42, span: 40, // MHz shown
+      fc: "1575.42 MHz", title: "GPS L1",
+      noise: -111, peak: () => -130 + S.pow,
+      parts: [
+        { name: "P(Y) 10.23Mcps", color: "--py", chip: 10.23, rel: -3, wide: true },
+        { name: "C/A 1.023Mcps", color: "--ca", chip: 1.023, rel: 0, wide: false },
+      ],
+    },
+    l5: {
+      center: 1176.45, span: 50,
+      fc: "1176.45 MHz", title: "GPS L5",
+      noise: -111, peak: () => -130 + S.pow,
+      parts: [
+        { name: "L5 10.23Mcps", color: "--sig", chip: 10.23, rel: 0, wide: true },
+      ],
+    },
+    fm: {
+      center: 83, span: 2,
+      fc: "83 MHz", title: "FM radio (ref)",
+      noise: -100, peak: () => -50 + S.pow,
+      parts: [
+        { name: "FM放送波", color: "--l1c", fm: true, rel: 0 },
+      ],
+    },
+  };
+
+  function partDb(cfg, p, offMHz) {
+    if (p.fm) {
+      // narrow near-flat top ~ +-0.1MHz with steep skirts
+      const a = Math.abs(offMHz);
+      if (a < 0.1) return -1 + Math.sin(offMHz * 40) * 0.6;
+      return -Math.min((a - 0.1) * 90, 60);
+    }
+    if (p.boc) return bocDb(offMHz);
+    return sincDb(offMHz, p.chip);
+  }
+
+  function draw() {
+    const cfg = CONFIG[S.sig];
+    const { w, h } = fit(cv, 0.52);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#0a1210";
+    ctx.fillRect(0, 0, w, h);
+    ctx.font = "10px ui-monospace, Consolas, monospace";
+    const padL = 40, padR = 10, padT = 14, padB = 26;
+    const plotW = w - padL - padR, plotH = h - padT - padB;
+    const DB_TOP = cfg === CONFIG.fm ? 0 : -100, DB_BOT = cfg === CONFIG.fm ? -110 : -160;
+    const halfSpan = cfg.span / 2;
+    const X = (off) => padL + (off + halfSpan) / cfg.span * plotW;
+    const Y = (db) => padT + (DB_TOP - db) / (DB_TOP - DB_BOT) * plotH;
+
+    // grid
+    for (let db = DB_TOP; db >= DB_BOT; db -= (cfg === CONFIG.fm ? 20 : 20)) {
+      const y = Y(db);
+      ctx.strokeStyle = "rgba(148,180,170,.1)";
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke();
+      ctx.fillStyle = "rgba(160,190,182,.55)";
+      ctx.fillText(db + "", 4, y + 3);
+    }
+    ctx.fillStyle = "rgba(160,190,182,.55)";
+    ctx.fillText("dBm", 4, padT - 2);
+    for (let o = -halfSpan; o <= halfSpan + 0.01; o += cfg.span / 8) {
+      const x = X(o);
+      ctx.strokeStyle = "rgba(148,180,170,.1)";
+      ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, h - padB); ctx.stroke();
+      ctx.fillStyle = "rgba(160,190,182,.55)";
+      const mhz = cfg.center + o;
+      ctx.fillText(mhz.toFixed(cfg.span < 5 ? 1 : 0), x - 14, h - padB + 14);
+    }
+    ctx.fillStyle = "rgba(160,190,182,.5)";
+    ctx.fillText("MHz", w - padR - 24, h - 6);
+
+    const noiseDb = cfg.noise;
+    const peakDb = cfg.peak();
+
+    // noise floor
+    if (S.noise) {
+      ctx.strokeStyle = "rgba(107,114,128,.55)";
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(padL, Y(noiseDb)); ctx.lineTo(w - padR, Y(noiseDb)); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "rgba(148,163,175,.8)";
+      ctx.fillText("thermal noise floor " + noiseDb + " dBm", padL + 4, Y(noiseDb) - 4);
+      // noisy floor texture
+      ctx.strokeStyle = "rgba(107,114,128,.4)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let px = 0; px <= plotW; px += 2) {
+        const rnd = Math.sin(px * 12.9898 + S.t * 3) * 43758.5453;
+        const jit = (rnd - Math.floor(rnd) - 0.5) * 5;
+        const y = Y(noiseDb + jit);
+        px === 0 ? ctx.moveTo(padL + px, y) : ctx.lineTo(padL + px, y);
+      }
+      ctx.stroke();
+    }
+
+    // combined signal spectrum (sum of parts in linear power) above the noise floor
+    function totalDbAt(off) {
+      let linSig = 0;
+      cfg.parts.forEach((p) => {
+        const rel = partDb(cfg, p, off) + (p.rel || 0);
+        linSig += Math.pow(10, (peakDb + rel) / 10);
+      });
+      const linNoise = S.noise ? Math.pow(10, noiseDb / 10) : 0;
+      return 10 * Math.log10(Math.max(linSig + linNoise, 1e-20));
+    }
+
+    // fill area under total curve
+    ctx.beginPath();
+    for (let px = 0; px <= plotW; px++) {
+      const off = px / plotW * cfg.span - halfSpan;
+      const y = Y(totalDbAt(off));
+      px === 0 ? ctx.moveTo(padL + px, y) : ctx.lineTo(padL + px, y);
+    }
+    ctx.lineTo(w - padR, h - padB); ctx.lineTo(padL, h - padB); ctx.closePath();
+    ctx.fillStyle = "rgba(52,211,153,.10)";
+    ctx.fill();
+
+    // individual parts (color-coded envelopes)
+    if (S.parts && cfg.parts.length > 1) {
+      cfg.parts.forEach((p) => {
+        ctx.strokeStyle = col(p.color);
+        ctx.globalAlpha = 0.6;
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        for (let px = 0; px <= plotW; px++) {
+          const off = px / plotW * cfg.span - halfSpan;
+          const db = peakDb + partDb(cfg, p, off) + (p.rel || 0);
+          const y = Y(Math.max(db, DB_BOT));
+          px === 0 ? ctx.moveTo(padL + px, y) : ctx.lineTo(padL + px, y);
+        }
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      });
+    }
+
+    // total envelope
+    ctx.strokeStyle = col("--sig");
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let px = 0; px <= plotW; px++) {
+      const off = px / plotW * cfg.span - halfSpan;
+      const y = Y(totalDbAt(off));
+      px === 0 ? ctx.moveTo(padL + px, y) : ctx.lineTo(padL + px, y);
+    }
+    ctx.stroke();
+
+    // center frequency marker
+    ctx.strokeStyle = "rgba(230,238,236,.35)";
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(X(0), padT); ctx.lineTo(X(0), h - padB); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(230,238,236,.7)";
+    ctx.fillText(cfg.fc, X(0) - 26, padT + 9);
+
+    // sweep line
+    if (S.sweep) {
+      const sx = padL + ((S.t * 0.35) % 1) * plotW;
+      ctx.strokeStyle = "rgba(230,238,236,.5)";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(sx, padT); ctx.lineTo(sx, h - padB); ctx.stroke();
+    }
+
+    // readout
+    const above = peakDb - noiseDb;
+    $("readout").innerHTML = cfg.title + ": peak ~<b>" + peakDb.toFixed(0) + " dBm</b>, noise floor " + noiseDb +
+      " dBm (diff " + (above >= 0 ? "+" : "") + above.toFixed(0) + " dB) — " +
+      (S.sig !== "fm" ? (above < 0 ? "<b style='color:var(--muted)'>sunk below the noise; invisible raw</b>" : "above the noise") : "clearly visible as a sharp peak");
+
+    // legend
+    let leg = "<span><i style='background:" + col("--sig") + "'></i>combined spectrum</span>";
+    if (S.parts && cfg.parts.length > 1) cfg.parts.forEach((p) => { leg += "<span><i style='background:" + col(p.color) + "'></i>" + p.name + "</span>"; });
+    if (S.noise) leg += "<span><i style='background:" + col("--noise") + "'></i>noise floor</span>";
+    $("legend").innerHTML = leg;
+  }
+
+  document.querySelectorAll(".tab-btn").forEach((b) => {
+    b.addEventListener("click", () => {
+      S.sig = b.dataset.sig;
+      document.querySelectorAll(".tab-btn").forEach((x) => x.classList.toggle("active", x === b));
+      // FM default stronger power
+      draw();
+    });
+  });
+  $("pow").addEventListener("input", (e) => {
+    S.pow = +e.target.value;
+    $("powOut").textContent = S.pow === 0 ? "nominal" : (S.pow > 0 ? "+" : "") + S.pow + " dB";
+    draw();
+  });
+  $("showNoise").addEventListener("change", (e) => { S.noise = e.target.checked; draw(); });
+  $("showParts").addEventListener("change", (e) => { S.parts = e.target.checked; draw(); });
+  $("logSweep").addEventListener("change", (e) => { S.sweep = e.target.checked; draw(); });
+
+  document.querySelector('.tab-btn[data-sig="l1"]').classList.add("active");
+  window.addEventListener("resize", draw);
+  if (window.ResizeObserver) new ResizeObserver(draw).observe(cv);
+  draw();
+
+  if (!reduced) {
+    let last = performance.now();
+    (function loop(now) {
+      S.t += Math.max(0, Math.min(0.1, (now - last) / 1000));
+      last = now;
+      draw();
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+})();
+</script>
+</body>
+</html>
