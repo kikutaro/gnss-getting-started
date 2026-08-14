@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>地上系電波（eLoran 等） | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="地上系電波（eLoran 等） | GNSS Study">
+<meta property="og:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/terrestrial-rf.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="地上系電波（eLoran 等） | GNSS Study">
+<meta name="twitter:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  }
+  :root[data-theme="dark"] { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  :root[data-theme="light"] { --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+      --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif; line-height: 1.6; }
+  main { max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px; display: flex; flex-direction: column; gap: 16px; }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+  .feat { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .feat div { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 10px; padding: 10px 13px; background: var(--surface2); }
+  .feat h4 { margin: 0 0 3px; font-size: .9rem; }
+  .feat p { margin: 0; font-size: .82rem; color: var(--muted); }
+  .feat.cons div { border-left-color: #fb923c; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .card { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 10px; padding: 11px 14px; background: var(--surface2); }
+  .card h4 { margin: 0 0 3px; font-size: .92rem; }
+  .card p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 6px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>地上系電波（eLoran 等）</h1>
+    <p>衛星ではなく地上の送信局から。強力な長波で、妨害に強く時刻配信のバックアップにも</p>
+  </header>
+
+  <div class="panel">
+    <h3>アイデア — 上ではなく「地上」から放送する</h3>
+    <p>GNSSの弱さは「はるか宇宙から届く微弱な信号」であることに由来します。ならば逆に、<strong>地上の大電力送信局から強い電波を放送</strong>すればよい——これが地上系PNTの発想です。代表格が <strong>eLoran</strong>（enhanced Loran、拡張ロラン）。軍用のLoran-Cを現代化したもので、<strong>約100kHzの長波</strong>を使います。</p>
+    <p>長波はとても低い周波数なので、<strong>遠くまで届き、地面や建物に回り込み</strong>、GNSSが苦手な場所にも入り込みます。送信出力も桁違いに大きいので、<strong>妨害でかき消すのが難しい</strong>のが最大の魅力です。</p>
+  </div>
+
+  <div class="panel">
+    <h3>なぜGNSSの相棒に向くのか</h3>
+    <div class="feat">
+      <div><h4>妨害に強い</h4><p>高出力＋低周波。GNSSとは物理がまるで違うので、両方を同時に潰すのは難しい。</p></div>
+      <div><h4>独立している</h4><p>衛星に一切依存しない別系統。宇宙天気や衛星障害の影響を受けない。</p></div>
+      <div><h4>時刻も配れる</h4><p>送信局は原子時計で同期。ns級の時刻・周波数を広域に配信でき、<a href="gnss-timesync.html">時刻同期</a>のバックアップになる。</p></div>
+      <div><h4>広いカバー</h4><p>1局で数百kmをカバー。少ない局数で国土を覆える。</p></div>
+    </div>
+    <p class="cap">位置精度はおよそ10〜20m級で、GNSSの数mには及びません。しかし「妨害されにくい独立系」という価値から、重要インフラの<strong>PNTバックボーン</strong>として各国が検討・一部運用しています（英国の試験、韓国の整備など）。</p>
+  </div>
+
+  <div class="panel">
+    <h3>ほかの地上系</h3>
+    <div class="cards">
+      <div class="card"><h4>標準電波（JJY 等）</h4><p>長波の標準時放送。位置は測れないが<b>正確な時刻</b>を広域配信。電波時計でおなじみ。</p></div>
+      <div class="card"><h4>放送・通信網の同期信号</h4><p>デジタル放送や通信網は自らも時刻同期して動く。地上の時刻源として使える場面も。</p></div>
+      <div class="card"><h4>携帯ネットワーク測位</h4><p>基地局のセルIDや到達時間差での測位も地上系。5Gでは測位機能が標準化（詳しくは <a href="soop.html">信号機会測位</a>）。</p></div>
+      <div class="card"><h4>疑似衛星（シュードライト）</h4><p>地上に置いた“GPS送信機”。空港や屋内など局所エリアをGNSS互換信号で補強する。</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>GNSS と eLoran のちがい</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>項目</th><th>GNSS</th><th>eLoran</th></tr>
+        <tr><td>発信源</td><td>宇宙（衛星）</td><td>地上（送信局）</td></tr>
+        <tr><td>周波数</td><td class="num">L帯（約1.2〜1.6GHz）</td><td class="num">長波（約100kHz）</td></tr>
+        <tr><td>信号強度</td><td>非常に弱い</td><td>非常に強い</td></tr>
+        <tr><td>位置精度</td><td class="num">数 m</td><td class="num">約10〜20 m</td></tr>
+        <tr><td>時刻配信</td><td>◎</td><td>○（ns級可）</td></tr>
+        <tr><td>妨害耐性</td><td>弱い</td><td>強い</td></tr>
+        <tr><td>屋内・地下</td><td>✕</td><td>△（届きやすいが完全ではない）</td></tr>
+      </table>
+    </div>
+    <p class="cap">短所は、送信局という<strong>地上インフラの整備・維持が必要</strong>なこと、精度がGNSSに劣ること、地形や電波環境の影響を受けること。だからGNSSを置き換えるより、<strong>独立したバックアップ</strong>として併用する構図が現実的です。全体像は <a href="pnt-alternatives.html">GNSSの代替（概要）</a> へ。</p>
+  </div>
+</main>
+</body>
+</html>

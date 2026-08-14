@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>慣性航法（INS / IMU） | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="慣性航法（INS / IMU） | GNSS Study">
+<meta property="og:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/ins-imu.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="慣性航法（INS / IMU） | GNSS Study">
+<meta name="twitter:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; --scope-bg: #0a1210;
+    --g1: #f87171; --g2: #fbbf24; --g3: #34d399;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  }
+  :root[data-theme="dark"] { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  :root[data-theme="light"] { --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+      --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif; line-height: 1.6; }
+  main { max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px; display: flex; flex-direction: column; gap: 16px; }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 620px) { .two { grid-template-columns: 1fr; } }
+  .two div { border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: 10px; padding: 10px 13px; background: var(--surface2); }
+  .two h4 { margin: 0 0 3px; font-size: .95rem; }
+  .two p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  .ctrls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .ctrls .lbl { font-size: .82rem; color: var(--muted); }
+  .ctrls button { appearance: none; border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text); border-radius: 999px; padding: 4px 12px; font-size: .82rem; cursor: pointer; font-family: inherit; }
+  .ctrls button.on, .ctrls button:hover { border-color: var(--accent); color: var(--accent); }
+  .ctrls input[type=range] { flex: 1 1 180px; accent-color: var(--accent); }
+  .ctrls .now { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; font-weight: 700; white-space: nowrap; }
+
+  .row { display: grid; grid-template-columns: 200px 1fr 92px; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid var(--border); }
+  .row:first-of-type { border-top: none; }
+  @media (max-width: 640px) { .row { grid-template-columns: 1fr; gap: 3px; } }
+  .row .nm { font-size: .86rem; font-weight: 600; }
+  .row .nm i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: var(--c); vertical-align: middle; }
+  .row .nm small { display: block; color: var(--muted); font-weight: 400; font-size: .72rem; margin-left: 15px; }
+  .row .bar { background: var(--surface2); border-radius: 999px; height: 12px; overflow: hidden; }
+  .row .bar span { display: block; height: 100%; width: 0; background: var(--c); border-radius: 999px; transition: width .18s; }
+  .row .val { font-family: ui-monospace, Consolas, monospace; font-size: .82rem; font-weight: 700; text-align: right; }
+  @media (max-width: 640px) { .row .val { text-align: left; } }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 6px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; white-space: nowrap; }
+  table.cmp td.sys i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .tw { overflow-x: auto; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>慣性航法（INS / IMU）</h1>
+    <p>電波を一切使わず、自分の動きを積算して位置を知る。GNSS途絶時の“最後の砦”</p>
+  </header>
+
+  <div class="panel">
+    <h3>電波なしで位置がわかる — 推測航法</h3>
+    <p>慣性航法（INS: Inertial Navigation System）は、<strong>加速度計</strong>（どれだけ加速したか）と<strong>ジャイロ</strong>（どれだけ回ったか）だけで自分の位置・速度・姿勢を割り出します。これらのセンサーをまとめた装置が <strong>IMU</strong>（Inertial Measurement Unit）です。スタート地点さえ分かっていれば、あとは動きを足し算していくだけ——電波も衛星も基地局もいりません。</p>
+    <div class="two">
+      <div><h4>⬆ 加速度計</h4><p>加速度を測り、1回積分で速度、もう1回積分で移動距離になる。</p></div>
+      <div><h4>🌀 ジャイロ</h4><p>回転（角速度）を測り、積分で「今どちらを向いているか（姿勢）」がわかる。</p></div>
+    </div>
+    <p class="cap">最大の長所は<strong>完全自立</strong>。外から電波を受けないので、ジャミングもスプーフィングも原理的に効きません（<a href="gnss-threats.html">脅威のページ</a>）。潜水艦・航空機・ミサイル・ロケットが昔から使ってきた、由緒ある航法です。</p>
+  </div>
+
+  <div class="panel">
+    <h3>弱点はドリフト — 時間とともに誤差が育つ</h3>
+    <p>完全自立の代償が<strong>ドリフト</strong>です。加速度を2回も積分するので、センサーのわずかな偏り（バイアス）が<strong>時間の2乗で位置誤差に膨らみます</strong>。GNSSが切れてから何もしないでいると、誤差はどんどん育っていきます。センサーの“格”（グレード）でその速さは桁違い。下のスライダーで、GNSS途絶からの経過時間を動かしてみましょう。</p>
+    <div class="ctrls">
+      <span class="lbl">GNSS途絶からの経過:</span>
+      <button data-sec="10">10秒</button>
+      <button data-sec="60" class="on">1分</button>
+      <button data-sec="300">5分</button>
+      <button data-sec="3600">1時間</button>
+      <input type="range" id="elapsed" min="0" max="1000" step="1" value="639">
+      <span class="now" id="nowLabel">1分</span>
+    </div>
+    <div id="grades"></div>
+    <p class="cap">位置誤差 ≈ ½ × 加速度バイアス × 時間²、という簡略モデル（教材用の代表値）。実際はジャイロ誤差や重力の誤投影も効き、もっと複雑に増えます。要点は<strong>「安いセンサーほど、あっという間にズレる」</strong>こと。</p>
+  </div>
+
+  <div class="panel">
+    <h3>IMUのグレード</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>グレード</th><th>センサー例</th><th>ドリフトの目安</th><th>用途</th></tr>
+        <tr><td class="sys"><i style="background:var(--g1)"></i>民生（MEMS）</td><td>スマホ・車の小型MEMS</td><td class="num">数分でkm級（1分で約100m）</td><td>歩行者・車の短時間の穴埋め、姿勢制御</td></tr>
+        <tr><td class="sys"><i style="background:var(--g2)"></i>戦術級</td><td>高性能MEMS / FOG</td><td class="num">1時間で数km級</td><td>車載・ドローン・精密農機</td></tr>
+        <tr><td class="sys"><i style="background:var(--g3)"></i>航法級</td><td>光ファイバ(FOG) / リングレーザ(RLG)</td><td class="num">1時間で約2km（≈1海里/時）</td><td>航空機・潜水艦・船舶</td></tr>
+      </table>
+    </div>
+    <p class="cap">FOG=Fiber Optic Gyro、RLG=Ring Laser Gyro。高精度なほど大きく高価になります。スマホのIMUはとても安価な代わり、単独では数十秒でずれていきます。</p>
+  </div>
+
+  <div class="panel">
+    <h3>だからGNSSと組む — GNSS/INS統合</h3>
+    <p>INSは<strong>短時間はとても正確だが長時間でずれる</strong>。GNSSは<strong>長時間ずれないが一瞬でも遮られると使えない</strong>。この2つは弱点が正反対なので、組み合わせると最強になります。GNSSが見えている間にINSの誤差を<strong>較正</strong>し続け、トンネルやビル街・妨害でGNSSが切れたら、較正済みのINSが<strong>数秒〜数分の穴を滑らかに埋める</strong>——これが多くのカーナビ・スマホ・自動運転が実際にやっていることです。</p>
+    <div class="two">
+      <div style="border-top-color: var(--g3)"><h4>GNSSがある間</h4><p>位置の真値でINSのバイアスやドリフトを推定・補正（カルマンフィルタ）。</p></div>
+      <div style="border-top-color: var(--g1)"><h4>GNSSが切れた瞬間</h4><p>直前まで較正されたINSが推測航法を継続。短い遮蔽なら誤差はごくわずか。</p></div>
+    </div>
+    <p class="cap">カーナビがトンネルでも位置を保てるのは、この統合とタイヤの回転（オドメトリ）などの助けによるものです。<a href="pnt-alternatives.html">GNSSの代替（概要）</a>も参照。</p>
+  </div>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  // representative accelerometer bias (m/s^2) per grade
+  const GRADES = [
+    { key: "--g1", name: "民生（MEMS・スマホ）", sub: "加速度バイアス ~0.05 m/s²", b: 0.05 },
+    { key: "--g2", name: "戦術級", sub: "~0.001 m/s²", b: 0.001 },
+    { key: "--g3", name: "航法級（FOG/RLG）", sub: "~0.0003 m/s²", b: 0.0003 },
+  ];
+
+  const wrap = $("grades");
+  GRADES.forEach((gr, i) => {
+    const d = document.createElement("div");
+    d.className = "row"; d.style.setProperty("--c", "var(" + gr.key + ")");
+    d.innerHTML = '<div class="nm"><i></i>' + gr.name + '<small>' + gr.sub + '</small></div>' +
+      '<div class="bar"><span id="b' + i + '"></span></div>' +
+      '<div class="val" id="v' + i + '">—</div>';
+    wrap.appendChild(d);
+  });
+
+  function fmtM(m) {
+    if (m < 1) return (m * 100).toFixed(0) + " cm";
+    if (m < 1000) return m.toFixed(m < 10 ? 1 : 0) + " m";
+    return (m / 1000).toFixed(m < 10000 ? 2 : 1) + " km";
+  }
+  function fmtT(s) {
+    if (s < 60) return Math.round(s) + "秒";
+    if (s < 3600) return (s / 60).toFixed(s % 60 ? 1 : 0) + "分";
+    return (s / 3600).toFixed(s % 3600 ? 1 : 0) + "時間";
+  }
+  const LMAX = Math.log10(3600);
+  const toSec = (v) => Math.pow(10, (v / 1000) * LMAX);
+  const toSlider = (s) => Math.round(Math.log10(s) / LMAX * 1000);
+
+  function update(sec) {
+    $("nowLabel").textContent = fmtT(sec);
+    GRADES.forEach((gr, i) => {
+      const err = 0.5 * gr.b * sec * sec; // metres
+      $("v" + i).textContent = fmtM(err);
+      const lo = -1, hi = 5; // 0.1 m .. 100 km (log10)
+      const lg = Math.log10(Math.max(err, Math.pow(10, lo)));
+      $("b" + i).style.width = Math.max(1.5, Math.min(100, (lg - lo) / (hi - lo) * 100)) + "%";
+    });
+  }
+
+  const slider = $("elapsed");
+  const btns = Array.from(document.querySelectorAll(".ctrls button"));
+  slider.addEventListener("input", () => { btns.forEach(b => b.classList.remove("on")); update(toSec(Number(slider.value))); });
+  btns.forEach(b => b.addEventListener("click", () => {
+    const sec = Number(b.dataset.sec); slider.value = toSlider(sec);
+    btns.forEach(x => x.classList.toggle("on", x === b)); update(sec);
+  }));
+  update(60);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>LEO-PNT — 低軌道測位 | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="LEO-PNT — 低軌道測位 | GNSS Study">
+<meta property="og:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/leo-pnt.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="LEO-PNT — 低軌道測位 | GNSS Study">
+<meta name="twitter:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; --scope-bg: #0a1210;
+    --leo: #38bdf8; --meo: #fb923c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; --leo: #38bdf8; --meo: #fb923c; }
+  }
+  :root[data-theme="dark"] { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  :root[data-theme="light"] { --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+      --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif; line-height: 1.6; }
+  main { max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px; display: flex; flex-direction: column; gap: 16px; }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+  .simgrid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 16px; align-items: center; }
+  @media (max-width: 820px) { .simgrid { grid-template-columns: 1fr; } }
+  .ctl { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+  .ctl .name { font-size: .84rem; color: var(--muted); flex: none; width: 96px; }
+  .ctl input[type=range] { flex: 1; accent-color: var(--accent); }
+  .ctl output { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; font-weight: 700; width: 82px; text-align: right; }
+  .readout { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+  .readout .big { font-family: ui-monospace, Consolas, monospace; font-size: 1.5rem; font-weight: 700; color: var(--leo); }
+  .readout .sub { font-size: .82rem; color: var(--muted); }
+  .readout .row { display: flex; justify-content: space-between; font-size: .84rem; border-top: 1px solid var(--border); padding-top: 6px; }
+  .readout .row b { font-family: ui-monospace, Consolas, monospace; }
+
+  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 620px) { .pc { grid-template-columns: 1fr; } }
+  .pc div { border: 1px solid var(--border); border-radius: 10px; padding: 10px 13px; background: var(--surface2); }
+  .pc.pros div { border-left: 4px solid #34d399; }
+  .pc.cons div { border-left: 4px solid #fb923c; }
+  .pc h4 { margin: 0 0 3px; font-size: .88rem; }
+  .pc p { margin: 0; font-size: .81rem; color: var(--muted); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .card { border: 1px solid var(--border); border-left: 4px solid var(--sc, var(--accent)); border-radius: 10px; padding: 11px 14px; background: var(--surface2); }
+  .card h4 { margin: 0 0 3px; font-size: .93rem; }
+  .card p { margin: 0; font-size: .82rem; color: var(--muted); }
+  .card .tag { display: inline-block; font-family: ui-monospace, Consolas, monospace; font-size: .68rem; font-weight: 700; color: var(--sc, var(--accent)); border: 1px solid var(--sc, var(--accent)); border-radius: 999px; padding: 0 7px; margin-bottom: 6px; }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 6px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>LEO-PNT — 低軌道測位</h1>
+    <p>GNSSより桁違いに低い高度を飛ぶ衛星で測る。信号が強く、妨害に強い次世代PNTの本命</p>
+  </header>
+
+  <div class="panel">
+    <h3>アイデア — 衛星を「うんと低く」する</h3>
+    <p>GPSなどのGNSS衛星は高度<strong>約20,200km（中軌道 MEO）</strong>を回っています。遠いぶん信号は地上で極端に弱くなり、<a href="gnss-threats.html">妨害・偽装</a>の的になります。そこで発想を変え、<strong>高度数百〜千数百kmの低軌道（LEO）</strong>に測位衛星を置くのが <strong>LEO-PNT</strong>（Low Earth Orbit PNT）です。Starlinkが飛んでいるのと同じくらいの高さです。</p>
+    <p>近いと何が良いのか？ 距離が縮むぶん<strong>信号が桁違いに強くなり</strong>、屋内にも届きやすく、妨害しにくくなります。さらにLEO衛星は空を<strong>速く横切る</strong>ので、幾何配置がどんどん変わり、測位解の<strong>収束が速く</strong>、偽装も見破りやすくなります。下で高度を変えて、信号強度の違いを見てみましょう。</p>
+  </div>
+
+  <div class="panel">
+    <h3>高度と信号強度 — MEO(GNSS) と LEO をくらべる</h3>
+    <div class="simgrid">
+      <div>
+        <canvas class="dark" id="orbit" aria-label="地球とMEO(GNSS)・LEOの軌道高度、受信機への距離の比較図"></canvas>
+        <div class="ctl">
+          <span class="name">LEOの高度</span>
+          <input type="range" id="alt" min="350" max="2000" step="10" value="550">
+          <output id="altOut">550 km</output>
+        </div>
+        <p class="cap">真上にある衛星までの距離で、自由空間の距離減衰（距離の2乗に反比例）を単純比較した<strong>教材用モデル</strong>。実際はアンテナ利得や大気の影響も加わります。</p>
+      </div>
+      <div class="readout">
+        <div>
+          <div class="big" id="gainDb">+31 dB</div>
+          <div class="sub">MEO(20,200km) にくらべた LEO の信号の強さ</div>
+        </div>
+        <div class="row"><span>= 電力比</span><b id="gainX">約1400倍</b></div>
+        <div class="row"><span>MEOまでの距離</span><b>20,200 km</b></div>
+        <div class="row"><span>LEOまでの距離</span><b id="leoDist">550 km</b></div>
+        <div class="row"><span>空を横切る速さ</span><b id="cross">速い</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>長所と短所</h3>
+    <div class="pc pros">
+      <div><h4>信号が強い</h4><p>距離が1/20〜1/40 → 電力で数百〜千倍。屋内にも届きやすい。</p></div>
+      <div><h4>妨害・偽装に強い</h4><p>強い信号は潰しにくく、速い幾何変化と多数機で偽装を検知しやすい。</p></div>
+      <div><h4>収束が速い</h4><p>衛星が速く動き幾何がすぐ変わるので、高精度解に早く到達。</p></div>
+      <div><h4>大きなドップラー</h4><p>速度が速く周波数変化が大きい＝それ自体を測位の手がかりにできる。</p></div>
+    </div>
+    <div class="pc cons" style="margin-top:12px">
+      <div><h4>たくさんの衛星が要る</h4><p>1機が見える時間が短いので、全球カバーには数百機規模の群れが必要。</p></div>
+      <div><h4>軌道の維持</h4><p>低軌道は大気抵抗で高度が下がる。定期的な軌道維持・更新が必要。</p></div>
+      <div><h4>まだ整備途上</h4><p>専用のLEO-PNTは実証・構築の段階。GNSSほどの成熟度はこれから。</p></div>
+      <div><h4>基準時刻はやはり必要</h4><p>衛星の時計や軌道の管理は必須。GNSSや地上局と連携する設計が多い。</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>おもな取り組み</h3>
+    <div class="cards">
+      <div class="card" style="--sc: var(--leo)">
+        <span class="tag">専用・実証中</span>
+        <h4>Xona Space Systems（PULSAR）</h4>
+        <p>測位専用のLEO衛星群を構築中。GPS互換の考え方で<b>より強く・認証つき</b>の信号を目指す。実証衛星を打ち上げ済み。</p>
+      </div>
+      <div class="card" style="--sc: var(--leo)">
+        <span class="tag">商用・運用中</span>
+        <h4>Iridium STL（Satelles）</h4>
+        <p>既存の<b>Iridium 66機</b>のLEO衛星から時刻・測位信号（STL）を放送。屋内浸透・耐妨害が強みで、時刻同期のバックアップに実用化。</p>
+      </div>
+      <div class="card" style="--sc: var(--leo)">
+        <span class="tag">計画・実証</span>
+        <h4>ESA LEO-PNT / 各国の構想</h4>
+        <p>欧州（ESA）が軌道実証を計画。中国なども大規模LEO群でのPNT補強を構想。GNSSを補完する世界的な流れ。</p>
+      </div>
+      <div class="card" style="--sc: var(--leo)">
+        <span class="tag">流用・研究</span>
+        <h4>Starlink 等の流用</h4>
+        <p>通信用LEO（Starlink/OneWeb）の電波を測位に流用する研究も活発。詳しくは <a href="soop.html">信号機会測位</a> のページへ。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>MEO(GNSS) と LEO のちがい</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>項目</th><th>GNSS（MEO）</th><th>LEO-PNT</th></tr>
+        <tr><td>高度</td><td class="num">約 20,200 km</td><td class="num">約 350〜2,000 km</td></tr>
+        <tr><td>地上での信号強度</td><td>非常に弱い（約−130dBm）</td><td>数百〜千倍強い</td></tr>
+        <tr><td>1機が見える時間</td><td>数時間</td><td>数分〜十数分</td></tr>
+        <tr><td>必要な衛星数</td><td>1系統 約24〜30機</td><td>数百機規模</td></tr>
+        <tr><td>妨害・偽装耐性</td><td>弱い</td><td>強い</td></tr>
+        <tr><td>成熟度</td><td>成熟（運用中）</td><td>整備・実証段階</td></tr>
+      </table>
+    </div>
+    <p class="cap">LEO-PNTはGNSSを<strong>置き換える</strong>より<strong>補完・補強する</strong>位置づけで語られることが多い手段です。全体像は <a href="pnt-alternatives.html">GNSSの代替（概要）</a> を参照。</p>
+  </div>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const cv = $("orbit");
+  const ctx = cv.getContext("2d");
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const RE = 6371, MEO = 20200;
+  let t = 0;
+
+  function fit(c, aspect) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = c.clientWidth, h = Math.round(w * aspect);
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+      c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); c.style.height = h + "px";
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  function draw() {
+    const alt = Number($("alt").value);
+    const { w, h } = fit(cv, 0.82);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#0a1210"; ctx.fillRect(0, 0, w, h);
+
+    // Earth centered near bottom; radii mapped so the MEO ring fits
+    const cx = w / 2, cy = h * 0.99;
+    const maxKm = RE + MEO + 2500;
+    const scale = (h * 0.95) / maxKm;
+    const rE = RE * scale;
+    const rMEO = (RE + MEO) * scale;
+    const rLEO = (RE + alt) * scale;
+
+    // stars
+    ctx.fillStyle = "rgba(200,220,214,.35)";
+    for (let i = 0; i < 40; i++) {
+      const sx = (Math.sin(i * 3.1 + 1) * 0.5 + 0.5) * w;
+      const sy = (Math.cos(i * 2.3 + i) * 0.5 + 0.5) * h * 0.9;
+      ctx.globalAlpha = 0.2 + (i % 5) * 0.1; ctx.fillRect(sx, sy, 1.3, 1.3);
+    }
+    ctx.globalAlpha = 1;
+
+    function ring(r, color, dash) {
+      ctx.strokeStyle = color; ctx.lineWidth = 1.4; ctx.setLineDash(dash || []);
+      ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+    }
+    ring(rMEO, "rgba(251,146,60,.5)", [6, 5]);
+    ring(rLEO, "rgba(56,189,248,.6)");
+
+    // earth
+    const g = ctx.createRadialGradient(cx - rE * 0.4, cy - rE * 0.4, rE * 0.2, cx, cy, rE);
+    g.addColorStop(0, "#2a6d8a"); g.addColorStop(1, "#0f3a4d");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, rE, 0, Math.PI * 2); ctx.fill();
+
+    // receiver at top of earth
+    const rx = cx, ry = cy - rE;
+    ctx.fillStyle = "#e6eeec"; ctx.beginPath(); ctx.arc(rx, ry, 3.5, 0, Math.PI * 2); ctx.fill();
+
+    // satellites (overhead) with distance lines
+    const meoY = cy - rMEO, leoY = cy - rLEO;
+    // MEO sat slightly to the left, LEO to the right, for clarity
+    const meoX = cx - rMEO * 0.18, meoSy = cy - Math.sqrt(Math.max(0, rMEO * rMEO - (meoX - cx) * (meoX - cx)));
+    const leoAng = reduced ? -Math.PI / 2 - 0.25 : -Math.PI / 2 + Math.sin(t * 0.5) * 0.5;
+    const leoX = cx + Math.cos(leoAng) * rLEO, leoY2 = cy + Math.sin(leoAng) * rLEO;
+
+    function beam(x, y, color) {
+      ctx.strokeStyle = color; ctx.globalAlpha = .5; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(rx, ry); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    }
+    function sat(x, y, color, label) {
+      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = color; ctx.globalAlpha = .6; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(x - 8, y); ctx.lineTo(x + 8, y); ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.fillStyle = "rgba(230,238,236,.85)"; ctx.font = "11px ui-monospace, Consolas, monospace";
+      ctx.fillText(label, x + 10, y + 3);
+    }
+    beam(meoX, meoSy, "rgba(251,146,60,.5)");
+    beam(leoX, leoY2, "rgba(56,189,248,.7)");
+    sat(meoX, meoSy, "#fb923c", "MEO 20,200km");
+    sat(leoX, leoY2, "#38bdf8", "LEO " + alt + "km");
+
+    ctx.fillStyle = "rgba(230,238,236,.7)"; ctx.font = "10px ui-monospace, Consolas, monospace";
+    ctx.textAlign = "right"; ctx.fillText("受信機", rx - 8, ry - 7); ctx.textAlign = "left";
+
+    // readouts
+    const gain = 20 * Math.log10(MEO / alt);
+    const x = Math.pow(10, gain / 10);
+    $("altOut").textContent = alt + " km";
+    $("gainDb").textContent = "+" + gain.toFixed(0) + " dB";
+    $("gainX").textContent = "約" + (x >= 1000 ? (x / 1000).toFixed(1) + "千倍" : Math.round(x / 10) * 10 + "倍");
+    $("leoDist").textContent = alt.toLocaleString() + " km";
+    $("cross").textContent = alt < 800 ? "とても速い" : alt < 1400 ? "速い" : "やや速い";
+  }
+
+  fit(cv, 0.82); draw();
+  $("alt").addEventListener("input", draw);
+  window.addEventListener("resize", draw);
+  if (window.ResizeObserver) new ResizeObserver(draw).observe(cv);
+  if (!reduced) {
+    let last = performance.now();
+    (function loop(now) {
+      t += Math.max(0, Math.min(0.1, (now - last) / 1000)); last = now;
+      draw(); requestAnimationFrame(loop);
+    })(performance.now());
+  }
+})();
+</script>
+</body>
+</html>

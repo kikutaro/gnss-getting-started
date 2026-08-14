@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>Inertial Navigation (INS / IMU) | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="Inertial Navigation (INS / IMU) | GNSS Study">
+<meta property="og:description" content="Interactive GNSS learning site: from wave basics to receiver internals, SDR practice and anti-jamming/spoofing, learned by moving sliders.">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/en/ins-imu.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Inertial Navigation (INS / IMU) | GNSS Study">
+<meta name="twitter:description" content="Interactive GNSS learning site: from wave basics to receiver internals, SDR practice and anti-jamming/spoofing, learned by moving sliders.">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; --scope-bg: #0a1210;
+    --g1: #f87171; --g2: #fbbf24; --g3: #34d399;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  }
+  :root[data-theme="dark"] { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  :root[data-theme="light"] { --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+      --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; }
+  main { max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px; display: flex; flex-direction: column; gap: 16px; }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 620px) { .two { grid-template-columns: 1fr; } }
+  .two div { border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: 10px; padding: 10px 13px; background: var(--surface2); }
+  .two h4 { margin: 0 0 3px; font-size: .95rem; }
+  .two p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  .ctrls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .ctrls .lbl { font-size: .82rem; color: var(--muted); }
+  .ctrls button { appearance: none; border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text); border-radius: 999px; padding: 4px 12px; font-size: .82rem; cursor: pointer; font-family: inherit; }
+  .ctrls button.on, .ctrls button:hover { border-color: var(--accent); color: var(--accent); }
+  .ctrls input[type=range] { flex: 1 1 180px; accent-color: var(--accent); }
+  .ctrls .now { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; font-weight: 700; white-space: nowrap; }
+
+  .row { display: grid; grid-template-columns: 210px 1fr 92px; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid var(--border); }
+  .row:first-of-type { border-top: none; }
+  @media (max-width: 640px) { .row { grid-template-columns: 1fr; gap: 3px; } }
+  .row .nm { font-size: .86rem; font-weight: 600; }
+  .row .nm i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: var(--c); vertical-align: middle; }
+  .row .nm small { display: block; color: var(--muted); font-weight: 400; font-size: .72rem; margin-left: 15px; }
+  .row .bar { background: var(--surface2); border-radius: 999px; height: 12px; overflow: hidden; }
+  .row .bar span { display: block; height: 100%; width: 0; background: var(--c); border-radius: 999px; transition: width .18s; }
+  .row .val { font-family: ui-monospace, Consolas, monospace; font-size: .82rem; font-weight: 700; text-align: right; }
+  @media (max-width: 640px) { .row .val { text-align: left; } }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 6px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; white-space: nowrap; }
+  table.cmp td.sys i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .tw { overflow-x: auto; }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Inertial Navigation (INS / IMU)</h1>
+    <p>Know your position by integrating your own motion, with no radio at all. The "last line of defence" during a GNSS outage</p>
+  </header>
+
+  <div class="panel">
+    <h3>Position without radio — dead reckoning</h3>
+    <p>An inertial navigation system (INS) works out your position, velocity and attitude from <strong>accelerometers</strong> (how hard you accelerated) and <strong>gyroscopes</strong> (how much you turned) alone. The unit bundling these sensors is an <strong>IMU</strong> (Inertial Measurement Unit). As long as you know the starting point, you just keep adding up the motion — no radio, no satellites, no base stations.</p>
+    <div class="two">
+      <div><h4>⬆ Accelerometer</h4><p>Measures acceleration; integrate once for velocity, again for distance travelled.</p></div>
+      <div><h4>🌀 Gyroscope</h4><p>Measures rotation (angular rate); integrate to know "which way you now face" (attitude).</p></div>
+    </div>
+    <p class="cap">Its greatest strength is being <strong>fully self-contained</strong>. Receiving no external signal, it is immune to jamming and spoofing in principle (<a href="gnss-threats.html">Threats page</a>). Submarines, aircraft, missiles and rockets have used this venerable method for decades.</p>
+  </div>
+
+  <div class="panel">
+    <h3>The weakness is drift — error grows with time</h3>
+    <p>The price of being self-contained is <strong>drift</strong>. Because you integrate acceleration <em>twice</em>, a tiny sensor bias <strong>swells into position error as the square of time</strong>. Do nothing after GNSS drops out and the error keeps growing. The speed depends dramatically on the sensor "grade". Move the slider below to change the time since GNSS was lost.</p>
+    <div class="ctrls">
+      <span class="lbl">Time since GNSS lost:</span>
+      <button data-sec="10">10 s</button>
+      <button data-sec="60" class="on">1 min</button>
+      <button data-sec="300">5 min</button>
+      <button data-sec="3600">1 hr</button>
+      <input type="range" id="elapsed" min="0" max="1000" step="1" value="639">
+      <span class="now" id="nowLabel">1 min</span>
+    </div>
+    <div id="grades"></div>
+    <p class="cap">A simplified model: position error ≈ ½ × accelerometer bias × time² (representative teaching values). In reality gyro error and mis-projected gravity also contribute, growing more intricately. The point: <strong>the cheaper the sensor, the faster it drifts away</strong>.</p>
+  </div>
+
+  <div class="panel">
+    <h3>IMU grades</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>Grade</th><th>Example sensors</th><th>Rough drift</th><th>Use</th></tr>
+        <tr><td class="sys"><i style="background:var(--g1)"></i>Consumer (MEMS)</td><td>tiny MEMS in phones/cars</td><td class="num">km-scale in minutes (~100 m in 1 min)</td><td>brief gap-filling for pedestrians/cars, attitude</td></tr>
+        <tr><td class="sys"><i style="background:var(--g2)"></i>Tactical</td><td>high-grade MEMS / FOG</td><td class="num">several km in 1 hr</td><td>vehicles, drones, precision agri-machines</td></tr>
+        <tr><td class="sys"><i style="background:var(--g3)"></i>Navigation</td><td>fibre-optic (FOG) / ring-laser (RLG)</td><td class="num">~2 km in 1 hr (≈1 nmi/hr)</td><td>aircraft, submarines, ships</td></tr>
+      </table>
+    </div>
+    <p class="cap">FOG = Fiber Optic Gyro, RLG = Ring Laser Gyro. Higher precision means bigger and pricier. A phone's IMU is very cheap but drifts away on its own within tens of seconds.</p>
+  </div>
+
+  <div class="panel">
+    <h3>So it teams up with GNSS — GNSS/INS fusion</h3>
+    <p>INS is <strong>very accurate short-term but drifts long-term</strong>. GNSS <strong>doesn't drift long-term but is useless the instant it's blocked</strong>. Their weaknesses are exact opposites, so combining them is unbeatable. While GNSS is visible it continuously <strong>calibrates</strong> the INS error; when GNSS is lost in a tunnel, urban canyon or under jamming, the calibrated INS <strong>smoothly bridges the gap of seconds to minutes</strong> — which is exactly what most car navs, phones and self-driving cars actually do.</p>
+    <div class="two">
+      <div style="border-top-color: var(--g3)"><h4>While GNSS is present</h4><p>The true position estimates and corrects the INS bias and drift (a Kalman filter).</p></div>
+      <div style="border-top-color: var(--g1)"><h4>The moment GNSS drops</h4><p>The just-calibrated INS continues dead reckoning. For short blockages the error is tiny.</p></div>
+    </div>
+    <p class="cap">A car nav holding position through a tunnel relies on this fusion plus help from wheel odometry. See also <a href="pnt-alternatives.html">GNSS Alternatives (overview)</a>.</p>
+  </div>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const GRADES = [
+    { key: "--g1", name: "Consumer (MEMS / phone)", sub: "accel bias ~0.05 m/s²", b: 0.05 },
+    { key: "--g2", name: "Tactical", sub: "~0.001 m/s²", b: 0.001 },
+    { key: "--g3", name: "Navigation (FOG/RLG)", sub: "~0.0003 m/s²", b: 0.0003 },
+  ];
+
+  const wrap = $("grades");
+  GRADES.forEach((gr, i) => {
+    const d = document.createElement("div");
+    d.className = "row"; d.style.setProperty("--c", "var(" + gr.key + ")");
+    d.innerHTML = '<div class="nm"><i></i>' + gr.name + '<small>' + gr.sub + '</small></div>' +
+      '<div class="bar"><span id="b' + i + '"></span></div>' +
+      '<div class="val" id="v' + i + '">—</div>';
+    wrap.appendChild(d);
+  });
+
+  function fmtM(m) {
+    if (m < 1) return (m * 100).toFixed(0) + " cm";
+    if (m < 1000) return m.toFixed(m < 10 ? 1 : 0) + " m";
+    return (m / 1000).toFixed(m < 10000 ? 2 : 1) + " km";
+  }
+  function fmtT(s) {
+    if (s < 60) return Math.round(s) + " s";
+    if (s < 3600) return (s / 60).toFixed(s % 60 ? 1 : 0) + " min";
+    return (s / 3600).toFixed(s % 3600 ? 1 : 0) + " hr";
+  }
+  const LMAX = Math.log10(3600);
+  const toSec = (v) => Math.pow(10, (v / 1000) * LMAX);
+  const toSlider = (s) => Math.round(Math.log10(s) / LMAX * 1000);
+
+  function update(sec) {
+    $("nowLabel").textContent = fmtT(sec);
+    GRADES.forEach((gr, i) => {
+      const err = 0.5 * gr.b * sec * sec;
+      $("v" + i).textContent = fmtM(err);
+      const lo = -1, hi = 5;
+      const lg = Math.log10(Math.max(err, Math.pow(10, lo)));
+      $("b" + i).style.width = Math.max(1.5, Math.min(100, (lg - lo) / (hi - lo) * 100)) + "%";
+    });
+  }
+
+  const slider = $("elapsed");
+  const btns = Array.from(document.querySelectorAll(".ctrls button"));
+  slider.addEventListener("input", () => { btns.forEach(b => b.classList.remove("on")); update(toSec(Number(slider.value))); });
+  btns.forEach(b => b.addEventListener("click", () => {
+    const sec = Number(b.dataset.sec); slider.value = toSlider(sec);
+    btns.forEach(x => x.classList.toggle("on", x === b)); update(sec);
+  }));
+  update(60);
+})();
+</script>
+</body>
+</html>

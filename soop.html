@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>信号機会測位（Signals of Opportunity） | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="信号機会測位（Signals of Opportunity） | GNSS Study">
+<meta property="og:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/soop.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="信号機会測位（Signals of Opportunity） | GNSS Study">
+<meta name="twitter:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  }
+  :root[data-theme="dark"] { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  :root[data-theme="light"] { --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+      --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif; line-height: 1.6; }
+  main { max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px; display: flex; flex-direction: column; gap: 16px; }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .card { border: 1px solid var(--border); border-left: 4px solid var(--sc, var(--accent)); border-radius: 10px; padding: 11px 14px; background: var(--surface2); }
+  .card .ico { font-size: 1.2rem; line-height: 1; }
+  .card h4 { margin: 5px 0 3px; font-size: .92rem; }
+  .card p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  .feat { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .feat div { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 10px; padding: 10px 13px; background: var(--surface2); }
+  .feat.cons div { border-left-color: #fb923c; }
+  .feat h4 { margin: 0 0 3px; font-size: .9rem; }
+  .feat p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 6px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>信号機会測位（Signals of Opportunity）</h1>
+    <p>測位用でない電波を、測位に“流用”する。空にはすでに使える電波があふれている</p>
+  </header>
+
+  <div class="panel">
+    <h3>アイデア — そこにある電波を、ありがたく使う</h3>
+    <p>私たちのまわりは、Starlinkのような通信衛星、携帯基地局、テレビ・ラジオ放送など、<strong>測位のために作られたわけではない電波</strong>であふれています。これらを測位に<strong>流用</strong>してしまおう、というのが<strong>信号機会測位（SoOP: Signals of Opportunity）</strong>です。「機会があれば何でも使う」という意味の名前です。</p>
+    <p>やり方はGNSSと似ています。電波の<strong>到達時間の差</strong>や、送信源が動くときの<strong>ドップラー（周波数の変化）</strong>、既知の信号パターンなどを手がかりに位置を解きます。特にLEO通信衛星は空を速く横切るのでドップラーが大きく、測位の良い手がかりになります。</p>
+  </div>
+
+  <div class="panel">
+    <h3>使える“機会信号”の例</h3>
+    <div class="cards">
+      <div class="card" style="--sc:#38bdf8"><div class="ico">🛰️</div><h4>Starlink / OneWeb（LEO通信）</h4><p>多数・強力・世界中を飛ぶ。通信の合間の信号から数m級の測位を実証した研究例も。専用設計の <a href="leo-pnt.html">LEO-PNT</a> と対になる“流用”版。</p></div>
+      <div class="card" style="--sc:#34d399"><div class="ico">📱</div><h4>携帯（LTE / 5G）</h4><p>基地局の信号で測位。5Gでは測位機能が標準化され、屋内で数m級を狙う。都市部で基地局が密なほど有利。</p></div>
+      <div class="card" style="--sc:#f59e0b"><div class="ico">📺</div><h4>テレビ・ラジオ放送</h4><p>強力で安定した地上波。到達時間差から測位できる。信号が強く妨害されにくいのが利点。</p></div>
+      <div class="card" style="--sc:#a855f7"><div class="ico">📶</div><h4>Wi-Fi</h4><p>身近な機会信号の代表。到達時間や電波強度で屋内測位に使える（<a href="vps-mapmatch.html">環境標定</a>とも重なる）。</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>長所と短所</h3>
+    <div class="feat">
+      <div><h4>タダで、すでにある</h4><p>専用の衛星や送信局を新設しなくても、いま飛んでいる電波をそのまま使える。</p></div>
+      <div><h4>強くて多様</h4><p>GNSSより強い信号が多く、種類も豊富。まとめて妨害するのは難しい。</p></div>
+    </div>
+    <div class="feat cons" style="margin-top:12px">
+      <div><h4>専用でない難しさ</h4><p>信号の中身や送信タイミングが測位用に整っていない。事業者の協力がないと精度に工夫が要る。</p></div>
+      <div><h4>まだ研究段階</h4><p>実証は進むが、GNSSのように「受信機を買えば誰でも」という成熟度はこれから。</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>LEO-PNT との違い</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th></th><th><a href="leo-pnt.html">LEO-PNT</a></th><th>信号機会測位（SoOP）</th></tr>
+        <tr><td>電波</td><td>測位専用に設計</td><td>他用途の電波を流用</td></tr>
+        <tr><td>精度・信頼性</td><td>高くしやすい</td><td>条件しだい・工夫が必要</td></tr>
+        <tr><td>導入コスト</td><td>専用衛星の構築が必要</td><td>既存の電波を使える</td></tr>
+        <tr><td>成熟度</td><td>実証・構築中</td><td>研究段階</td></tr>
+      </table>
+    </div>
+    <p class="cap">同じ「低軌道衛星を使う」でも、<strong>測位専用に作る</strong>のがLEO-PNT、<strong>ありもので済ませる</strong>のがSoOP、という住み分けです。どちらもGNSSを補完する有力な選択肢。全体像は <a href="pnt-alternatives.html">GNSSの代替（概要）</a> へ。</p>
+  </div>
+</main>
+</body>
+</html>

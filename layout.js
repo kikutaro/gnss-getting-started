@@ -22,11 +22,17 @@
     { ja: "sdr-spectrum.html",  en: "sdr-spectrum.html",tja: "SDRとスペクトル",    ten: "SDR & Spectrum",        grp: 4 },
     { ja: "sdr-gnss-tx.html",   en: "sdr-gnss-tx.html", tja: "SDRでGNSS送信",      ten: "GNSS TX with SDR",      grp: 4 },
     { ja: "gnss-threats.html",  en: "gnss-threats.html", tja: "妨害と偽装",        ten: "Jamming & Spoofing",    grp: 5 },
-    { ja: "opensource.html",    en: "opensource.html",  tja: "測位系OSS",          ten: "Positioning OSS",       grp: 6 },
+    { ja: "pnt-alternatives.html", en: "pnt-alternatives.html", tja: "代替の概要",   ten: "Alternatives Overview", grp: 6 },
+    { ja: "leo-pnt.html",       en: "leo-pnt.html",     tja: "LEO-PNT",            ten: "LEO-PNT",               grp: 6 },
+    { ja: "ins-imu.html",       en: "ins-imu.html",     tja: "慣性航法(INS)",      ten: "Inertial (INS)",        grp: 6 },
+    { ja: "terrestrial-rf.html", en: "terrestrial-rf.html", tja: "地上系電波(eLoran)", ten: "Terrestrial (eLoran)", grp: 6 },
+    { ja: "vps-mapmatch.html",  en: "vps-mapmatch.html", tja: "環境標定(VPS)",      ten: "Vision/Map (VPS)",      grp: 6 },
+    { ja: "soop.html",          en: "soop.html",        tja: "信号機会測位",       ten: "Signals of Opportunity", grp: 6 },
+    { ja: "opensource.html",    en: "opensource.html",  tja: "測位系OSS",          ten: "Positioning OSS",       grp: 7 },
   ];
   var GRPS = {
-    ja: ["", "STEP 0 · GNSSとは", "STEP 1 · 基礎", "STEP 2 · GNSSのしくみ", "STEP 3 · SDR実践", "STEP 4 · 脅威と対策", "STEP 5 · ツール"],
-    en: ["", "STEP 0 · WHAT IS GNSS", "STEP 1 · BASICS", "STEP 2 · HOW GNSS WORKS", "STEP 3 · SDR IN PRACTICE", "STEP 4 · THREATS & DEFENCE", "STEP 5 · TOOLS"],
+    ja: ["", "STEP 0 · GNSSとは", "STEP 1 · 基礎", "STEP 2 · GNSSのしくみ", "STEP 3 · SDR実践", "STEP 4 · 脅威と対策", "STEP 5 · GNSSの代替", "STEP 6 · ツール"],
+    en: ["", "STEP 0 · WHAT IS GNSS", "STEP 1 · BASICS", "STEP 2 · HOW GNSS WORKS", "STEP 3 · SDR IN PRACTICE", "STEP 4 · THREATS & DEFENCE", "STEP 5 · GNSS ALTERNATIVES", "STEP 6 · TOOLS"],
   };
   var BRAND = "GNSS Study";
 

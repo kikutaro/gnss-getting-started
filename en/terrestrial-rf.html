@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>Terrestrial RF (eLoran, etc.) | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="Terrestrial RF (eLoran, etc.) | GNSS Study">
+<meta property="og:description" content="Interactive GNSS learning site: from wave basics to receiver internals, SDR practice and anti-jamming/spoofing, learned by moving sliders.">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/en/terrestrial-rf.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Terrestrial RF (eLoran, etc.) | GNSS Study">
+<meta name="twitter:description" content="Interactive GNSS learning site: from wave basics to receiver internals, SDR practice and anti-jamming/spoofing, learned by moving sliders.">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  }
+  :root[data-theme="dark"] { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  :root[data-theme="light"] { --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+      --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; }
+  main { max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px; display: flex; flex-direction: column; gap: 16px; }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+  .feat { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .feat div { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 10px; padding: 10px 13px; background: var(--surface2); }
+  .feat h4 { margin: 0 0 3px; font-size: .9rem; }
+  .feat p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .card { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 10px; padding: 11px 14px; background: var(--surface2); }
+  .card h4 { margin: 0 0 3px; font-size: .92rem; }
+  .card p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 6px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Terrestrial RF (eLoran, etc.)</h1>
+    <p>From ground stations, not satellites. Powerful long waves — jam-resistant, and a backup for time distribution too</p>
+  </header>
+
+  <div class="panel">
+    <h3>The idea — broadcast from the ground, not from above</h3>
+    <p>GNSS's weakness comes from being "a faint signal arriving from deep space". So flip it: <strong>broadcast a strong signal from a high-power ground station</strong>. That's the idea of terrestrial PNT. The classic example is <strong>eLoran</strong> (enhanced Loran), a modernization of the military Loran-C that uses <strong>long waves around 100 kHz</strong>.</p>
+    <p>Because long waves are such a low frequency, they <strong>travel far and bend around ground and buildings</strong>, reaching places GNSS struggles with. And the transmit power is enormous, so <strong>it's hard to drown out with jamming</strong> — its biggest appeal.</p>
+  </div>
+
+  <div class="panel">
+    <h3>Why it makes a good partner for GNSS</h3>
+    <div class="feat">
+      <div><h4>Jam-resistant</h4><p>High power + low frequency. Its physics is utterly unlike GNSS, so jamming both at once is hard.</p></div>
+      <div><h4>Independent</h4><p>A separate system with zero dependence on satellites — unaffected by space weather or satellite failures.</p></div>
+      <div><h4>Distributes time too</h4><p>Stations sync via atomic clocks; they can broadcast ns-class time/frequency over a wide area, backing up <a href="gnss-timesync.html">time synchronization</a>.</p></div>
+      <div><h4>Wide coverage</h4><p>One station covers hundreds of km, so few stations can blanket a country.</p></div>
+    </div>
+    <p class="cap">Position accuracy is roughly 10–20 m, short of GNSS's few metres. But for its value as an "independent, hard-to-jam" system, countries are studying or partly operating it as a <strong>PNT backbone</strong> for critical infrastructure (UK trials, deployment in South Korea, etc.).</p>
+  </div>
+
+  <div class="panel">
+    <h3>Other terrestrial systems</h3>
+    <div class="cards">
+      <div class="card"><h4>Time-signal stations (JJY, etc.)</h4><p>Long-wave standard-time broadcasts. Can't fix position, but distribute <b>accurate time</b> over a wide area — familiar from radio clocks.</p></div>
+      <div class="card"><h4>Broadcast/telecom sync signals</h4><p>Digital broadcast and telecom networks synchronize themselves; sometimes usable as a ground time source.</p></div>
+      <div class="card"><h4>Cellular network positioning</h4><p>Cell-ID and time-difference positioning from base stations is also terrestrial. 5G standardizes positioning (see <a href="soop.html">Signals of Opportunity</a>).</p></div>
+      <div class="card"><h4>Pseudolites</h4><p>Ground-based "GPS transmitters" augmenting a local area (airport, indoors) with GNSS-compatible signals.</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>GNSS vs eLoran</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>Item</th><th>GNSS</th><th>eLoran</th></tr>
+        <tr><td>Source</td><td>space (satellites)</td><td>ground (transmitters)</td></tr>
+        <tr><td>Frequency</td><td class="num">L-band (~1.2–1.6 GHz)</td><td class="num">long wave (~100 kHz)</td></tr>
+        <tr><td>Signal strength</td><td>very weak</td><td>very strong</td></tr>
+        <tr><td>Position accuracy</td><td class="num">a few m</td><td class="num">~10–20 m</td></tr>
+        <tr><td>Time distribution</td><td>◎</td><td>○ (ns-class possible)</td></tr>
+        <tr><td>Jam resistance</td><td>weak</td><td>strong</td></tr>
+        <tr><td>Indoor/underground</td><td>✕</td><td>△ (penetrates well but not fully)</td></tr>
+      </table>
+    </div>
+    <p class="cap">The downsides: it needs <strong>ground infrastructure (transmitters) built and maintained</strong>, its accuracy is below GNSS, and terrain/RF conditions affect it. So the realistic role is an <strong>independent backup</strong> used alongside GNSS, not a replacement. Big picture: <a href="pnt-alternatives.html">GNSS Alternatives (overview)</a>.</p>
+  </div>
+</main>
+</body>
+</html>

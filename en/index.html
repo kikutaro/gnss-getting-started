@@ -251,10 +251,46 @@
   </section>
 
   <section class="step">
-    <h2><span class="tag">STEP 5</span>Tools — to get hands-on</h2>
+    <h2><span class="tag">STEP 5</span>GNSS alternatives — PNT when GNSS is unavailable</h2>
     <ol class="path">
       <li>
         <span class="no">21</span>
+        <a class="t" href="pnt-alternatives.html">GNSS Alternatives (overview)</a>
+        <p>Why alternatives are needed (GNSS's weaknesses), the idea of PNT (positioning, navigation, timing), and a catalogue and comparison of the options. The gateway to resilient PNT.</p>
+      </li>
+      <li>
+        <span class="no">22</span>
+        <a class="t" href="leo-pnt.html">LEO-PNT (low-earth-orbit)</a>
+        <p>Positioning from satellites flying far lower than GNSS. A simulator to see how signal strength changes with altitude, plus efforts like Xona and Iridium STL.</p>
+      </li>
+      <li>
+        <span class="no">23</span>
+        <a class="t" href="ins-imu.html">Inertial navigation (INS / IMU)</a>
+        <p>Self-contained positioning with accelerometers and gyros, no radio. A simulator of how drift grows after GNSS is lost, through to GNSS/INS fusion.</p>
+      </li>
+      <li>
+        <span class="no">24</span>
+        <a class="t" href="terrestrial-rf.html">Terrestrial RF (eLoran, etc.)</a>
+        <p>Powerful long-wave broadcasts from ground stations. A jam-resistant, independent alternative that also backs up time distribution.</p>
+      </li>
+      <li>
+        <span class="no">25</span>
+        <a class="t" href="vps-mapmatch.html">Vision / map matching (VPS)</a>
+        <p>Match "what you see" — camera, LiDAR, magnetic field, Wi-Fi — against a map. Strong exactly where GNSS struggles: indoors and in cities.</p>
+      </li>
+      <li>
+        <span class="no">26</span>
+        <a class="t" href="soop.html">Signals of Opportunity (SoOP)</a>
+        <p>Repurposing signals not meant for positioning — Starlink, cellular, TV — as a positioning source. How it differs from LEO-PNT.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="step">
+    <h2><span class="tag">STEP 6</span>Tools — to get hands-on</h2>
+    <ol class="path">
+      <li>
+        <span class="no">27</span>
         <a class="t" href="opensource.html">GNSS Open-Source Catalog</a>
         <p>GNSS-SDR, PocketSDR, RTKLIB, gps-sdr-sim and more — the classic receive / positioning / signal-generation tools, grouped by purpose so you can see at a glance what each does.</p>
       </li>

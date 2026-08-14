@@ -251,10 +251,46 @@
   </section>
 
   <section class="step">
-    <h2><span class="tag">STEP 5</span>ツール — 自分で触るための道具</h2>
+    <h2><span class="tag">STEP 5</span>GNSSの代替 — GNSSが使えないときのPNT</h2>
     <ol class="path">
       <li>
         <span class="no">21</span>
+        <a class="t" href="pnt-alternatives.html">GNSSの代替（概要）</a>
+        <p>なぜ代替が要るのか（GNSSの弱点）、PNT（位置・航法・時刻）という考え方、代替手段の一覧と比較表。強靭なPNTへの入口。</p>
+      </li>
+      <li>
+        <span class="no">22</span>
+        <a class="t" href="leo-pnt.html">LEO-PNT（低軌道測位）</a>
+        <p>GNSSより桁違いに低い高度を飛ぶ衛星で測位。高度を変えて信号強度の違いを見るシミュレーター、Xona/Iridium STLなどの取り組み。</p>
+      </li>
+      <li>
+        <span class="no">23</span>
+        <a class="t" href="ins-imu.html">慣性航法（INS / IMU）</a>
+        <p>加速度計とジャイロで電波なしに自立測位。GNSS途絶からの経過でドリフトが育つ様子をシミュレーターで、GNSS/INS統合まで。</p>
+      </li>
+      <li>
+        <span class="no">24</span>
+        <a class="t" href="terrestrial-rf.html">地上系電波（eLoran 等）</a>
+        <p>地上の大電力送信局から強力な長波を放送。妨害に強く独立した、時刻配信のバックアップにもなる代替。</p>
+      </li>
+      <li>
+        <span class="no">25</span>
+        <a class="t" href="vps-mapmatch.html">環境標定（VPS / 地図照合）</a>
+        <p>カメラ・LiDAR・地磁気・Wi-Fiで「見えているもの」を地図と照合。GNSSが苦手な屋内・都市に強い。</p>
+      </li>
+      <li>
+        <span class="no">26</span>
+        <a class="t" href="soop.html">信号機会測位（SoOP）</a>
+        <p>Starlinkや携帯・TVなど「測位用でない電波」を測位に流用する研究的手法。LEO-PNTとの違いも。</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="step">
+    <h2><span class="tag">STEP 6</span>ツール — 自分で触るための道具</h2>
+    <ol class="path">
+      <li>
+        <span class="no">27</span>
         <a class="t" href="opensource.html">測位系オープンソース一覧</a>
         <p>GNSS-SDR・PocketSDR・RTKLIB・gps-sdr-simなど、受信・測位・信号生成の定番ツールを用途別に整理。何ができるソフトかがひと目でわかる。</p>
       </li>

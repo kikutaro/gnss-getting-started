@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>Signals of Opportunity (SoOP) | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="Signals of Opportunity (SoOP) | GNSS Study">
+<meta property="og:description" content="Interactive GNSS learning site: from wave basics to receiver internals, SDR practice and anti-jamming/spoofing, learned by moving sliders.">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/en/soop.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Signals of Opportunity (SoOP) | GNSS Study">
+<meta name="twitter:description" content="Interactive GNSS learning site: from wave basics to receiver internals, SDR practice and anti-jamming/spoofing, learned by moving sliders.">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  }
+  :root[data-theme="dark"] { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  :root[data-theme="light"] { --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+      --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; }
+  main { max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px; display: flex; flex-direction: column; gap: 16px; }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .card { border: 1px solid var(--border); border-left: 4px solid var(--sc, var(--accent)); border-radius: 10px; padding: 11px 14px; background: var(--surface2); }
+  .card .ico { font-size: 1.2rem; line-height: 1; }
+  .card h4 { margin: 5px 0 3px; font-size: .92rem; }
+  .card p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  .feat { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .feat div { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 10px; padding: 10px 13px; background: var(--surface2); }
+  .feat.cons div { border-left-color: #fb923c; }
+  .feat h4 { margin: 0 0 3px; font-size: .9rem; }
+  .feat p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 6px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Signals of Opportunity (SoOP)</h1>
+    <p>Repurpose signals never meant for positioning. The sky is already full of usable radio</p>
+  </header>
+
+  <div class="panel">
+    <h3>The idea — gratefully use the radio that's already there</h3>
+    <p>We're surrounded by radio <strong>not built for positioning</strong> — communications satellites like Starlink, cellular base stations, TV and radio broadcasts. <strong>Signals of Opportunity (SoOP)</strong> is the idea of <strong>repurposing</strong> them for positioning. The name means "use whatever you get the chance to".</p>
+    <p>The method resembles GNSS. Position is solved from cues like the <strong>difference in arrival times</strong>, the <strong>Doppler (frequency shift)</strong> as a source moves, and known signal patterns. LEO comms satellites in particular race across the sky, so their large Doppler is a good positioning cue.</p>
+  </div>
+
+  <div class="panel">
+    <h3>Examples of usable "opportunity signals"</h3>
+    <div class="cards">
+      <div class="card" style="--sc:#38bdf8"><div class="ico">🛰️</div><h4>Starlink / OneWeb (LEO comms)</h4><p>Many, strong, worldwide. Studies have demonstrated metre-level positioning from the signals between traffic. The "repurposed" counterpart to purpose-built <a href="leo-pnt.html">LEO-PNT</a>.</p></div>
+      <div class="card" style="--sc:#34d399"><div class="ico">📱</div><h4>Cellular (LTE / 5G)</h4><p>Positioning from base-station signals. 5G standardizes positioning, aiming for metre-level indoors. The denser the base stations in a city, the better.</p></div>
+      <div class="card" style="--sc:#f59e0b"><div class="ico">📺</div><h4>TV / radio broadcast</h4><p>Powerful, stable terrestrial signals. Position from arrival-time differences. Strong and hard to jam.</p></div>
+      <div class="card" style="--sc:#a855f7"><div class="ico">📶</div><h4>Wi-Fi</h4><p>The everyday opportunity signal. Usable for indoor positioning via arrival time or signal strength (overlaps with <a href="vps-mapmatch.html">vision/map matching</a>).</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Pros and cons</h3>
+    <div class="feat">
+      <div><h4>Free and already there</h4><p>No need to build dedicated satellites or transmitters — use the radio already flying.</p></div>
+      <div><h4>Strong and diverse</h4><p>Many signals stronger than GNSS, and varied in type. Jamming them all at once is hard.</p></div>
+    </div>
+    <div class="feat cons" style="margin-top:12px">
+      <div><h4>The difficulty of "not dedicated"</h4><p>The signal content and timing aren't arranged for positioning. Without operator cooperation, accuracy takes ingenuity.</p></div>
+      <div><h4>Still research stage</h4><p>Demonstrations progress, but the "buy a receiver and anyone can use it" maturity of GNSS is yet to come.</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Difference from LEO-PNT</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th></th><th><a href="leo-pnt.html">LEO-PNT</a></th><th>Signals of Opportunity (SoOP)</th></tr>
+        <tr><td>Signal</td><td>designed for positioning</td><td>repurposed from other uses</td></tr>
+        <tr><td>Accuracy/reliability</td><td>easy to make high</td><td>condition-dependent; needs ingenuity</td></tr>
+        <tr><td>Deployment cost</td><td>needs dedicated satellites</td><td>uses existing radio</td></tr>
+        <tr><td>Maturity</td><td>demo/deployment</td><td>research stage</td></tr>
+      </table>
+    </div>
+    <p class="cap">Even with the same "use LEO satellites", <strong>building them for positioning</strong> is LEO-PNT, and <strong>making do with what's there</strong> is SoOP. Both are strong options to complement GNSS. Big picture: <a href="pnt-alternatives.html">GNSS Alternatives (overview)</a>.</p>
+  </div>
+</main>
+</body>
+</html>

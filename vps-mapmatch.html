@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>環境標定（VPS / 地図照合 / SLAM） | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="環境標定（VPS / 地図照合 / SLAM） | GNSS Study">
+<meta property="og:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/vps-mapmatch.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="環境標定（VPS / 地図照合 / SLAM） | GNSS Study">
+<meta name="twitter:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  }
+  :root[data-theme="dark"] { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  :root[data-theme="light"] { --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+      --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif; line-height: 1.6; }
+  main { max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px; display: flex; flex-direction: column; gap: 16px; }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .card { border: 1px solid var(--border); border-left: 4px solid var(--sc, var(--accent)); border-radius: 10px; padding: 11px 14px; background: var(--surface2); }
+  .card .ico { font-size: 1.2rem; line-height: 1; }
+  .card h4 { margin: 5px 0 3px; font-size: .93rem; }
+  .card p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  .flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  @media (max-width: 620px) { .flow { grid-template-columns: 1fr; } }
+  .flow div { position: relative; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--surface2); font-size: .84rem; }
+  .flow div b { display: block; margin-bottom: 2px; }
+  .flow div span { color: var(--muted); font-size: .8rem; }
+
+  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 620px) { .pc { grid-template-columns: 1fr; } }
+  .pc div { border: 1px solid var(--border); border-radius: 10px; padding: 10px 13px; background: var(--surface2); }
+  .pc.pros div { border-left: 4px solid #34d399; }
+  .pc.cons div { border-left: 4px solid #fb923c; }
+  .pc h4 { margin: 0 0 3px; font-size: .88rem; }
+  .pc p { margin: 0; font-size: .81rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>環境標定（VPS / 地図照合 / SLAM）</h1>
+    <p>電波ではなく「見えているもの」を地図と照合して位置を出す。屋内・地下・都市に強い</p>
+  </header>
+
+  <div class="panel">
+    <h3>アイデア — まわりの景色で「ここはどこか」を当てる</h3>
+    <p>人は知らない駅でも、看板・柱・通路の形を見て「自分がどこにいるか」を当てられます。同じことを機械にやらせるのが<strong>環境標定</strong>です。カメラやセンサーで<strong>今見えているもの</strong>を捉え、あらかじめ用意した<strong>地図やデータベースと照合</strong>して現在地を割り出します。電波を使わないので、GNSSが届かない<strong>屋内・地下・トンネル・ビル街</strong>でこそ真価を発揮します。</p>
+    <div class="flow">
+      <div><b>① 観測</b><span>カメラ・LiDAR・地磁気・Wi-Fiなどで周囲を計測</span></div>
+      <div><b>② 照合</b><span>観測を既知の地図・特徴点DBと突き合わせる</span></div>
+      <div><b>③ 推定</b><span>最も合う場所＝現在地・姿勢として出力</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>おもな方法</h3>
+    <div class="cards">
+      <div class="card" style="--sc:#38bdf8"><div class="ico">📷</div><h4>ビジュアル測位（VPS）</h4><p>スマホのカメラ映像を、街を3D化した<b>特徴点データベース</b>と照合。ARナビ（GoogleのVPSなど）で歩行者を数十cm〜数m級に。</p></div>
+      <div class="card" style="--sc:#a855f7"><div class="ico">🟣</div><h4>LiDAR / SLAM</h4><p>レーザーの点群で周囲の形を測り、<b>地図を作りながら同時に自己位置推定</b>（SLAM）。自動運転車や掃除ロボットの中核。</p></div>
+      <div class="card" style="--sc:#f59e0b"><div class="ico">🧲</div><h4>地磁気フィンガープリント</h4><p>建物の鉄骨などが作る<b>磁場の“癖”</b>は場所ごとに違う。その指紋を地図化して屋内測位に。特別な設備が要らない。</p></div>
+      <div class="card" style="--sc:#34d399"><div class="ico">📶</div><h4>Wi-Fi / BLE 測位</h4><p>各地点で見えるWi-FiやビーコンのID・強度パターンを指紋に。ショッピングモールや空港の屋内ナビで実用化。</p></div>
+      <div class="card" style="--sc:#fb923c"><div class="ico">🛣️</div><h4>マップマッチング</h4><p>カーナビが位置を<b>道路網にスナップ</b>。「車は道の上にいるはず」という地図の拘束で誤差を吸収する古典的手法。</p></div>
+      <div class="card" style="--sc:#f472b6"><div class="ico">🌡️</div><h4>気圧高度計</h4><p>気圧から高さ＝<b>建物の“何階か”</b>を推定。水平の測位と組み合わせて3次元の屋内位置に。</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>長所と短所</h3>
+    <div class="pc pros">
+      <div><h4>屋内・都市に強い</h4><p>GNSSが最も苦手な場所が主戦場。地下街やモールでも効く。</p></div>
+      <div><h4>妨害されにくい</h4><p>“景色”や磁場を偽装するのは難しい。電波妨害と無関係。</p></div>
+    </div>
+    <div class="pc cons" style="margin-top:12px">
+      <div><h4>事前の地図が要る</h4><p>照合先のDB（3D地図・指紋マップ）を作り、維持する必要がある。</p></div>
+      <div><h4>環境変化に弱い</h4><p>模様替え・工事・夜間・悪天候で見え方が変わると精度が落ちる。計算量も大きい。</p></div>
+    </div>
+    <p class="cap">実際は<strong>屋外はGNSS、屋内はVPSや地磁気</strong>とシームレスに切り替え、<a href="ins-imu.html">慣性航法（INS）</a>で隙間をつなぐ形で使われます。全体像は <a href="pnt-alternatives.html">GNSSの代替（概要）</a> へ。</p>
+  </div>
+</main>
+</body>
+</html>

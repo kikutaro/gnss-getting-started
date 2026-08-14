@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>GNSS Alternatives — when GNSS is unavailable | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="GNSS Alternatives — when GNSS is unavailable | GNSS Study">
+<meta property="og:description" content="Interactive GNSS learning site: from wave basics to receiver internals, SDR practice and anti-jamming/spoofing, learned by moving sliders.">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/en/pnt-alternatives.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="GNSS Alternatives — when GNSS is unavailable | GNSS Study">
+<meta name="twitter:description" content="Interactive GNSS learning site: from wave basics to receiver internals, SDR practice and anti-jamming/spoofing, learned by moving sliders.">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; --scope-bg: #0a1210;
+    --leo: #38bdf8; --ins: #f59e0b; --ter: #34d399; --vps: #a855f7; --soop: #f472b6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  }
+  :root[data-theme="dark"] { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  :root[data-theme="light"] { --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+      --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; }
+  main { max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px; display: flex; flex-direction: column; gap: 16px; }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+  .why { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .why div { border: 1px solid var(--border); border-left: 4px solid #f87171; border-radius: 10px; padding: 10px 13px; background: var(--surface2); }
+  .why h4 { margin: 0 0 3px; font-size: .9rem; }
+  .why p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  .pnt { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 620px) { .pnt { grid-template-columns: 1fr; } }
+  .pnt div { border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: 10px; padding: 10px 13px; background: var(--surface2); }
+  .pnt h4 { margin: 0 0 3px; font-size: .95rem; }
+  .pnt p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  .nav-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  a.nav-card { display: block; text-decoration: none; color: inherit;
+    border: 1px solid var(--border); border-left: 4px solid var(--sc, var(--accent));
+    border-radius: 10px; padding: 12px 14px; background: var(--surface2); transition: border-color .15s; }
+  a.nav-card:hover { border-color: var(--sc, var(--accent)); }
+  a.nav-card .ico { font-size: 1.3rem; line-height: 1; }
+  a.nav-card h4 { margin: 6px 0 3px; font-size: .96rem; color: var(--text); }
+  a.nav-card p { margin: 0; font-size: .82rem; color: var(--muted); }
+  a.nav-card .go { color: var(--sc, var(--accent)); font-size: .8rem; font-weight: 700; margin-top: 6px; display: inline-block; }
+
+  table.cmp { border-collapse: collapse; font-size: .8rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.sys { font-weight: 700; white-space: nowrap; }
+  table.cmp .g { color: #34d399; font-weight: 700; }
+  table.cmp .b { color: #f87171; font-weight: 700; }
+  table.cmp .y { color: #fbbf24; font-weight: 700; }
+  .tw { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>GNSS Alternatives — when GNSS is unavailable</h1>
+    <p>When jamming, blockage or an outage means GNSS can't be trusted, how do you keep position and time? The gateway to "resilient PNT"</p>
+  </header>
+
+  <div class="panel">
+    <h3>Why think about alternatives — GNSS's weaknesses</h3>
+    <p>GNSS is wonderfully convenient, but not omnipotent. Because its signal is <strong>extremely weak</strong> (about −130 dBm at the ground, see the <a href="db-lab.html">dB page</a>), it can be knocked out in many ways. Now that even infrastructure <a href="gnss-timesync.html">time synchronization</a> depends on GNSS, "what do we do without GNSS?" is an important question.</p>
+    <div class="why">
+      <div><h4>Vulnerable to jamming/spoofing</h4><p>A weak signal is easily <a href="gnss-threats.html">jammed or spoofed</a> — a security weak point.</p></div>
+      <div><h4>Doesn't reach indoors/underground</h4><p>Inside buildings, tunnels and basements no satellites are visible.</p></div>
+      <div><h4>Multipath in urban canyons</h4><p>City streets add reflection errors and reduce the number of visible satellites.</p></div>
+      <div><h4>Space weather / ionosphere</h4><p>Solar flares and ionospheric storms degrade or interrupt accuracy.</p></div>
+      <div><h4>Single point of failure</h4><p>A whole society depending on one system — if it fails, the impact is wide.</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>The idea of PNT — GNSS is just one means</h3>
+    <p>What we really want isn't "GPS" itself but <strong>PNT</strong> — Positioning, Navigation and Timing. GNSS is just <strong>one way</strong> to achieve PNT. So we flip the thinking: <strong>combine several means so it never drops out</strong> — the idea of "Resilient PNT" / "Complementary PNT".</p>
+    <div class="pnt">
+      <div><h4>P — Positioning</h4><p>Where you are in space (latitude, longitude, height).</p></div>
+      <div><h4>N — Navigation</h4><p>Which way and how fast you are moving (velocity, heading).</p></div>
+      <div><h4>T — Timing</h4><p>Accurate time and frequency — the foundation of telecom, power and finance.</p></div>
+    </div>
+    <p class="cap">Alternatives aren't all about "completely replacing GNSS". Many act to <strong>complement it and bridge the moments it drops out (a backup)</strong>. Using them together with GNSS is the norm.</p>
+  </div>
+
+  <div class="panel">
+    <h3>Catalogue of alternatives</h3>
+    <p>In this step we look at the main alternative and complementary techniques one by one.</p>
+    <div class="nav-cards">
+      <a class="nav-card" href="leo-pnt.html" style="--sc: var(--leo)">
+        <div class="ico">🛰️</div><h4>LEO-PNT (low-earth-orbit)</h4>
+        <p>Positioning from satellites flying far lower than GNSS. Strong signal, jam-resistant — the leading next-generation candidate.</p>
+        <span class="go">Open →</span>
+      </a>
+      <a class="nav-card" href="ins-imu.html" style="--sc: var(--ins)">
+        <div class="ico">🎯</div><h4>Inertial navigation (INS / IMU)</h4>
+        <p>Integrate your own motion with accelerometers and gyros. No radio needed, fully self-contained. The classic during GNSS outages.</p>
+        <span class="go">Open →</span>
+      </a>
+      <a class="nav-card" href="terrestrial-rf.html" style="--sc: var(--ter)">
+        <div class="ico">📡</div><h4>Terrestrial RF (eLoran, etc.)</h4>
+        <p>Powerful long-wave broadcasts from ground stations. Jam-resistant, and a backup for time distribution too.</p>
+        <span class="go">Open →</span>
+      </a>
+      <a class="nav-card" href="vps-mapmatch.html" style="--sc: var(--vps)">
+        <div class="ico">🗺️</div><h4>Vision / map matching (VPS)</h4>
+        <p>Match "what you see" — camera, LiDAR, magnetic field, Wi-Fi — against a map. Strong indoors.</p>
+        <span class="go">Open →</span>
+      </a>
+      <a class="nav-card" href="soop.html" style="--sc: var(--soop)">
+        <div class="ico">📶</div><h4>Signals of Opportunity (SoOP)</h4>
+        <p>A research approach that repurposes "signals not meant for positioning" — Starlink, cellular, TV — for positioning.</p>
+        <span class="go">Open →</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>At a glance</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>Means</th><th>Position</th><th>Time</th><th>Indoor</th><th>Jam-resist</th><th>Self-reliance※</th><th>In a nutshell</th></tr>
+        <tr><td class="sys">GNSS</td><td class="g">◎</td><td class="g">◎</td><td class="b">✕</td><td class="b">weak</td><td class="g">high</td><td>The baseline, but weak and easy to jam</td></tr>
+        <tr><td class="sys">LEO-PNT</td><td class="g">◎</td><td class="g">○</td><td class="y">△</td><td class="g">strong</td><td class="g">high</td><td>Strong signal, jam-resistant. Being built out</td></tr>
+        <tr><td class="sys">Inertial (INS)</td><td class="y">△</td><td class="b">✕</td><td class="g">◎</td><td class="g">strongest</td><td class="g">fully self-contained</td><td>No radio needed, but error accumulates over time</td></tr>
+        <tr><td class="sys">Terrestrial (eLoran)</td><td class="y">△</td><td class="g">◎</td><td class="y">△</td><td class="g">strong</td><td class="y">medium</td><td>Powerful ground signal; wide-area time backup</td></tr>
+        <tr><td class="sys">Vision (VPS)</td><td class="g">○</td><td class="b">✕</td><td class="g">◎</td><td class="g">strong</td><td class="y">medium</td><td>Strong indoors/cities; needs a map</td></tr>
+        <tr><td class="sys">SoOP</td><td class="y">△</td><td class="y">△</td><td class="y">△</td><td class="g">strong</td><td class="y">medium</td><td>Repurposes existing signals; research stage</td></tr>
+      </table>
+    </div>
+    <p class="cap">※Self-reliance = how well it works alone, without external infrastructure (satellites, base stations, maps). ◎○△✕ are rough teaching estimates and vary by implementation and conditions. In practice you <strong>combine these</strong> to keep position and time even when GNSS drops out.</p>
+  </div>
+</main>
+</body>
+</html>

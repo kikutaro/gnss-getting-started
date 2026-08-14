@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>Vision / Map Matching (VPS / SLAM) | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="Vision / Map Matching (VPS / SLAM) | GNSS Study">
+<meta property="og:description" content="Interactive GNSS learning site: from wave basics to receiver internals, SDR practice and anti-jamming/spoofing, learned by moving sliders.">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/en/vps-mapmatch.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Vision / Map Matching (VPS / SLAM) | GNSS Study">
+<meta name="twitter:description" content="Interactive GNSS learning site: from wave basics to receiver internals, SDR practice and anti-jamming/spoofing, learned by moving sliders.">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  }
+  :root[data-theme="dark"] { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  :root[data-theme="light"] { --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+      --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; }
+  main { max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px; display: flex; flex-direction: column; gap: 16px; }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .card { border: 1px solid var(--border); border-left: 4px solid var(--sc, var(--accent)); border-radius: 10px; padding: 11px 14px; background: var(--surface2); }
+  .card .ico { font-size: 1.2rem; line-height: 1; }
+  .card h4 { margin: 5px 0 3px; font-size: .93rem; }
+  .card p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  .flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  @media (max-width: 620px) { .flow { grid-template-columns: 1fr; } }
+  .flow div { position: relative; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--surface2); font-size: .84rem; }
+  .flow div b { display: block; margin-bottom: 2px; }
+  .flow div span { color: var(--muted); font-size: .8rem; }
+
+  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 620px) { .pc { grid-template-columns: 1fr; } }
+  .pc div { border: 1px solid var(--border); border-radius: 10px; padding: 10px 13px; background: var(--surface2); }
+  .pc.pros div { border-left: 4px solid #34d399; }
+  .pc.cons div { border-left: 4px solid #fb923c; }
+  .pc h4 { margin: 0 0 3px; font-size: .88rem; }
+  .pc p { margin: 0; font-size: .81rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Vision / Map Matching (VPS / SLAM)</h1>
+    <p>Fix your position by matching "what you see" to a map, not by radio. Strong indoors, underground and in cities</p>
+  </header>
+
+  <div class="panel">
+    <h3>The idea — guess "where am I" from the surroundings</h3>
+    <p>Even in an unfamiliar station, a person can tell where they are from the signs, pillars and corridor shapes. <strong>Environment-based positioning</strong> makes machines do the same. Sensors capture <strong>what is visible now</strong> and match it against a prepared <strong>map or database</strong> to find the current location. Using no radio, it comes into its own exactly where GNSS can't reach — <strong>indoors, underground, tunnels and urban canyons</strong>.</p>
+    <div class="flow">
+      <div><b>① Observe</b><span>Measure surroundings with camera, LiDAR, magnetic field, Wi-Fi, etc.</span></div>
+      <div><b>② Match</b><span>Compare the observation against a known map / feature database</span></div>
+      <div><b>③ Estimate</b><span>The best-fitting place = current position and attitude</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Main methods</h3>
+    <div class="cards">
+      <div class="card" style="--sc:#38bdf8"><div class="ico">📷</div><h4>Visual positioning (VPS)</h4><p>Match a phone camera image against a <b>feature-point database</b> that 3D-maps a city. AR navigation (e.g. Google's VPS) puts pedestrians at tens-of-cm to metre level.</p></div>
+      <div class="card" style="--sc:#a855f7"><div class="ico">🟣</div><h4>LiDAR / SLAM</h4><p>Measure the shape of surroundings with laser point clouds, <b>building a map and estimating your position at once</b> (SLAM). The core of self-driving cars and cleaning robots.</p></div>
+      <div class="card" style="--sc:#f59e0b"><div class="ico">🧲</div><h4>Magnetic fingerprint</h4><p>The <b>quirks of the magnetic field</b> created by a building's steel differ by place. Map those fingerprints for indoor positioning — no special equipment needed.</p></div>
+      <div class="card" style="--sc:#34d399"><div class="ico">📶</div><h4>Wi-Fi / BLE positioning</h4><p>Use the ID/strength pattern of Wi-Fi and beacons visible at each spot as a fingerprint. In practical use in malls and airports.</p></div>
+      <div class="card" style="--sc:#fb923c"><div class="ico">🛣️</div><h4>Map matching</h4><p>A car nav <b>snaps position to the road network</b>. The classic method of absorbing error with the map constraint that "the car must be on a road".</p></div>
+      <div class="card" style="--sc:#f472b6"><div class="ico">🌡️</div><h4>Barometric altimeter</h4><p>Estimate height — i.e. <b>which floor</b> — from air pressure. Combined with horizontal positioning for 3D indoor location.</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Pros and cons</h3>
+    <div class="pc pros">
+      <div><h4>Strong indoors/cities</h4><p>Its home turf is exactly where GNSS is weakest — underground malls included.</p></div>
+      <div><h4>Hard to spoof</h4><p>Faking the "scenery" or magnetic field is difficult. Unrelated to RF jamming.</p></div>
+    </div>
+    <div class="pc cons" style="margin-top:12px">
+      <div><h4>Needs a prior map</h4><p>The reference DB (3D map, fingerprint map) must be built and maintained.</p></div>
+      <div><h4>Sensitive to change</h4><p>Renovation, construction, darkness or bad weather change the appearance and drop accuracy. Compute cost is high too.</p></div>
+    </div>
+    <p class="cap">In practice you switch seamlessly — <strong>GNSS outdoors, VPS or magnetic indoors</strong> — and bridge the gaps with <a href="ins-imu.html">inertial navigation (INS)</a>. Big picture: <a href="pnt-alternatives.html">GNSS Alternatives (overview)</a>.</p>
+  </div>
+</main>
+</body>
+</html>
