@@ -21,11 +21,11 @@
     { ja: "sdr-spectrum.html",  en: "sdr-spectrum.html",tja: "SDRとスペクトル",    ten: "SDR & Spectrum",        grp: 4 },
     { ja: "sdr-gnss-tx.html",   en: "sdr-gnss-tx.html", tja: "SDRでGNSS送信",      ten: "GNSS TX with SDR",      grp: 4 },
     { ja: "gnss-threats.html",  en: "gnss-threats.html", tja: "妨害と偽装",        ten: "Jamming & Spoofing",    grp: 5 },
-    { ja: "opensource.html",    en: "opensource.html",  tja: "オープンソース",     ten: "Open Source",           grp: 6 },
+    { ja: "opensource.html",    en: "opensource.html",  tja: "測位系OSS",          ten: "Positioning OSS",       grp: 6 },
   ];
   var GRPS = {
-    ja: ["", "STEP 0 · GNSSとは", "STEP 1 · 基礎", "STEP 2 · GNSSのしくみ", "STEP 3 · SDR実践", "STEP 4 · 脅威と対策", "STEP 5 · オープンソース"],
-    en: ["", "STEP 0 · WHAT IS GNSS", "STEP 1 · BASICS", "STEP 2 · HOW GNSS WORKS", "STEP 3 · SDR IN PRACTICE", "STEP 4 · THREATS & DEFENCE", "STEP 5 · OPEN SOURCE"],
+    ja: ["", "STEP 0 · GNSSとは", "STEP 1 · 基礎", "STEP 2 · GNSSのしくみ", "STEP 3 · SDR実践", "STEP 4 · 脅威と対策", "STEP 5 · ツール"],
+    en: ["", "STEP 0 · WHAT IS GNSS", "STEP 1 · BASICS", "STEP 2 · HOW GNSS WORKS", "STEP 3 · SDR IN PRACTICE", "STEP 4 · THREATS & DEFENCE", "STEP 5 · TOOLS"],
   };
   var BRAND = "GNSS Study";
 
