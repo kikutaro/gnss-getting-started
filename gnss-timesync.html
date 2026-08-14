@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>時刻同期 — GNSSは時計を配るシステム | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="時刻同期 — GNSSは時計を配るシステム | GNSS Study">
+<meta property="og:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/gnss-timesync.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="時刻同期 — GNSSは時計を配るシステム | GNSS Study">
+<meta name="twitter:description" content="波の基礎からGNSS受信機の中身、SDR実践、妨害・偽装対策まで、スライダーを動かして学ぶインタラクティブGNSS学習サイト。">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --qz: #f59e0b;
+    --rb: #3b82f6;
+    --cs: #10b981;
+    --hm: #a855f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --qz: #fbbf24; --rb: #60a5fa; --cs: #34d399; --hm: #c084fc;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --qz: #fbbf24; --rb: #60a5fa; --cs: #34d399; --hm: #c084fc;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --qz: #f59e0b; --rb: #3b82f6; --cs: #10b981; --hm: #a855f7;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+  /* key relation box */
+  .keybox {
+    display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 4px 0 4px;
+  }
+  .keybox .k {
+    flex: 1 1 150px; text-align: center;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 8px;
+  }
+  .keybox .k b { display: block; font-family: ui-monospace, Consolas, monospace; font-size: 1.15rem; color: var(--accent); }
+  .keybox .k small { color: var(--muted); font-size: .76rem; }
+
+  /* clock comparison */
+  .ctrls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .ctrls .lbl { font-size: .82rem; color: var(--muted); }
+  .ctrls button {
+    appearance: none; border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text); border-radius: 999px; padding: 4px 12px; font-size: .82rem;
+    cursor: pointer; font-family: inherit;
+  }
+  .ctrls button.on, .ctrls button:hover { border-color: var(--accent); color: var(--accent); }
+  .ctrls input[type=range] { flex: 1 1 180px; accent-color: var(--accent); }
+  .ctrls .now { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; font-weight: 700; white-space: nowrap; }
+
+  .clk-row { display: grid; grid-template-columns: 200px 1fr 168px; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid var(--border); }
+  .clk-row:first-of-type { border-top: none; }
+  @media (max-width: 680px) { .clk-row { grid-template-columns: 1fr; gap: 3px; } }
+  .clk-name { font-size: .86rem; font-weight: 600; }
+  .clk-name i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: var(--c, var(--accent)); vertical-align: middle; }
+  .clk-name small { display: block; color: var(--muted); font-weight: 400; font-size: .72rem; margin-left: 15px; }
+  .clk-bar { background: var(--surface2); border-radius: 999px; height: 12px; overflow: hidden; }
+  .clk-bar span { display: block; height: 100%; width: 0; background: var(--c, var(--accent)); border-radius: 999px; transition: width .18s ease; }
+  .clk-val { font-family: ui-monospace, Consolas, monospace; font-size: .8rem; text-align: right; }
+  @media (max-width: 680px) { .clk-val { text-align: left; } }
+  .clk-val b { font-weight: 700; }
+  .clk-val .d { color: var(--accent); margin-left: 8px; }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 6px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.sys { font-weight: 700; white-space: nowrap; }
+  table.cmp td.sys i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+
+  /* time-scale offsets */
+  .scale { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 620px) { .scale { grid-template-columns: 1fr; } }
+  .scale div {
+    border: 1px solid var(--border); border-top: 3px solid var(--sc, var(--accent));
+    border-radius: 10px; padding: 10px 13px; background: var(--surface2);
+  }
+  .scale h4 { margin: 0 0 3px; font-size: .9rem; }
+  .scale p { margin: 0; font-size: .8rem; color: var(--muted); }
+  .scale .off { font-family: ui-monospace, Consolas, monospace; color: var(--text); font-weight: 700; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .card {
+    border: 1px solid var(--border); border-left: 4px solid var(--sc, var(--accent));
+    border-radius: 10px; padding: 11px 14px; background: var(--surface2);
+  }
+  .card .ico { font-size: 1.2rem; line-height: 1; }
+  .card h4 { margin: 5px 0 3px; font-size: .93rem; }
+  .card p { margin: 0; font-size: .82rem; color: var(--muted); }
+  .card .req {
+    display: inline-block; font-family: ui-monospace, Consolas, monospace;
+    font-size: .68rem; font-weight: 700; color: var(--sc, var(--accent));
+    border: 1px solid var(--sc, var(--accent)); border-radius: 999px; padding: 0 7px; margin-top: 7px;
+  }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code { font-family: ui-monospace, Consolas, monospace; background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em; }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>時刻同期 — GNSSは「時計」を配るシステム</h1>
+    <p>なぜ測位の話に時刻が出てくるのか。衛星の原子時計と、世界の時刻同期を支えるGNSSの裏の顔</p>
+  </header>
+
+  <div class="panel">
+    <h3>なぜ「測位」なのに「時刻」の話ばかり出てくるのか</h3>
+    <p>GNSSの測位は、突きつめると<strong>「電波が衛星から届くまでの時間」を測ること</strong>です。電波は光の速さ（約30万km/秒）で進むので、<strong>時間さえ分かれば距離が分かる</strong>。距離 ＝ 光速 × 飛行時間、という関係が測位の心臓部です（→ <a href="gnss-obs.html">擬似距離のページ</a>）。</p>
+    <div class="keybox">
+      <div class="k"><b>1 秒</b><small>光は約30万km進む（地球7周半）</small></div>
+      <div class="k"><b>1 µs</b><small>＝ 100万分の1秒 → 約300m</small></div>
+      <div class="k"><b>1 ns</b><small>＝ 10億分の1秒 → 約30cm</small></div>
+    </div>
+    <p>つまり、時計が<strong>1ナノ秒ずれるだけで距離が約30cmずれる</strong>。数mの測位精度を出すには、衛星の時計はナノ秒レベルで正確でなければなりません。だからGNSSは「衛星測位システム」であると同時に、<strong>超高精度な時計のシステム</strong>なのです（時間の基礎は → <a href="time-lab.html">時間と時計</a>）。</p>
+  </div>
+
+  <div class="panel">
+    <h3>時計くらべ — 放置するとどれだけズレる？</h3>
+    <p style="font-size:.86rem">同じ時刻に合わせた時計を、地上と通信せずに<strong>そのまま動かし続けた</strong>ときの誤差。時間の誤差は、そのまま測位の距離誤差（× 光速）になります。バーは距離誤差の大きさ（対数スケール）。</p>
+    <div class="ctrls">
+      <span class="lbl">経過時間:</span>
+      <button data-sec="1">1秒</button>
+      <button data-sec="60">1分</button>
+      <button data-sec="3600">1時間</button>
+      <button data-sec="86400" class="on">1日</button>
+      <input type="range" id="elapsed" min="0" max="1000" step="1" value="712">
+      <span class="now" id="nowLabel">1日</span>
+    </div>
+    <div id="clocks"></div>
+    <p class="cap">周波数確度は種類ごとの<strong>代表値（教材用）</strong>。実際は個体・温度・経年変化（エージング）で変わり、原子時計は地上局が常時監視して補正します。クオーツ（水晶）は原子時計に比べ桁違いにドリフトが大きいことに注目。</p>
+  </div>
+
+  <div class="panel">
+    <h3>衛星に積まれた原子時計</h3>
+    <p>クオーツでは足りないので、GNSS衛星は<strong>原子時計</strong>を積んでいます。原子が特定の周波数の電磁波を吸収・放出する性質を「振り子」に使うと、温度や経年でほとんど狂わない時計になります。多くの衛星は<strong>複数台を冗長に搭載</strong>し、1台が劣化しても切り替えられます。</p>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>種類</th><th>原理（何の原子か）</th><th>安定度の目安</th><th>特徴</th><th>採用例</th></tr>
+        <tr><td class="sys"><i style="background:var(--rb)"></i>ルビジウム</td><td>ルビジウム(Rb)原子</td><td class="num">~10⁻¹²〜10⁻¹³</td><td>小型・軽量・省電力。衛星搭載の主力</td><td>GPS / QZSS / Galileo ほか</td></tr>
+        <tr><td class="sys"><i style="background:var(--cs)"></i>セシウム</td><td>セシウム(Cs)原子</td><td class="num">~10⁻¹³</td><td>「1秒」の定義そのもの。長期安定に優れる</td><td>GPS（一部）/ 地上の標準時</td></tr>
+        <tr><td class="sys"><i style="background:var(--hm)"></i>水素メーザー</td><td>水素(H)原子</td><td class="num">~10⁻¹⁴〜10⁻¹⁵</td><td>短期安定が最高クラス。大きく高価</td><td>Galileo（受動型水素メーザー）</td></tr>
+        <tr><td class="sys"><i style="background:var(--qz)"></i>（参考）クオーツ</td><td>水晶の機械振動</td><td class="num">~10⁻⁶〜10⁻⁹</td><td>安価だが温度・経年で大きくドリフト</td><td>腕時計・受信機のTCXO</td></tr>
+      </table>
+    </div>
+    <p class="cap">「1秒」は現在、セシウム原子の放つ電磁波が <code>9,192,631,770</code> 回振動する時間として定義されています。※「イリジウム」は衛星電話の通信網で、原子時計とは別物です。原子時計もわずかに漂うため、地上管制が誤差を推定して<strong>クロック補正値</strong>を放送します（→ <a href="gnss-corrections.html">誤差と補正</a>、<a href="gnss-navmsg.html">航法メッセージ</a>）。</p>
+  </div>
+
+  <div class="panel">
+    <h3>GNSSの時刻系 — GPS時刻とUTC・うるう秒</h3>
+    <p>原子時計が刻む「途切れない時間」から、各GNSSは自分の時刻系を作ります。ここで<strong>うるう秒</strong>が絡んできます。私たちが使うUTC（協定世界時）は地球の自転に合わせて<strong>ときどき1秒を足す</strong>のに対し、GPS時刻は<strong>うるう秒を入れない連続時間</strong>。だから両者は少しずつズレていきます。</p>
+    <div class="scale">
+      <div style="--sc: var(--hm)"><h4>TAI（国際原子時）</h4><p>原子時計を束ねた、うるう秒なしの基準時間。すべての土台。<span class="off">基準</span></p></div>
+      <div style="--sc: var(--rb)"><h4>GPS時刻</h4><p>1980/1/6起点、うるう秒なし。<span class="off">＝ TAI − 19秒</span>（固定）</p></div>
+      <div style="--sc: var(--cs)"><h4>UTC（協定世界時）</h4><p>うるう秒で自転に追随。<span class="off">＝ TAI − 37秒</span>（2026年時点）</p></div>
+    </div>
+    <p class="cap">結果として<strong>GPS時刻 − UTC ＝ 18秒</strong>（2017年以降）。この差（うるう秒の情報）は<a href="gnss-navmsg.html">航法メッセージ</a>で放送され、受信機はGPS時刻を正しいUTCに変換できます。時刻を利用する機器は、この変換を通じて<strong>UTCにトレーサブルな正確な時刻</strong>を得ます。</p>
+  </div>
+
+  <div class="panel">
+    <h3>時刻同期のユースケース — 「時刻を配る」GNSS</h3>
+    <p>GNSS受信機は位置だけでなく、<strong>1秒ちょうどの合図（1PPS＝1 pulse per second）とUTC時刻</strong>を出力できます。これを時刻源にして、社会インフラの多くが同期しています。</p>
+    <div class="cards">
+      <div class="card" style="--sc: var(--rb)">
+        <div class="ico">📱</div>
+        <h4>携帯電話網の基地局同期</h4>
+        <p>5GやLTE-TDDは、上り/下りを時間で区切って同じ周波数を共用するため、<b>基地局どうしの時刻をµs単位で揃える</b>必要があります。ズレると隣のセルと干渉し、ハンドオーバーも乱れます。多くの基地局がGNSSの1PPSを基準時計に使います。</p>
+        <span class="req">要求 ~1.5 µs</span>
+      </div>
+      <div class="card" style="--sc: var(--cs)">
+        <div class="ico">⚡</div>
+        <h4>電力網の同期フェーザ計測（PMU）</h4>
+        <p>広域の電圧・電流の位相を<b>同じ瞬間に</b>測って系統の安定を監視します（WAMS）。全国に散らばった測定器をµs精度のGNSS時刻でタイムスタンプし、位相を突き合わせます。</p>
+        <span class="req">要求 ~1 µs</span>
+      </div>
+      <div class="card" style="--sc: var(--hm)">
+        <div class="ico">💹</div>
+        <h4>金融取引のタイムスタンプ</h4>
+        <p>高頻度取引では注文・約定の時刻を<b>UTCにトレーサブルに</b>記録することが規制で求められます（例: 欧州MiFID II）。取引所やサーバがGNSS時刻で同期し、取引の順序を厳密に保ちます。</p>
+        <span class="req">要求 ~100 µs</span>
+      </div>
+      <div class="card" style="--sc: var(--qz)">
+        <div class="ico">🖥️</div>
+        <h4>通信網・データセンターの時刻源</h4>
+        <p>NTP/PTPの最上位サーバ（Stratum-1 / グランドマスター）はGNSS受信機を時刻源にします。分散データベースは時刻の不確かさを使って、離れたサーバ間でも順序と整合性を保ちます。</p>
+        <span class="req">NTP/PTP</span>
+      </div>
+      <div class="card" style="--sc: var(--rb)">
+        <div class="ico">📡</div>
+        <h4>デジタル放送（単一周波数網 SFN）</h4>
+        <p>複数の送信所が<b>同じ周波数で同じ信号を同時刻に</b>送ると、電波が広く隙間なく届きます。この「同時刻」をGNSS時刻でそろえます。</p>
+        <span class="req">µs級</span>
+      </div>
+      <div class="card" style="--sc: var(--cs)">
+        <div class="ico">🔬</div>
+        <h4>科学観測・測地</h4>
+        <p>離れた望遠鏡を結ぶVLBI、全国の地震計、天文観測などは、遠隔地の記録を<b>共通の時刻</b>で結合してはじめて意味を持ちます。GNSS時刻がその物差しです。</p>
+        <span class="req">ns〜µs級</span>
+      </div>
+    </div>
+  </div>
+
+  <details class="note">
+    <summary>GNSSに頼りすぎるリスク — ホールドオーバーと妨害</summary>
+    <div class="body">
+      <p>これだけ多くのインフラがGNSS時刻に依存すると、<strong>GNSSが止まったとき</strong>が問題になります。受信できなくなった機器は、内部の時計だけで時刻を保つ「ホールドオーバー」に入りますが、その時計（多くはクオーツやルビジウム）は上の「時計くらべ」のとおり少しずつズレていきます。数時間〜数日でµsの許容を超えることもあります。</p>
+      <p>さらに、GNSS信号は非常に微弱なため<strong>妨害（ジャミング）や偽の時刻を送り込む偽装（スプーフィング）</strong>の標的になり得ます。時刻インフラでは、複数GNSSの併用、地上時刻源とのバックアップ、異常検知などの対策が重要です（→ <a href="gnss-threats.html">妨害と偽装</a>）。</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const C = 299792458; // m/s
+
+  const CLOCKS = [
+    { key: "--qz", name: "クオーツ（腕時計）", sub: "周波数確度 ~10⁻⁶", frac: 1e-6 },
+    { key: "--rb", name: "ルビジウム原子時計", sub: "~10⁻¹² · 衛星の主力", frac: 1e-12 },
+    { key: "--cs", name: "セシウム原子時計", sub: "~10⁻¹³ · 秒の定義", frac: 1e-13 },
+    { key: "--hm", name: "水素メーザー", sub: "~10⁻¹⁵ · 最高安定度", frac: 1e-15 },
+  ];
+
+  // build rows
+  const wrap = $("clocks");
+  CLOCKS.forEach((c, i) => {
+    const row = document.createElement("div");
+    row.className = "clk-row";
+    row.style.setProperty("--c", "var(" + c.key + ")");
+    row.innerHTML =
+      '<div class="clk-name"><i></i>' + c.name + '<small>' + c.sub + '</small></div>' +
+      '<div class="clk-bar"><span id="bar' + i + '"></span></div>' +
+      '<div class="clk-val"><b class="t" id="t' + i + '">—</b><b class="d" id="d' + i + '">—</b></div>';
+    wrap.appendChild(row);
+  });
+
+  function fmtSec(s) {
+    if (s < 1e-9) return (s * 1e12).toFixed(0) + " ps";
+    if (s < 1e-6) return (s * 1e9).toFixed(1) + " ns";
+    if (s < 1e-3) return (s * 1e6).toFixed(1) + " µs";
+    if (s < 1) return (s * 1e3).toFixed(1) + " ms";
+    return s.toFixed(2) + " s";
+  }
+  function fmtM(m) {
+    if (m < 1) return (m * 100).toFixed(1) + " cm";
+    if (m < 1000) return m.toFixed(1) + " m";
+    if (m < 1e6) return (m / 1000).toFixed(1) + " km";
+    return Math.round(m / 1000).toLocaleString() + " km";
+  }
+  function fmtElapsed(s) {
+    if (s < 60) return Math.round(s) + "秒";
+    if (s < 3600) return (s / 60).toFixed(s % 60 ? 1 : 0) + "分";
+    if (s < 86400) return (s / 3600).toFixed(s % 3600 ? 1 : 0) + "時間";
+    return (s / 86400).toFixed(s % 86400 ? 1 : 0) + "日";
+  }
+
+  // slider maps 0..1000 to 10^0 .. 10^log10(86400) seconds (1s .. 1day)
+  const LMAX = Math.log10(86400);
+  const sliderToSec = (v) => Math.pow(10, (v / 1000) * LMAX);
+  const secToSlider = (s) => Math.round(Math.log10(s) / LMAX * 1000);
+
+  function update(sec) {
+    $("nowLabel").textContent = fmtElapsed(sec);
+    CLOCKS.forEach((c, i) => {
+      const errS = c.frac * sec;
+      const distM = errS * C;
+      $("t" + i).textContent = fmtSec(errS);
+      $("d" + i).textContent = fmtM(distM);
+      // log bar: 1mm (1e-3 m) .. 1e8 m (100,000 km)
+      const lo = -3, hi = 8;
+      const lg = Math.log10(Math.max(distM, Math.pow(10, lo)));
+      const pct = Math.max(1.5, Math.min(100, (lg - lo) / (hi - lo) * 100));
+      $("bar" + i).style.width = pct + "%";
+    });
+  }
+
+  const slider = $("elapsed");
+  const btns = Array.from(document.querySelectorAll(".ctrls button"));
+  function setActiveBtn(sec) {
+    btns.forEach((b) => b.classList.toggle("on", Number(b.dataset.sec) === sec));
+  }
+
+  slider.addEventListener("input", () => {
+    const sec = sliderToSec(Number(slider.value));
+    setActiveBtn(0); // slider moves off presets
+    update(sec);
+  });
+  btns.forEach((b) => {
+    b.addEventListener("click", () => {
+      const sec = Number(b.dataset.sec);
+      slider.value = secToSlider(sec);
+      setActiveBtn(sec);
+      update(sec);
+    });
+  });
+
+  update(86400);
+})();
+</script>
+</body>
+</html>

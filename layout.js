@@ -14,6 +14,7 @@
     { ja: "gnss-spectrum.html", en: "gnss-spectrum.html", tja: "スペクトル",       ten: "Spectrum",              grp: 3 },
     { ja: "gnss-navmsg.html",   en: "gnss-navmsg.html", tja: "航法メッセージ",     ten: "Nav Messages",          grp: 3 },
     { ja: "gnss-obs.html",      en: "gnss-obs.html",    tja: "擬似距離・ドップラー", ten: "Pseudorange & Doppler", grp: 3 },
+    { ja: "gnss-timesync.html", en: "gnss-timesync.html", tja: "時刻同期",          ten: "Time Sync",             grp: 3 },
     { ja: "gnss-corrections.html", en: "gnss-corrections.html", tja: "誤差と補正", ten: "Errors & Corrections", grp: 3 },
     { ja: "gnss-rx.html",       en: "gnss-rx.html",     tja: "受信の流れ",         ten: "Receive Chain",         grp: 3 },
     { ja: "qzss.html",          en: "qzss.html",        tja: "QZSS みちびき",      ten: "QZSS Michibiki",        grp: 3 },

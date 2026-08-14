@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="../layout.css">
+<script defer src="../layout.js"></script>
+<title>Time Synchronization — GNSS distributes time | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="Time Synchronization — GNSS distributes time | GNSS Study">
+<meta property="og:description" content="Interactive GNSS learning site: from wave basics to receiver internals, SDR practice and anti-jamming/spoofing, learned by moving sliders.">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/en/gnss-timesync.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Time Synchronization — GNSS distributes time | GNSS Study">
+<meta name="twitter:description" content="Interactive GNSS learning site: from wave basics to receiver internals, SDR practice and anti-jamming/spoofing, learned by moving sliders.">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface2: #eef3f2;
+    --text: #16211f;
+    --muted: #5a6b68;
+    --accent: #0e8a80;
+    --border: #dce4e2;
+    --scope-bg: #0a1210;
+    --qz: #f59e0b;
+    --rb: #3b82f6;
+    --cs: #10b981;
+    --hm: #a855f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+      --qz: #fbbf24; --rb: #60a5fa; --cs: #34d399; --hm: #c084fc;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+    --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
+    --qz: #fbbf24; --rb: #60a5fa; --cs: #34d399; --hm: #c084fc;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
+    --qz: #f59e0b; --rb: #3b82f6; --cs: #10b981; --hm: #a855f7;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+  .keybox { display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 4px 0 4px; }
+  .keybox .k {
+    flex: 1 1 150px; text-align: center;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 8px;
+  }
+  .keybox .k b { display: block; font-family: ui-monospace, Consolas, monospace; font-size: 1.15rem; color: var(--accent); }
+  .keybox .k small { color: var(--muted); font-size: .76rem; }
+
+  .ctrls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .ctrls .lbl { font-size: .82rem; color: var(--muted); }
+  .ctrls button {
+    appearance: none; border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text); border-radius: 999px; padding: 4px 12px; font-size: .82rem;
+    cursor: pointer; font-family: inherit;
+  }
+  .ctrls button.on, .ctrls button:hover { border-color: var(--accent); color: var(--accent); }
+  .ctrls input[type=range] { flex: 1 1 180px; accent-color: var(--accent); }
+  .ctrls .now { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; font-weight: 700; white-space: nowrap; }
+
+  .clk-row { display: grid; grid-template-columns: 210px 1fr 168px; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid var(--border); }
+  .clk-row:first-of-type { border-top: none; }
+  @media (max-width: 680px) { .clk-row { grid-template-columns: 1fr; gap: 3px; } }
+  .clk-name { font-size: .86rem; font-weight: 600; }
+  .clk-name i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: var(--c, var(--accent)); vertical-align: middle; }
+  .clk-name small { display: block; color: var(--muted); font-weight: 400; font-size: .72rem; margin-left: 15px; }
+  .clk-bar { background: var(--surface2); border-radius: 999px; height: 12px; overflow: hidden; }
+  .clk-bar span { display: block; height: 100%; width: 0; background: var(--c, var(--accent)); border-radius: 999px; transition: width .18s ease; }
+  .clk-val { font-family: ui-monospace, Consolas, monospace; font-size: .8rem; text-align: right; }
+  @media (max-width: 680px) { .clk-val { text-align: left; } }
+  .clk-val b { font-weight: 700; }
+  .clk-val .d { color: var(--accent); margin-left: 8px; }
+
+  table.cmp { border-collapse: collapse; font-size: .82rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 6px 9px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.sys { font-weight: 700; white-space: nowrap; }
+  table.cmp td.sys i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  table.cmp td.num { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tw { overflow-x: auto; }
+
+  .scale { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 620px) { .scale { grid-template-columns: 1fr; } }
+  .scale div {
+    border: 1px solid var(--border); border-top: 3px solid var(--sc, var(--accent));
+    border-radius: 10px; padding: 10px 13px; background: var(--surface2);
+  }
+  .scale h4 { margin: 0 0 3px; font-size: .9rem; }
+  .scale p { margin: 0; font-size: .8rem; color: var(--muted); }
+  .scale .off { font-family: ui-monospace, Consolas, monospace; color: var(--text); font-weight: 700; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .card {
+    border: 1px solid var(--border); border-left: 4px solid var(--sc, var(--accent));
+    border-radius: 10px; padding: 11px 14px; background: var(--surface2);
+  }
+  .card .ico { font-size: 1.2rem; line-height: 1; }
+  .card h4 { margin: 5px 0 3px; font-size: .93rem; }
+  .card p { margin: 0; font-size: .82rem; color: var(--muted); }
+  .card .req {
+    display: inline-block; font-family: ui-monospace, Consolas, monospace;
+    font-size: .68rem; font-weight: 700; color: var(--sc, var(--accent));
+    border: 1px solid var(--sc, var(--accent)); border-radius: 999px; padding: 0 7px; margin-top: 7px;
+  }
+
+  details.note { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.note summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: .92rem; list-style-position: inside; }
+  details.note[open] summary { border-bottom: 1px solid var(--border); }
+  details.note .body { padding: 12px 18px 16px; font-size: .88rem; }
+  details.note .body p { margin: 0 0 10px; }
+  details.note .body p:last-child { margin-bottom: 0; }
+  details.note code { font-family: ui-monospace, Consolas, monospace; background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em; }
+  details.note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Time Synchronization — GNSS distributes "time"</h1>
+    <p>Why time keeps coming up in positioning — the atomic clocks aboard satellites, and GNSS's hidden role in keeping the world in sync</p>
+  </header>
+
+  <div class="panel">
+    <h3>Why does "positioning" talk so much about "time"?</h3>
+    <p>At its heart, GNSS positioning is about <strong>measuring how long a signal takes to arrive from a satellite</strong>. Radio travels at the speed of light (~300,000 km/s), so <strong>time gives you distance</strong>. Distance = speed of light × travel time is the core of positioning (→ <a href="gnss-obs.html">Pseudorange page</a>).</p>
+    <div class="keybox">
+      <div class="k"><b>1 s</b><small>light travels ~300,000 km (7.5× around Earth)</small></div>
+      <div class="k"><b>1 µs</b><small>= one millionth of a second → ~300 m</small></div>
+      <div class="k"><b>1 ns</b><small>= one billionth of a second → ~30 cm</small></div>
+    </div>
+    <p>So a clock that is off by just <strong>one nanosecond means ~30 cm of range error</strong>. To reach metre-level positioning, a satellite's clock must be accurate to the nanosecond. That's why GNSS is a satellite-positioning system and, at the same time, a <strong>system of ultra-precise clocks</strong> (time basics → <a href="time-lab.html">Time &amp; Clocks</a>).</p>
+  </div>
+
+  <div class="panel">
+    <h3>Clock comparison — how far do they drift if left alone?</h3>
+    <p style="font-size:.86rem">The error of a clock set to the right time and then <strong>left running with no contact to the ground</strong>. Time error becomes positioning distance error directly (× speed of light). Bars show the size of the distance error (log scale).</p>
+    <div class="ctrls">
+      <span class="lbl">Elapsed:</span>
+      <button data-sec="1">1 s</button>
+      <button data-sec="60">1 min</button>
+      <button data-sec="3600">1 hr</button>
+      <button data-sec="86400" class="on">1 day</button>
+      <input type="range" id="elapsed" min="0" max="1000" step="1" value="712">
+      <span class="now" id="nowLabel">1 day</span>
+    </div>
+    <div id="clocks"></div>
+    <p class="cap">Frequency accuracy figures are <strong>representative values (for teaching)</strong>. Real values vary with the unit, temperature and ageing, and atomic clocks are monitored and corrected from the ground continuously. Note how quartz drifts orders of magnitude more than an atomic clock.</p>
+  </div>
+
+  <div class="panel">
+    <h3>The atomic clocks aboard satellites</h3>
+    <p>Quartz isn't good enough, so GNSS satellites carry <strong>atomic clocks</strong>. Using the way atoms absorb and emit electromagnetic waves at one specific frequency as a "pendulum" gives a clock that barely drifts with temperature or age. Most satellites carry <strong>several units for redundancy</strong>, switching if one degrades.</p>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>Type</th><th>Principle (which atom)</th><th>Stability (approx.)</th><th>Character</th><th>Used in</th></tr>
+        <tr><td class="sys"><i style="background:var(--rb)"></i>Rubidium</td><td>Rubidium (Rb) atoms</td><td class="num">~10⁻¹²–10⁻¹³</td><td>Small, light, low power. The workhorse aboard satellites</td><td>GPS / QZSS / Galileo, etc.</td></tr>
+        <tr><td class="sys"><i style="background:var(--cs)"></i>Caesium</td><td>Caesium (Cs) atoms</td><td class="num">~10⁻¹³</td><td>The very definition of the "second". Excellent long-term stability</td><td>GPS (some) / ground time standards</td></tr>
+        <tr><td class="sys"><i style="background:var(--hm)"></i>Hydrogen maser</td><td>Hydrogen (H) atoms</td><td class="num">~10⁻¹⁴–10⁻¹⁵</td><td>Best-in-class short-term stability. Large and costly</td><td>Galileo (passive hydrogen maser)</td></tr>
+        <tr><td class="sys"><i style="background:var(--qz)"></i>(for reference) Quartz</td><td>mechanical vibration of quartz</td><td class="num">~10⁻⁶–10⁻⁹</td><td>Cheap, but drifts a lot with temperature and age</td><td>wristwatches, a receiver's TCXO</td></tr>
+      </table>
+    </div>
+    <p class="cap">Today the "second" is defined as the time for <code>9,192,631,770</code> oscillations of the radiation from a caesium atom. (Note: "Iridium" is a satellite-phone network, not an atomic clock.) Even atomic clocks drift slightly, so the ground control estimates the error and broadcasts <strong>clock corrections</strong> (→ <a href="gnss-corrections.html">Errors &amp; Corrections</a>, <a href="gnss-navmsg.html">Navigation Messages</a>).</p>
+  </div>
+
+  <div class="panel">
+    <h3>GNSS time scales — GPS time vs UTC and leap seconds</h3>
+    <p>From the unbroken time their atomic clocks keep, each GNSS builds its own time scale. This is where <strong>leap seconds</strong> come in. The UTC (Coordinated Universal Time) we live by <strong>occasionally adds a second</strong> to track Earth's rotation, while GPS time is a <strong>continuous scale with no leap seconds</strong>. So the two slowly diverge.</p>
+    <div class="scale">
+      <div style="--sc: var(--hm)"><h4>TAI (Int'l Atomic Time)</h4><p>Atomic clocks combined; no leap seconds. The foundation. <span class="off">reference</span></p></div>
+      <div style="--sc: var(--rb)"><h4>GPS time</h4><p>Epoch 1980-01-06, no leap seconds. <span class="off">= TAI − 19 s</span> (fixed)</p></div>
+      <div style="--sc: var(--cs)"><h4>UTC</h4><p>Follows Earth's rotation via leap seconds. <span class="off">= TAI − 37 s</span> (as of 2026)</p></div>
+    </div>
+    <p class="cap">As a result, <strong>GPS time − UTC = 18 s</strong> (since 2017). This offset (the leap-second info) is broadcast in the <a href="gnss-navmsg.html">navigation message</a>, so a receiver can convert GPS time to correct UTC. Devices that use the time get an accurate, <strong>UTC-traceable</strong> time through this conversion.</p>
+  </div>
+
+  <div class="panel">
+    <h3>Time-sync use cases — GNSS as a "time distributor"</h3>
+    <p>A GNSS receiver outputs not just position but a <strong>one-per-second pulse (1PPS) and UTC time</strong>. Much of our infrastructure uses this as its time source to stay in sync.</p>
+    <div class="cards">
+      <div class="card" style="--sc: var(--rb)">
+        <div class="ico">📱</div>
+        <h4>Mobile network base-station sync</h4>
+        <p>5G and LTE-TDD split uplink/downlink in time to share one frequency, so <b>base stations must agree on time to the microsecond</b>. Drift causes interference with neighbouring cells and disrupts handover. Many base stations use GNSS 1PPS as their reference clock.</p>
+        <span class="req">need ~1.5 µs</span>
+      </div>
+      <div class="card" style="--sc: var(--cs)">
+        <div class="ico">⚡</div>
+        <h4>Power-grid phasor measurement (PMU)</h4>
+        <p>Wide-area monitoring measures voltage/current phase <b>at the same instant</b> across the grid (WAMS). Meters scattered nationwide time-stamp with microsecond GNSS time so their phases can be compared.</p>
+        <span class="req">need ~1 µs</span>
+      </div>
+      <div class="card" style="--sc: var(--hm)">
+        <div class="ico">💹</div>
+        <h4>Financial trade timestamps</h4>
+        <p>High-frequency trading is required by regulation to record order/execution times <b>traceable to UTC</b> (e.g. Europe's MiFID II). Exchanges and servers sync to GNSS time to keep trade ordering exact.</p>
+        <span class="req">need ~100 µs</span>
+      </div>
+      <div class="card" style="--sc: var(--qz)">
+        <div class="ico">🖥️</div>
+        <h4>Network &amp; data-centre time source</h4>
+        <p>The top NTP/PTP servers (Stratum-1 / grandmaster) use a GNSS receiver as their time source. Distributed databases use time uncertainty to keep ordering and consistency across far-apart servers.</p>
+        <span class="req">NTP/PTP</span>
+      </div>
+      <div class="card" style="--sc: var(--rb)">
+        <div class="ico">📡</div>
+        <h4>Digital broadcast (single-frequency network, SFN)</h4>
+        <p>When several transmitters send <b>the same signal on the same frequency at the same instant</b>, coverage becomes wide and seamless. GNSS time aligns that "same instant".</p>
+        <span class="req">µs class</span>
+      </div>
+      <div class="card" style="--sc: var(--cs)">
+        <div class="ico">🔬</div>
+        <h4>Science &amp; geodesy</h4>
+        <p>VLBI linking distant telescopes, nationwide seismometers, and astronomy only make sense when remote records are combined on a <b>common time</b>. GNSS time is that ruler.</p>
+        <span class="req">ns–µs class</span>
+      </div>
+    </div>
+  </div>
+
+  <details class="note">
+    <summary>The risk of over-relying on GNSS — holdover and interference</summary>
+    <div class="body">
+      <p>With so much infrastructure depending on GNSS time, the problem is <strong>when GNSS goes away</strong>. A device that loses reception enters "holdover", keeping time on its internal clock alone — but that clock (often quartz or rubidium) slowly drifts, as the comparison above shows. Within hours to days it can exceed a microsecond of tolerance.</p>
+      <p>And because GNSS signals are extremely weak, they can be targets for <strong>jamming or spoofing (feeding a fake time)</strong>. Timing infrastructure needs defences such as using multiple GNSS, backing up with ground time sources, and anomaly detection (→ <a href="gnss-threats.html">Jamming &amp; Spoofing</a>).</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const C = 299792458; // m/s
+
+  const CLOCKS = [
+    { key: "--qz", name: "Quartz (wristwatch)", sub: "freq. accuracy ~10⁻⁶", frac: 1e-6 },
+    { key: "--rb", name: "Rubidium atomic clock", sub: "~10⁻¹² · satellite workhorse", frac: 1e-12 },
+    { key: "--cs", name: "Caesium atomic clock", sub: "~10⁻¹³ · defines the second", frac: 1e-13 },
+    { key: "--hm", name: "Hydrogen maser", sub: "~10⁻¹⁵ · best stability", frac: 1e-15 },
+  ];
+
+  const wrap = $("clocks");
+  CLOCKS.forEach((c, i) => {
+    const row = document.createElement("div");
+    row.className = "clk-row";
+    row.style.setProperty("--c", "var(" + c.key + ")");
+    row.innerHTML =
+      '<div class="clk-name"><i></i>' + c.name + '<small>' + c.sub + '</small></div>' +
+      '<div class="clk-bar"><span id="bar' + i + '"></span></div>' +
+      '<div class="clk-val"><b class="t" id="t' + i + '">—</b><b class="d" id="d' + i + '">—</b></div>';
+    wrap.appendChild(row);
+  });
+
+  function fmtSec(s) {
+    if (s < 1e-9) return (s * 1e12).toFixed(0) + " ps";
+    if (s < 1e-6) return (s * 1e9).toFixed(1) + " ns";
+    if (s < 1e-3) return (s * 1e6).toFixed(1) + " µs";
+    if (s < 1) return (s * 1e3).toFixed(1) + " ms";
+    return s.toFixed(2) + " s";
+  }
+  function fmtM(m) {
+    if (m < 1) return (m * 100).toFixed(1) + " cm";
+    if (m < 1000) return m.toFixed(1) + " m";
+    if (m < 1e6) return (m / 1000).toFixed(1) + " km";
+    return Math.round(m / 1000).toLocaleString() + " km";
+  }
+  function fmtElapsed(s) {
+    if (s < 60) return Math.round(s) + " s";
+    if (s < 3600) return (s / 60).toFixed(s % 60 ? 1 : 0) + " min";
+    if (s < 86400) return (s / 3600).toFixed(s % 3600 ? 1 : 0) + " hr";
+    return (s / 86400).toFixed(s % 86400 ? 1 : 0) + " day";
+  }
+
+  const LMAX = Math.log10(86400);
+  const sliderToSec = (v) => Math.pow(10, (v / 1000) * LMAX);
+  const secToSlider = (s) => Math.round(Math.log10(s) / LMAX * 1000);
+
+  function update(sec) {
+    $("nowLabel").textContent = fmtElapsed(sec);
+    CLOCKS.forEach((c, i) => {
+      const errS = c.frac * sec;
+      const distM = errS * C;
+      $("t" + i).textContent = fmtSec(errS);
+      $("d" + i).textContent = fmtM(distM);
+      const lo = -3, hi = 8;
+      const lg = Math.log10(Math.max(distM, Math.pow(10, lo)));
+      const pct = Math.max(1.5, Math.min(100, (lg - lo) / (hi - lo) * 100));
+      $("bar" + i).style.width = pct + "%";
+    });
+  }
+
+  const slider = $("elapsed");
+  const btns = Array.from(document.querySelectorAll(".ctrls button"));
+  function setActiveBtn(sec) {
+    btns.forEach((b) => b.classList.toggle("on", Number(b.dataset.sec) === sec));
+  }
+
+  slider.addEventListener("input", () => {
+    const sec = sliderToSec(Number(slider.value));
+    setActiveBtn(0);
+    update(sec);
+  });
+  btns.forEach((b) => {
+    b.addEventListener("click", () => {
+      const sec = Number(b.dataset.sec);
+      slider.value = secToSlider(sec);
+      setActiveBtn(sec);
+      update(sec);
+    });
+  });
+
+  update(86400);
+})();
+</script>
+</body>
+</html>
