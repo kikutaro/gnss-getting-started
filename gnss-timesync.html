@@ -34,23 +34,24 @@
     --rb: #3b82f6;
     --cs: #10b981;
     --hm: #a855f7;
+    --ol: #ec4899;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
       --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
-      --qz: #fbbf24; --rb: #60a5fa; --cs: #34d399; --hm: #c084fc;
+      --qz: #fbbf24; --rb: #60a5fa; --cs: #34d399; --hm: #c084fc; --ol: #f472b6;
     }
   }
   :root[data-theme="dark"] {
     --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
     --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
-    --qz: #fbbf24; --rb: #60a5fa; --cs: #34d399; --hm: #c084fc;
+    --qz: #fbbf24; --rb: #60a5fa; --cs: #34d399; --hm: #c084fc; --ol: #f472b6;
   }
   :root[data-theme="light"] {
     --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
     --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
-    --qz: #f59e0b; --rb: #3b82f6; --cs: #10b981; --hm: #a855f7;
+    --qz: #f59e0b; --rb: #3b82f6; --cs: #10b981; --hm: #a855f7; --ol: #ec4899;
   }
 
   * { box-sizing: border-box; }
@@ -200,11 +201,20 @@
         <tr><td class="sys"><i style="background:var(--rb)"></i>ルビジウム</td><td>ルビジウム(Rb)原子</td><td class="num">~10⁻¹²〜10⁻¹³</td><td>小型・軽量・省電力。衛星搭載の主力</td><td>GPS / QZSS / Galileo ほか</td></tr>
         <tr><td class="sys"><i style="background:var(--cs)"></i>セシウム</td><td>セシウム(Cs)原子</td><td class="num">~10⁻¹³</td><td>「1秒」の定義そのもの。長期安定に優れる</td><td>GPS（一部）/ 地上の標準時</td></tr>
         <tr><td class="sys"><i style="background:var(--hm)"></i>水素メーザー</td><td>水素(H)原子</td><td class="num">~10⁻¹⁴〜10⁻¹⁵</td><td>短期安定が最高クラス。大きく高価</td><td>Galileo（受動型水素メーザー）</td></tr>
+        <tr><td class="sys"><i style="background:var(--ol)"></i>光格子時計 <span style="font-weight:400;color:var(--muted)">※研究段階</span></td><td>ストロンチウム等の原子＋<strong>光</strong>の振動</td><td class="num">~10⁻¹⁸</td><td>次世代。目盛りが桁違いに細かい。「秒」の再定義候補</td><td>研究機関（衛星搭載は将来構想）</td></tr>
         <tr><td class="sys"><i style="background:var(--qz)"></i>（参考）クオーツ</td><td>水晶の機械振動</td><td class="num">~10⁻⁶〜10⁻⁹</td><td>安価だが温度・経年で大きくドリフト</td><td>腕時計・受信機のTCXO</td></tr>
       </table>
     </div>
     <p class="cap">「1秒」は現在、セシウム原子の放つ電磁波が <code>9,192,631,770</code> 回振動する時間として定義されています。※「イリジウム」は衛星電話の通信網で、原子時計とは別物です。原子時計もわずかに漂うため、地上管制が誤差を推定して<strong>クロック補正値</strong>を放送します（→ <a href="gnss-corrections.html">誤差と補正</a>、<a href="gnss-navmsg.html">航法メッセージ</a>）。</p>
   </div>
+
+  <details class="note">
+    <summary>次世代の時計 — 光格子時計と「時間で高さを測る」</summary>
+    <div class="body">
+      <p>いま各国が競って研究しているのが<strong>光格子時計</strong>です。セシウムがマイクロ波（毎秒約90億回の振動）を“振り子”に使うのに対し、光格子時計は<strong>光の振動（毎秒数百兆回）</strong>を使います。目盛りが約10万倍細かいので、精度も桁違い。ストロンチウムなどの原子を、レーザーで作った“光の卵パック（格子）”に整列させて閉じ込め、まとめて測ります（日本の香取秀俊らが先導）。安定度は<strong>10⁻¹⁸級</strong>——ざっくり<strong>約300億年に1秒</strong>ずれるかどうか、という世界です。</p>
+      <p>面白いのは応用です。アインシュタインの相対論では<strong>重力が強い（低い）場所ほど時間がゆっくり進みます</strong>。光格子時計はこの差を検出できるほど精密なので、2台の時計の進み方を比べるだけで<strong>数cmの高低差</strong>が分かります（相対論的測地）。「時刻」を突き詰めると、逆に「高さ・位置」が測れる——まさにこのページのテーマそのものです。将来は「秒」の再定義（マイクロ波→光）や、より高精度なGNSSの基盤になると期待されていますが、現状は装置が大きく繊細で、<strong>衛星に載せるのはまだ研究・構想段階</strong>です。</p>
+    </div>
+  </details>
 
   <div class="panel">
     <h3>GNSSの時刻系 — GPS時刻とUTC・うるう秒</h3>
@@ -279,6 +289,7 @@
     { key: "--rb", name: "ルビジウム原子時計", sub: "~10⁻¹² · 衛星の主力", frac: 1e-12 },
     { key: "--cs", name: "セシウム原子時計", sub: "~10⁻¹³ · 秒の定義", frac: 1e-13 },
     { key: "--hm", name: "水素メーザー", sub: "~10⁻¹⁵ · 最高安定度", frac: 1e-15 },
+    { key: "--ol", name: "光格子時計", sub: "~10⁻¹⁸ · 研究段階（次世代）", frac: 1e-18 },
   ];
 
   // build rows
@@ -295,6 +306,8 @@
   });
 
   function fmtSec(s) {
+    if (s < 1e-15) return (s * 1e18).toFixed(0) + " as";
+    if (s < 1e-12) return (s * 1e15).toFixed(0) + " fs";
     if (s < 1e-9) return (s * 1e12).toFixed(0) + " ps";
     if (s < 1e-6) return (s * 1e9).toFixed(1) + " ns";
     if (s < 1e-3) return (s * 1e6).toFixed(1) + " µs";
@@ -302,6 +315,9 @@
     return s.toFixed(2) + " s";
   }
   function fmtM(m) {
+    if (m < 1e-6) return (m * 1e9).toFixed(1) + " nm";
+    if (m < 1e-3) return (m * 1e6).toFixed(0) + " µm";
+    if (m < 1e-2) return (m * 1e3).toFixed(1) + " mm";
     if (m < 1) return (m * 100).toFixed(1) + " cm";
     if (m < 1000) return m.toFixed(1) + " m";
     if (m < 1e6) return (m / 1000).toFixed(1) + " km";

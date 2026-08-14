@@ -34,23 +34,24 @@
     --rb: #3b82f6;
     --cs: #10b981;
     --hm: #a855f7;
+    --ol: #ec4899;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
       --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
-      --qz: #fbbf24; --rb: #60a5fa; --cs: #34d399; --hm: #c084fc;
+      --qz: #fbbf24; --rb: #60a5fa; --cs: #34d399; --hm: #c084fc; --ol: #f472b6;
     }
   }
   :root[data-theme="dark"] {
     --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
     --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f;
-    --qz: #fbbf24; --rb: #60a5fa; --cs: #34d399; --hm: #c084fc;
+    --qz: #fbbf24; --rb: #60a5fa; --cs: #34d399; --hm: #c084fc; --ol: #f472b6;
   }
   :root[data-theme="light"] {
     --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
     --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2;
-    --qz: #f59e0b; --rb: #3b82f6; --cs: #10b981; --hm: #a855f7;
+    --qz: #f59e0b; --rb: #3b82f6; --cs: #10b981; --hm: #a855f7; --ol: #ec4899;
   }
 
   * { box-sizing: border-box; }
@@ -195,11 +196,20 @@
         <tr><td class="sys"><i style="background:var(--rb)"></i>Rubidium</td><td>Rubidium (Rb) atoms</td><td class="num">~10⁻¹²–10⁻¹³</td><td>Small, light, low power. The workhorse aboard satellites</td><td>GPS / QZSS / Galileo, etc.</td></tr>
         <tr><td class="sys"><i style="background:var(--cs)"></i>Caesium</td><td>Caesium (Cs) atoms</td><td class="num">~10⁻¹³</td><td>The very definition of the "second". Excellent long-term stability</td><td>GPS (some) / ground time standards</td></tr>
         <tr><td class="sys"><i style="background:var(--hm)"></i>Hydrogen maser</td><td>Hydrogen (H) atoms</td><td class="num">~10⁻¹⁴–10⁻¹⁵</td><td>Best-in-class short-term stability. Large and costly</td><td>Galileo (passive hydrogen maser)</td></tr>
+        <tr><td class="sys"><i style="background:var(--ol)"></i>Optical lattice clock <span style="font-weight:400;color:var(--muted)">※ research</span></td><td>strontium etc. atoms + <strong>optical</strong> oscillation</td><td class="num">~10⁻¹⁸</td><td>Next-gen; vastly finer ticks. A candidate to redefine the "second"</td><td>research labs (satellite use is a future concept)</td></tr>
         <tr><td class="sys"><i style="background:var(--qz)"></i>(for reference) Quartz</td><td>mechanical vibration of quartz</td><td class="num">~10⁻⁶–10⁻⁹</td><td>Cheap, but drifts a lot with temperature and age</td><td>wristwatches, a receiver's TCXO</td></tr>
       </table>
     </div>
     <p class="cap">Today the "second" is defined as the time for <code>9,192,631,770</code> oscillations of the radiation from a caesium atom. (Note: "Iridium" is a satellite-phone network, not an atomic clock.) Even atomic clocks drift slightly, so the ground control estimates the error and broadcasts <strong>clock corrections</strong> (→ <a href="gnss-corrections.html">Errors &amp; Corrections</a>, <a href="gnss-navmsg.html">Navigation Messages</a>).</p>
   </div>
+
+  <details class="note">
+    <summary>The next generation — optical clocks and "measuring height with time"</summary>
+    <div class="body">
+      <p>The clock everyone is racing to develop is the <strong>optical lattice clock</strong>. Where caesium uses microwaves (~9 billion oscillations per second) as its "pendulum", an optical clock uses <strong>optical oscillations (hundreds of trillions per second)</strong>. The ticks are ~100,000× finer, so the precision is on another level. Atoms such as strontium are lined up and trapped in an "egg-carton" lattice made of laser light and measured together (pioneered in Japan by Hidetoshi Katori). Stability reaches the <strong>10⁻¹⁸ level</strong> — roughly a matter of drifting one second in about 30 billion years.</p>
+      <p>The applications are the fun part. In Einstein's relativity, <strong>time runs slower where gravity is stronger (lower down)</strong>. An optical clock is precise enough to detect this, so simply comparing how two clocks tick reveals a <strong>height difference of a few centimetres</strong> (relativistic geodesy). Push "time" far enough and you can measure "height and position" from it — exactly this page's theme. It's expected to redefine the "second" (microwave → optical) and to underpin more precise GNSS in future, but for now the apparatus is large and delicate, so <strong>putting one on a satellite is still at the research/concept stage</strong>.</p>
+    </div>
+  </details>
 
   <div class="panel">
     <h3>GNSS time scales — GPS time vs UTC and leap seconds</h3>
@@ -274,6 +284,7 @@
     { key: "--rb", name: "Rubidium atomic clock", sub: "~10⁻¹² · satellite workhorse", frac: 1e-12 },
     { key: "--cs", name: "Caesium atomic clock", sub: "~10⁻¹³ · defines the second", frac: 1e-13 },
     { key: "--hm", name: "Hydrogen maser", sub: "~10⁻¹⁵ · best stability", frac: 1e-15 },
+    { key: "--ol", name: "Optical lattice clock", sub: "~10⁻¹⁸ · research (next-gen)", frac: 1e-18 },
   ];
 
   const wrap = $("clocks");
@@ -289,6 +300,8 @@
   });
 
   function fmtSec(s) {
+    if (s < 1e-15) return (s * 1e18).toFixed(0) + " as";
+    if (s < 1e-12) return (s * 1e15).toFixed(0) + " fs";
     if (s < 1e-9) return (s * 1e12).toFixed(0) + " ps";
     if (s < 1e-6) return (s * 1e9).toFixed(1) + " ns";
     if (s < 1e-3) return (s * 1e6).toFixed(1) + " µs";
@@ -296,6 +309,9 @@
     return s.toFixed(2) + " s";
   }
   function fmtM(m) {
+    if (m < 1e-6) return (m * 1e9).toFixed(1) + " nm";
+    if (m < 1e-3) return (m * 1e6).toFixed(0) + " µm";
+    if (m < 1e-2) return (m * 1e3).toFixed(1) + " mm";
     if (m < 1) return (m * 100).toFixed(1) + " cm";
     if (m < 1000) return m.toFixed(1) + " m";
     if (m < 1e6) return (m / 1000).toFixed(1) + " km";
