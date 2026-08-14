@@ -75,6 +75,9 @@ main { flex: 1 1 auto; min-width: 0; }
 .site-footer a:hover { text-decoration: underline; }
 .site-footer .sp { margin-left: auto; }
 .site-footer .dim { color: var(--muted); opacity: .8; }
+.site-footer .foot-right { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
+.site-footer .gh { display: inline-flex; align-items: center; gap: 5px; }
+.site-footer .gh svg { width: 15px; height: 15px; display: block; }
 
 /* ---------- sidebar (desktop) ---------- */
 .sidenav {
