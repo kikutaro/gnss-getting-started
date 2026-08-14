@@ -88,6 +88,28 @@
     document.body.insertBefore(topbar, document.body.firstChild);
     document.body.insertBefore(aside, document.body.firstChild);
 
+    // ---- footer (appended into <main>) ----
+    var main = document.querySelector("main");
+    if (main && !main.querySelector(".site-footer")) {
+      var footer = el("footer", "site-footer");
+      var year = new Date().getFullYear();
+      var cp = el("span");
+      cp.appendChild(document.createTextNode("© " + year + " "));
+      var cpLink = el("a", null, "GNSSたまごくらぶ");
+      cpLink.href = "https://zenn.dev/p/gnss_egg_team";
+      cpLink.target = "_blank";
+      cpLink.rel = "noopener";
+      cp.appendChild(cpLink);
+      footer.appendChild(cp);
+      footer.appendChild(el("span", "dim", isEn ? "· an interactive GNSS learning site" : "· GNSS学習サイト"));
+      var zenn = el("a", "sp", "Zenn ↗");
+      zenn.href = "https://zenn.dev/p/gnss_egg_team";
+      zenn.target = "_blank";
+      zenn.rel = "noopener";
+      footer.appendChild(zenn);
+      main.appendChild(footer);
+    }
+
     function setOpen(v) {
       document.body.classList.toggle("nav-open", v);
       btn.setAttribute("aria-expanded", String(v));

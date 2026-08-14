@@ -1,8 +1,80 @@
 /* GNSS Study — shared sidebar layout
    Relies on each page's CSS custom properties (--surface, --border, etc.) */
 
+/* ===========================================================================
+   Space theme (global). `html:root` outranks each page's plain `:root`
+   (and its prefers-color-scheme block), so these tokens win on every page
+   regardless of the visitor's OS light/dark setting. Nothing sets
+   [data-theme] on this site, so the whole site renders as deep space. */
+html:root {
+  color-scheme: dark;
+  --bg: #05060d;         /* deep space */
+  --surface: #0d1524;    /* panels / sidebar */
+  --surface2: #16223a;   /* raised surface */
+  --text: #e7edf6;
+  --muted: #93a3bd;
+  --accent: #2dd4bf;     /* teal — pops on black */
+  --border: #223349;
+  --scope-bg: #060a14;   /* dark canvas backdrop */
+}
+
+/* starfield + nebula glow, fixed behind all content.
+   `html body` outranks each page's inline `body { background: var(--bg) }`. */
+html body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1200px 720px at 88% -10%, rgba(45, 212, 191, .10), transparent 60%),
+    radial-gradient(1000px 820px at 6% 110%, rgba(79, 110, 247, .12), transparent 60%),
+    radial-gradient(700px 500px at 50% 50%, rgba(120, 90, 200, .05), transparent 70%),
+    radial-gradient(1.6px 1.6px at 12% 18%, rgba(255, 255, 255, .9), transparent),
+    radial-gradient(1.4px 1.4px at 32% 8%, rgba(200, 230, 255, .6), transparent),
+    radial-gradient(1px 1px at 47% 22%, rgba(255, 255, 255, .5), transparent),
+    radial-gradient(1.8px 1.8px at 63% 12%, rgba(255, 255, 255, .8), transparent),
+    radial-gradient(1px 1px at 78% 26%, rgba(190, 220, 255, .5), transparent),
+    radial-gradient(1.4px 1.4px at 88% 14%, rgba(255, 255, 255, .7), transparent),
+    radial-gradient(1px 1px at 7% 42%, rgba(255, 255, 255, .5), transparent),
+    radial-gradient(1.7px 1.7px at 22% 55%, rgba(180, 245, 235, .8), transparent),
+    radial-gradient(1px 1px at 38% 47%, rgba(255, 255, 255, .45), transparent),
+    radial-gradient(1.4px 1.4px at 54% 62%, rgba(255, 255, 255, .6), transparent),
+    radial-gradient(1px 1px at 69% 52%, rgba(210, 225, 255, .5), transparent),
+    radial-gradient(1.8px 1.8px at 83% 66%, rgba(255, 255, 255, .75), transparent),
+    radial-gradient(1px 1px at 94% 48%, rgba(255, 255, 255, .5), transparent),
+    radial-gradient(1.4px 1.4px at 16% 76%, rgba(255, 255, 255, .6), transparent),
+    radial-gradient(1px 1px at 29% 88%, rgba(200, 220, 255, .45), transparent),
+    radial-gradient(1.7px 1.7px at 45% 82%, rgba(255, 255, 255, .7), transparent),
+    radial-gradient(1px 1px at 60% 92%, rgba(255, 255, 255, .5), transparent),
+    radial-gradient(1.4px 1.4px at 74% 84%, rgba(190, 250, 240, .6), transparent),
+    radial-gradient(1px 1px at 90% 90%, rgba(255, 255, 255, .5), transparent),
+    radial-gradient(1.4px 1.4px at 5% 92%, rgba(255, 255, 255, .55), transparent),
+    radial-gradient(1px 1px at 50% 34%, rgba(255, 255, 255, .4), transparent),
+    radial-gradient(1px 1px at 84% 38%, rgba(255, 255, 255, .5), transparent);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
 body { display: flex; align-items: flex-start; }
 main { flex: 1 1 auto; min-width: 0; }
+
+/* translucent panels/sidebar so the starfield faintly shows through */
+.sidenav { background: rgba(13, 21, 36, .82); backdrop-filter: blur(6px); }
+
+/* ---------- site footer (injected by layout.js) ---------- */
+.site-footer {
+  margin-top: 44px;
+  padding: 22px 2px 6px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  color: var(--muted);
+  font-size: .8rem;
+  line-height: 1.5;
+}
+.site-footer a { color: var(--accent); text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; }
+.site-footer .sp { margin-left: auto; }
+.site-footer .dim { color: var(--muted); opacity: .8; }
 
 /* ---------- sidebar (desktop) ---------- */
 .sidenav {
