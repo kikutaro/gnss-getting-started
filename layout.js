@@ -1,5 +1,19 @@
 /* GNSS Study — shared sidebar navigation (load with <script defer>) */
 (function () {
+  // ---- Google Analytics (gtag.js) — injected once here for every page ----
+  (function () {
+    var GA_ID = "G-N0FSHWFCDN";
+    var s = document.createElement("script");
+    s.async = true;
+    s.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    window.gtag = gtag;
+    gtag("js", new Date());
+    gtag("config", GA_ID);
+  })();
+
   var PAGES = [
     { ja: "index.html",         en: "index.html",       tja: "ホーム",             ten: "Home",                  grp: 0 },
     { ja: "gnss-intro.html",    en: "gnss-intro.html",  tja: "GNSSとは？",         ten: "What is GNSS?",         grp: 1 },
