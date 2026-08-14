@@ -139,6 +139,18 @@
   </div>
 
   <div class="panel">
+    <h3>Why it resists jamming/spoofing — not just "strength"</h3>
+    <p>LEO-PNT's resilience isn't decided by signal strength alone; several reasons stack up.</p>
+    <div class="pc pros">
+      <div><h4>① Strong signal</h4><p>Orders of magnitude stronger because it's close — hard to drown out with jamming.</p></div>
+      <div><h4>② Fast-changing geometry · many sats</h4><p>Satellites move fast with large Doppler, so keeping a consistent fake going is hard, and many satellites cross-check each other.</p></div>
+      <div><h4>③ Signal spec is non-public · authenticated</h4><p>Many LEO-PNT signals don't publish their spec and add cryptographic authentication, so an attacker can't forge a convincing signal.</p></div>
+      <div><h4>④ Independent of GNSS</h4><p>A separate physics and system. Breaking it and GNSS at once is extremely hard; each backs up the other.</p></div>
+    </div>
+    <p class="cap">Point ③ is the big difference from GNSS. GNSS civil signals are <strong>fully published</strong> for interoperability (ICDs), so anyone can synthesize a matching signal — which is why <a href="gnss-threats.html">spoofing</a> is feasible. Many LEO-PNT signals, by contrast, keep the spec private and add <strong>cryptographic authentication</strong>, making spoofing difficult. Note, though, that the real strength is the <strong>authentication</strong>, not mere secrecy (GNSS is fighting back too, e.g. QZSS signal authentication).</p>
+  </div>
+
+  <div class="panel">
     <h3>Main efforts</h3>
     <div class="cards">
       <div class="card" style="--sc: var(--leo)">
@@ -147,9 +159,24 @@
         <p>Building a dedicated LEO positioning constellation. GPS-like thinking aimed at a <b>stronger, authenticated</b> signal. Demonstration satellites already launched.</p>
       </div>
       <div class="card" style="--sc: var(--leo)">
+        <span class="tag">US · dedicated</span>
+        <h4>TrustPoint</h4>
+        <p>A US startup building a commercial, dedicated LEO-PNT service. <b>Encrypted, authenticated</b> signals aim at jam- and spoof-resistance.</p>
+      </div>
+      <div class="card" style="--sc: var(--leo)">
         <span class="tag">commercial · operating</span>
         <h4>Iridium STL (Satelles)</h4>
         <p>Broadcasts a time/position signal (STL) from the existing <b>66 Iridium</b> LEO satellites. Indoor penetration and jam-resistance are its strengths; already used to back up time sync.</p>
+      </div>
+      <div class="card" style="--sc: #f87171">
+        <span class="tag">China · private</span>
+        <h4>CENTISPACE (China)</h4>
+        <p>China's private effort (Future Navigation) for a LEO positioning-augmentation constellation. Demonstration satellites already launched.</p>
+      </div>
+      <div class="card" style="--sc: #f87171">
+        <span class="tag">China · state</span>
+        <h4>China SatNet (Guowang)</h4>
+        <p>China's state-owned mega-constellation. Mainly communications, but a national project with PNT in view.</p>
       </div>
       <div class="card" style="--sc: var(--leo)">
         <span class="tag">planned · demo</span>
@@ -160,6 +187,11 @@
         <span class="tag">Japan · research/demo</span>
         <h4>JAXA / ArkEdge Space</h4>
         <p>Japan is moving on LEO-PNT too. <b>JAXA</b> is researching next-generation positioning, and the microsatellite startup <b>ArkEdge Space</b> has announced work toward positioning with small-satellite constellations. The aim is resilient PNT combined with the existing <a href="qzss.html">QZSS (Michibiki)</a>.</p>
+      </div>
+      <div class="card" style="--sc: #34d399">
+        <span class="tag">Korea · agencies</span>
+        <h4>KARI / KASA (Korea)</h4>
+        <p>South Korea's space agencies — <b>KARI</b> (Korea Aerospace Research Institute) and the new <b>KASA</b> (est. 2024) — are pushing LEO-PNT research and deployment, alongside the regional KPS.</p>
       </div>
       <div class="card" style="--sc: var(--leo)">
         <span class="tag">repurposing · research</span>

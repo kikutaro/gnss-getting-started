@@ -139,6 +139,18 @@
   </div>
 
   <div class="panel">
+    <h3>なぜ妨害・偽装に強いのか — 「強さ」だけではない</h3>
+    <p>LEO-PNTの耐性は信号の強さだけで決まるのではなく、いくつかの理由が重なっています。</p>
+    <div class="pc pros">
+      <div><h4>① 信号が強い</h4><p>近いぶん桁違いに強く、ジャミングでかき消しにくい。</p></div>
+      <div><h4>② 幾何が速く変わる・多数機</h4><p>衛星が速く動きドップラーも大きい。つじつまの合った偽装を続けるのが難しく、多数の衛星で相互チェックできる。</p></div>
+      <div><h4>③ 信号仕様が非公開・認証つき</h4><p>多くのLEO-PNTは信号の仕様が公開されず、暗号による認証が施される。攻撃者は本物そっくりの偽信号を作れない。</p></div>
+      <div><h4>④ GNSSと独立</h4><p>物理も系統も別。GNSSと同時に破るのは極めて難しく、互いのバックアップになる。</p></div>
+    </div>
+    <p class="cap">特に③がGNSSとの大きな違いです。GNSSの民生信号は相互運用のため仕様書（ICD）が<strong>完全に公開</strong>されており、誰でも同じ形の信号を合成できます（だから<a href="gnss-threats.html">スプーフィング</a>が成立しやすい）。一方、多くのLEO-PNTは仕様が非公開で<strong>暗号認証</strong>されるため、偽装が困難です。ただし本質的な強さは「隠すこと」自体ではなく<strong>暗号による認証</strong>にあります（GNSS側もQZSSの信号認証などで対抗しています）。</p>
+  </div>
+
+  <div class="panel">
     <h3>おもな取り組み</h3>
     <div class="cards">
       <div class="card" style="--sc: var(--leo)">
@@ -147,9 +159,24 @@
         <p>測位専用のLEO衛星群を構築中。GPS互換の考え方で<b>より強く・認証つき</b>の信号を目指す。実証衛星を打ち上げ済み。</p>
       </div>
       <div class="card" style="--sc: var(--leo)">
+        <span class="tag">米国・専用</span>
+        <h4>TrustPoint</h4>
+        <p>米国のスタートアップ。商用の専用LEO-PNTを構築中。<b>暗号化・認証つき</b>の信号で耐妨害・耐偽装を狙う。</p>
+      </div>
+      <div class="card" style="--sc: var(--leo)">
         <span class="tag">商用・運用中</span>
         <h4>Iridium STL（Satelles）</h4>
         <p>既存の<b>Iridium 66機</b>のLEO衛星から時刻・測位信号（STL）を放送。屋内浸透・耐妨害が強みで、時刻同期のバックアップに実用化。</p>
+      </div>
+      <div class="card" style="--sc: #f87171">
+        <span class="tag">中国・民営</span>
+        <h4>CENTISPACE（中国）</h4>
+        <p>中国の民間（未来導航）が進めるLEO測位補強コンステレーション。実証衛星を打ち上げ済み。</p>
+      </div>
+      <div class="card" style="--sc: #f87171">
+        <span class="tag">中国・国営</span>
+        <h4>China SatNet（国網）</h4>
+        <p>中国の国営による大規模LEOコンステレーション。主に通信だが、PNTも視野に入れた国家プロジェクト。</p>
       </div>
       <div class="card" style="--sc: var(--leo)">
         <span class="tag">計画・実証</span>
@@ -160,6 +187,11 @@
         <span class="tag">日本・研究/実証</span>
         <h4>JAXA / アークエッジ・スペース</h4>
         <p>日本でもLEO-PNTの研究・実証が動いている。<b>JAXA</b>が次世代測位技術の研究開発を進め、超小型衛星のスタートアップ <b>アークエッジ・スペース</b> が小型衛星コンステレーションによる測位への取り組みを表明。既存の <a href="qzss.html">QZSS（みちびき）</a> と組み合わせた強靭なPNTを見据える。</p>
+      </div>
+      <div class="card" style="--sc: #34d399">
+        <span class="tag">韓国・機関</span>
+        <h4>KARI / KASA（韓国）</h4>
+        <p>韓国の宇宙機関 <b>KARI</b>（航空宇宙研究院）と、2024年新設の <b>KASA</b>（宇宙庁）がLEO-PNTの研究・整備を推進。地域測位 KPS と併せた構想。</p>
       </div>
       <div class="card" style="--sc: var(--leo)">
         <span class="tag">流用・研究</span>
