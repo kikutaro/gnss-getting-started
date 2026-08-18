@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>用語集 — GNSS用語と別名 | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="用語集 — GNSS用語と別名 | GNSS Study">
+<meta property="og:description" content="GNSSの用語集。PRN＝拡散符号のように、同じ意味で呼び方が複数ある用語を並べて引けるインタラクティブな用語集。">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/glossary.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="用語集 — GNSS用語と別名 | GNSS Study">
+<meta name="twitter:description" content="GNSSの用語集。PRN＝拡散符号のように、同じ意味で呼び方が複数ある用語を並べて引ける。">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; --scope-bg: #0a1210;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  }
+  :root[data-theme="dark"] { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  :root[data-theme="light"] { --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+      --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif; line-height: 1.6; }
+  main { max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px; display: flex; flex-direction: column; gap: 14px; }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel > p { font-size: .88rem; margin: 0; }
+  a { color: var(--accent); }
+
+  /* toolbar */
+  .tools { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 6px 0 8px; display: flex; flex-direction: column; gap: 8px; }
+  .search { display: flex; align-items: center; gap: 8px; }
+  .search input {
+    flex: 1; font-family: inherit; font-size: .95rem; color: var(--text);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 9px 16px;
+  }
+  .search input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .search .count { font-size: .78rem; color: var(--muted); white-space: nowrap; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips button {
+    appearance: none; border: 1px solid var(--border); background: var(--surface2); color: var(--muted);
+    border-radius: 999px; padding: 4px 11px; font-size: .8rem; cursor: pointer; font-family: inherit;
+  }
+  .chips button.on { border-color: var(--accent); color: var(--accent); background: transparent; font-weight: 600; }
+
+  .cat-h { font-size: .78rem; font-weight: 700; letter-spacing: .08em; color: var(--muted); margin: 12px 2px 2px; }
+  .gt { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; margin-top: 8px; }
+  .gt .th { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .gt .t { font-size: 1rem; font-weight: 700; }
+  .gt .en { font-size: .78rem; color: var(--muted); font-family: ui-monospace, Consolas, monospace; }
+  .gt .aka { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 0; }
+  .gt .aka .eq { color: var(--muted); font-size: .78rem; align-self: center; }
+  .gt .aka span.a {
+    font-size: .76rem; color: var(--accent); background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 999px; padding: 1px 9px;
+  }
+  .gt .d { font-size: .85rem; color: var(--text); margin: 7px 0 0; }
+  .gt .d a { color: var(--accent); }
+  .empty { color: var(--muted); font-size: .85rem; padding: 20px 2px; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>用語集 <span style="font-size:.8rem;font-weight:400;color:var(--muted)">付録</span></h1>
+    <p>GNSSでよく出る用語を、別名（呼び方違い）とセットで引ける。日本語のみ</p>
+  </header>
+
+  <div class="panel">
+    <p>同じ概念でも呼び方が複数ある用語（例: <b>PRN</b>＝<b>拡散符号</b>＝<b>スードランダムナンバー</b>）は、代表語のもとに<strong>別名をまとめて併記</strong>しています。検索欄には別名や英語でも入力できます。用語をクリックすると解説ページへ飛べるものもあります。</p>
+  </div>
+
+  <div class="tools">
+    <div class="search">
+      <input type="search" id="q" placeholder="用語・別名・英語で検索（例: 拡散符号 / PRN / spreading）" aria-label="用語を検索">
+      <span class="count" id="count"></span>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div id="list"></div>
+  <div class="empty" id="empty" hidden>該当する用語がありません。別の言葉で試してみてください。</div>
+</main>
+
+<script>
+(function () {
+  const CATS = {
+    sig: "信号・変調", pos: "測位・幾何", nav: "軌道・航法メッセージ", time: "時刻",
+    corr: "補正・精度", band: "周波数帯", sys: "システム", threat: "脅威と対策",
+    sdr: "SDR", alt: "代替・PNT", coord: "座標と高さ",
+  };
+
+  // t: 代表語 / aka: 別名（同義・呼び方違い） / en: 英語 / d: 定義 / l:[href,label]
+  const T = [
+    { c: "sig", t: "PRN（拡散符号）", aka: ["擬似雑音符号", "スペクトラム拡散符号", "スードランダムナンバー", "PRNコード", "PNコード"], en: "Pseudo-Random Noise code", d: "衛星ごとに異なる、ランダムのように見える0/1の符号列。これで信号を広い帯域に拡散し、受信機は相関で『自分の衛星』を雑音の下から見分ける。", l: ["gnss-signal.html", "信号の構造"] },
+    { c: "sig", t: "C/Aコード", aka: ["粗捕捉符号", "クリア/アクイジションコード"], en: "Coarse/Acquisition code", d: "民生用GPS L1のPRN。1.023Mcps・1ms周期で、誰でも使える公開コード。", l: ["gnss-signal.html", "信号の構造"] },
+    { c: "sig", t: "P(Y)コード", aka: ["精密符号", "Pコード", "Yコード"], en: "Precision code", d: "軍用の精密PRN。10.23Mcpsと高速で高精度。暗号化されるとY符号になる。", l: ["gnss-spectrum.html", "スペクトル"] },
+    { c: "sig", t: "スペクトラム拡散", aka: ["スペクトル拡散", "直接拡散", "DSSS"], en: "Spread Spectrum", d: "情報を広い周波数帯にPRNで広げる方式。妨害に強く、雑音の下でも復調できる。", l: ["gnss-spectrum.html", "スペクトル"] },
+    { c: "sig", t: "逆拡散（相関）", aka: ["デスプレッド", "コード相関", "相関処理"], en: "Despreading / Correlation", d: "受信側で同じPRNを掛け合わせ、拡散された信号を元に戻す処理。処理利得が得られ、雑音下の信号が浮かび上がる。", l: ["gnss-obs.html", "擬似距離"] },
+    { c: "sig", t: "処理利得", aka: ["拡散利得", "プロセスゲイン"], en: "Processing Gain", d: "逆拡散で得られる実効的なS/N改善。帯域を広げた比率で決まる（GPS C/Aで約43dB）。", l: ["gnss-spectrum.html", "スペクトル"] },
+    { c: "sig", t: "チップ", aka: ["chip", "チップレート"], en: "chip", d: "PRN符号の最小単位（0/1の1区切り）。速さをチップレート[cps]で表す。C/Aは1.023Mcps。" },
+    { c: "sig", t: "BPSK", aka: ["二位相偏移変調"], en: "Binary Phase Shift Keying", d: "0/1を搬送波の位相反転（0°/180°）で表す変調。GNSSの基本方式。", l: ["mod-lab.html", "変調の基礎"] },
+    { c: "sig", t: "搬送波", aka: ["キャリア"], en: "Carrier", d: "情報を運ぶ大もとの正弦波（L1なら1575.42MHz）。位相を測ると高精度な搬送波位相測位に使える。" },
+    { c: "sig", t: "ドップラー", aka: ["ドップラーシフト", "ドップラー周波数偏移"], en: "Doppler shift", d: "衛星と受信機の相対速度で搬送波の周波数がずれる現象。捕捉・追尾・速度推定に使う。", l: ["gnss-obs.html", "擬似距離・ドップラー"] },
+    { c: "sig", t: "C/N₀", aka: ["搬送波電力対雑音密度比", "キャリア・ツー・ノイズ"], en: "Carrier-to-Noise-density ratio", d: "信号の強さの指標[dB-Hz]。大きいほど良好で、40dB-Hz以上が目安。", l: ["db-lab.html", "dBと信号強度"] },
+
+    { c: "pos", t: "擬似距離", aka: ["疑似距離", "プソイドレンジ"], en: "Pseudorange", d: "電波の到達時間×光速で求めた衛星までの距離。受信機時計の誤差を含むので『擬似』。", l: ["gnss-obs.html", "擬似距離"] },
+    { c: "pos", t: "三辺測位", aka: ["トリラテレーション"], en: "Trilateration", d: "複数衛星までの距離から位置を1点に絞る幾何。測位には最低4機必要。", l: ["gnss-intro.html", "GNSSとは"] },
+    { c: "pos", t: "DOP", aka: ["精度劣化度", "幾何学的精度低下率"], en: "Dilution of Precision", d: "衛星配置の良し悪しの指標。小さいほど良い（衛星が四方に散らばっている）。", l: ["gnss-obs.html", "擬似距離"] },
+    { c: "pos", t: "PVT", aka: ["位置・速度・時刻"], en: "Position, Velocity, Time", d: "GNSS受信機が最終的に出力する解。", l: ["gnss-rx.html", "受信の流れ"] },
+    { c: "pos", t: "マルチパス", aka: ["多重波", "反射波"], en: "Multipath", d: "建物などの反射で信号が回り道して届き、測距に誤差を生む現象。", l: ["gnss-sim.html", "GNSS衛星信号"] },
+    { c: "pos", t: "仰角", aka: ["エレベーション角"], en: "Elevation angle", d: "地平線から見た衛星の高さの角度。低いほどマルチパスや大気の影響が大きい。" },
+    { c: "pos", t: "UERE", aka: ["ユーザ等価測距誤差"], en: "User Equivalent Range Error", d: "1衛星あたりの実効的な測距誤差。DOPと掛けると測位誤差の目安になる。", l: ["gnss-corrections.html", "誤差と補正"] },
+
+    { c: "nav", t: "エフェメリス", aka: ["放送暦", "精密軌道暦", "軌道暦"], en: "Ephemeris", d: "各衛星の詳細な軌道情報。数時間有効で、正確な衛星位置の計算に使う。", l: ["gnss-navmsg.html", "航法メッセージ"] },
+    { c: "nav", t: "アルマナック", aka: ["概略軌道暦"], en: "Almanac", d: "全衛星のおおまかな軌道情報。粗いが長期間有効で、どの衛星が見えるかの予測に使う。", l: ["gnss-navmsg.html", "航法メッセージ"] },
+    { c: "nav", t: "航法メッセージ", aka: ["ナビゲーションメッセージ", "NAVデータ", "LNAV/CNAV"], en: "Navigation Message", d: "衛星が信号に載せて送る、時計・エフェメリス・アルマナックなどのデータ。", l: ["gnss-navmsg.html", "航法メッセージ"] },
+    { c: "nav", t: "サブフレーム", aka: [], en: "Subframe", d: "航法メッセージ(LNAV)の構成単位。1フレーム＝5サブフレーム＝30秒。", l: ["gnss-navmsg.html", "航法メッセージ"] },
+    { c: "nav", t: "MEO", aka: ["中軌道"], en: "Medium Earth Orbit", d: "高度約20,200km。GPSなど多くのGNSS衛星の軌道。", l: ["leo-pnt.html", "LEO-PNT"] },
+    { c: "nav", t: "LEO", aka: ["低軌道"], en: "Low Earth Orbit", d: "高度数百〜千数百km。Starlinkや次世代LEO-PNTの軌道。", l: ["leo-pnt.html", "LEO-PNT"] },
+    { c: "nav", t: "GEO / IGSO", aka: ["静止軌道", "傾斜静止軌道", "準天頂軌道"], en: "Geostationary / Inclined Geosynchronous Orbit", d: "GEOは赤道上・高度約36,000kmで地上から静止して見える軌道。傾けたIGSO/準天頂軌道がQZSSの八の字を生む。", l: ["qzss.html", "QZSS みちびき"] },
+
+    { c: "time", t: "原子時計", aka: ["ルビジウム原子時計", "セシウム原子時計", "水素メーザー"], en: "Atomic clock", d: "原子の共鳴周波数を使う超高精度な時計。GNSS衛星に搭載され、測位の土台をつくる。", l: ["gnss-timesync.html", "時刻同期"] },
+    { c: "time", t: "光格子時計", aka: ["オプティカル・ラティス・クロック"], en: "Optical lattice clock", d: "光の振動を使う次世代の原子時計（研究段階、~10⁻¹⁸）。秒の再定義候補で、相対論的測地にも。", l: ["gnss-timesync.html", "時刻同期"] },
+    { c: "time", t: "GPS時刻", aka: ["GPST"], en: "GPS Time", d: "うるう秒を入れない連続時間。UTCとは現在18秒差。", l: ["gnss-timesync.html", "時刻同期"] },
+    { c: "time", t: "UTC", aka: ["協定世界時"], en: "Coordinated Universal Time", d: "私たちが使う標準時。うるう秒で地球の自転に合わせる。", l: ["gnss-timesync.html", "時刻同期"] },
+    { c: "time", t: "うるう秒", aka: ["閏秒", "リープセカンド"], en: "Leap second", d: "UTCに時々挿入される1秒。GPS時刻には入らないため両者がずれる。", l: ["gnss-timesync.html", "時刻同期"] },
+    { c: "time", t: "1PPS", aka: ["毎秒パルス"], en: "1 Pulse Per Second", d: "受信機が出す、1秒ちょうどの合図。社会インフラの時刻同期の基準に使う。", l: ["gnss-timesync.html", "時刻同期"] },
+    { c: "time", t: "TAI", aka: ["国際原子時"], en: "International Atomic Time", d: "世界中の原子時計を束ねた、うるう秒なしの基準時間。", l: ["gnss-timesync.html", "時刻同期"] },
+
+    { c: "corr", t: "SBAS", aka: ["静止衛星型衛星航法補強システム", "WAAS", "EGNOS", "MSAS"], en: "Satellite-Based Augmentation System", d: "静止衛星から補正情報を放送して精度・信頼性を上げる仕組み。日本はMSAS/QZSS。", l: ["gnss-corrections.html", "誤差と補正"] },
+    { c: "corr", t: "RTK", aka: ["リアルタイムキネマティック"], en: "Real-Time Kinematic", d: "基準局との搬送波位相差でcm級を実現する高精度測位。", l: ["gnss-corrections.html", "誤差と補正"] },
+    { c: "corr", t: "PPP", aka: ["精密単独測位"], en: "Precise Point Positioning", d: "精密な衛星軌道・時計補正を使い、単独でcm〜dm級を狙う方式。", l: ["gnss-corrections.html", "誤差と補正"] },
+    { c: "corr", t: "CLAS", aka: ["センチメータ級測位補強サービス", "みちびきCLAS"], en: "Centimeter Level Augmentation Service", d: "QZSSがL6で放送するPPP-RTK補正。基準局契約なしでcm級が得られる。", l: ["qzss.html", "QZSS みちびき"] },
+    { c: "corr", t: "DGPS", aka: ["ディファレンシャルGPS", "相対測位"], en: "Differential GPS", d: "基準局の誤差を差し引いて精度を上げる古典的手法（m級）。", l: ["gnss-corrections.html", "誤差と補正"] },
+    { c: "corr", t: "電離層遅延", aka: ["電離層誤差"], en: "Ionospheric delay", d: "電離層で信号が遅れて生じる誤差。2周波受信で大幅に消せる。", l: ["gnss-corrections.html", "誤差と補正"] },
+    { c: "corr", t: "対流圏遅延", aka: ["対流圏誤差"], en: "Tropospheric delay", d: "大気（特に水蒸気）で信号が遅れる誤差。モデルや推定で補正する。", l: ["gnss-corrections.html", "誤差と補正"] },
+
+    { c: "band", t: "L1 / L2 / L5 / L6", aka: ["周波数帯", "バンド"], en: "GNSS frequency bands", d: "GNSSの周波数帯。L1=1575.42MHz（民生の主力）、L5=高性能な新信号、L6=QZSSの補強信号など。", l: ["gnss-bands.html", "周波数帯マップ"] },
+
+    { c: "sys", t: "GNSS", aka: ["全球測位衛星システム", "衛星測位システム"], en: "Global Navigation Satellite System", d: "GPS・Galileo・QZSSなど衛星測位システムの総称。GPSはこの中の1つ。", l: ["gnss-intro.html", "GNSSとは"] },
+    { c: "sys", t: "GPS", aka: ["全地球測位システム"], en: "Global Positioning System", d: "米国のGNSS。元祖で、日本では『GPS』が衛星測位の代名詞になった。", l: ["gnss-intro.html", "GNSSとは"] },
+    { c: "sys", t: "QZSS", aka: ["みちびき", "準天頂衛星システム"], en: "Quasi-Zenith Satellite System", d: "日本の地域GNSS。八の字軌道で日本の真上に居座り、GPSを補強する。", l: ["qzss.html", "QZSS みちびき"] },
+    { c: "sys", t: "Galileo / GLONASS / BeiDou / NavIC", aka: ["ガリレオ", "グロナス", "北斗", "ナビック"], en: "other GNSS", d: "それぞれ欧州 / ロシア / 中国 / インドのGNSS。BeiDou＝北斗。", l: ["gnss-intro.html", "GNSSとは"] },
+
+    { c: "threat", t: "ジャミング", aka: ["電波妨害", "妨害"], en: "Jamming", d: "強い電波でGNSS信号をかき消し、受信不能にする攻撃。", l: ["gnss-threats.html", "妨害と偽装"] },
+    { c: "threat", t: "スプーフィング", aka: ["なりすまし", "偽装"], en: "Spoofing", d: "本物そっくりの偽信号を送り、受信機を騙して誤った位置・時刻を出させる攻撃。", l: ["gnss-threats.html", "妨害と偽装"] },
+    { c: "threat", t: "ミーコニング", aka: ["再放送妨害"], en: "Meaconing", d: "受信した本物の信号を遅延させて再放送し、位置・時刻をずらす攻撃。", l: ["gnss-threats.html", "妨害と偽装"] },
+    { c: "threat", t: "AGC", aka: ["自動利得制御"], en: "Automatic Gain Control", d: "受信機が入力の強さを自動調整する回路。値の異常が妨害の検知手がかりになる。", l: ["gnss-threats.html", "妨害と偽装"] },
+    { c: "threat", t: "信号認証", aka: ["メッセージ認証", "電子署名"], en: "Signal authentication", d: "信号に電子署名を付け、本物かどうかを受信機が検証する仕組み。スプーフィング対策。", l: ["qzss.html", "QZSS みちびき"] },
+
+    { c: "sdr", t: "SDR", aka: ["ソフトウェア無線"], en: "Software Defined Radio", d: "受信した電波をソフトで処理する無線機。GNSS信号の受信・実験に使える。", l: ["sdr-intro.html", "SDR入門"] },
+    { c: "sdr", t: "I/Q", aka: ["同相・直交", "IQサンプル"], en: "In-phase / Quadrature", d: "電波を同相(I)と直交(Q)の2成分で表したデジタルデータ。SDRの生データ。", l: ["sdr-spectrum.html", "SDRとスペクトル"] },
+    { c: "sdr", t: "RBW", aka: ["分解能帯域幅"], en: "Resolution Bandwidth", d: "スペクトルの1本1本の細かさ。狭いほど雑音が下がり弱い信号が見える。", l: ["sdr-spectrum.html", "SDRとスペクトル"] },
+    { c: "sdr", t: "ADC", aka: ["アナログデジタル変換器"], en: "Analog-to-Digital Converter", d: "アナログの電波をデジタルに変換する素子。ビット数がダイナミックレンジを決める。", l: ["sdr-spectrum.html", "SDRとスペクトル"] },
+
+    { c: "alt", t: "PNT", aka: ["測位・航法・時刻"], en: "Positioning, Navigation, Timing", d: "GNSSが提供する3要素の総称。GNSSはPNTを得るための一手段にすぎない。", l: ["pnt-alternatives.html", "GNSSの代替"] },
+    { c: "alt", t: "LEO-PNT", aka: ["低軌道測位"], en: "LEO PNT", d: "低軌道衛星による測位。信号が強く妨害に強い次世代PNT。", l: ["leo-pnt.html", "LEO-PNT"] },
+    { c: "alt", t: "INS / IMU", aka: ["慣性航法装置", "慣性計測装置", "推測航法"], en: "Inertial Navigation System / Measurement Unit", d: "加速度計とジャイロで電波なしに自立測位。時間とともにドリフトする。", l: ["ins-imu.html", "慣性航法"] },
+    { c: "alt", t: "eLoran", aka: ["拡張ロラン"], en: "enhanced Loran", d: "地上局の強力な長波による測位・時刻。妨害に強い独立系の代替。", l: ["terrestrial-rf.html", "地上系電波"] },
+    { c: "alt", t: "SoOP", aka: ["信号機会測位"], en: "Signals of Opportunity", d: "Starlinkや携帯・TVなど測位用でない電波を測位に流用する手法。", l: ["soop.html", "信号機会測位"] },
+    { c: "alt", t: "VPS", aka: ["ビジュアル測位", "環境標定"], en: "Visual Positioning System", d: "カメラ映像を地図・特徴点DBと照合して位置を出す方法。屋内に強い。", l: ["vps-mapmatch.html", "環境標定"] },
+
+    { c: "coord", t: "ECEF", aka: ["地球中心地球固定座標"], en: "Earth-Centered Earth-Fixed", d: "地球の中心を原点にした直交座標系。GNSSの位置計算の土台。", l: ["coord-lab.html", "座標と高さ"] },
+    { c: "coord", t: "楕円体高 / 標高", aka: ["ジオイド高", "海抜"], en: "Ellipsoidal height / Elevation", d: "楕円体高＝GPSが出す高さ。標高＝平均海面(ジオイド)基準の高さ。両者はずれる。", l: ["coord-lab.html", "座標と高さ"] },
+  ];
+
+  const listEl = document.getElementById("list");
+  const emptyEl = document.getElementById("empty");
+  const countEl = document.getElementById("count");
+  const chipsEl = document.getElementById("chips");
+  const qEl = document.getElementById("q");
+
+  // build category chips
+  let activeCat = "all";
+  function mkChip(key, label) {
+    const b = document.createElement("button");
+    b.textContent = label; b.dataset.cat = key;
+    if (key === "all") b.classList.add("on");
+    b.addEventListener("click", () => {
+      activeCat = key;
+      chipsEl.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+      render();
+    });
+    chipsEl.appendChild(b);
+  }
+  mkChip("all", "すべて");
+  Object.keys(CATS).forEach((k) => mkChip(k, CATS[k]));
+
+  // precompute searchable text
+  T.forEach((e) => { e._s = (e.t + " " + e.aka.join(" ") + " " + (e.en || "") + " " + e.d).toLowerCase(); });
+
+  function render() {
+    const q = qEl.value.trim().toLowerCase();
+    listEl.innerHTML = "";
+    let shown = 0;
+    Object.keys(CATS).forEach((cat) => {
+      if (activeCat !== "all" && activeCat !== cat) return;
+      const items = T.filter((e) => e.c === cat && (activeCat !== "all" || true) && (!q || e._s.indexOf(q) >= 0));
+      if (!items.length) return;
+      const h = document.createElement("div"); h.className = "cat-h"; h.textContent = CATS[cat];
+      listEl.appendChild(h);
+      items.forEach((e) => {
+        shown++;
+        const d = document.createElement("div"); d.className = "gt";
+        let html = '<div class="th"><span class="t">' + e.t + "</span>" + (e.en ? '<span class="en">' + e.en + "</span>" : "") + "</div>";
+        if (e.aka.length) {
+          html += '<div class="aka"><span class="eq">＝</span>' + e.aka.map((a) => '<span class="a">' + a + "</span>").join("") + "</div>";
+        }
+        html += '<div class="d">' + e.d + (e.l ? ' <a href="' + e.l[0] + '">→ ' + e.l[1] + "</a>" : "") + "</div>";
+        d.innerHTML = html;
+        listEl.appendChild(d);
+      });
+    });
+    countEl.textContent = shown + " 語";
+    emptyEl.hidden = shown > 0;
+  }
+
+  qEl.addEventListener("input", render);
+  render();
+})();
+</script>
+</body>
+</html>

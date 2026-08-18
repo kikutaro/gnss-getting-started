@@ -43,10 +43,11 @@
     { ja: "vps-mapmatch.html",  en: "vps-mapmatch.html", tja: "環境標定(VPS)",      ten: "Vision/Map (VPS)",      grp: 6 },
     { ja: "soop.html",          en: "soop.html",        tja: "信号機会測位",       ten: "Signals of Opportunity", grp: 6 },
     { ja: "opensource.html",    en: "opensource.html",  tja: "測位系OSS",          ten: "Positioning OSS",       grp: 7 },
+    { ja: "glossary.html",      en: "glossary.html",    tja: "用語集",             ten: "Glossary",              grp: 8, nonum: true },
   ];
   var GRPS = {
-    ja: ["", "STEP 0 · GNSSとは", "STEP 1 · 基礎", "STEP 2 · GNSSのしくみ", "STEP 3 · SDR実践", "STEP 4 · 脅威と対策", "STEP 5 · GNSSの代替", "STEP 6 · ツール"],
-    en: ["", "STEP 0 · WHAT IS GNSS", "STEP 1 · BASICS", "STEP 2 · HOW GNSS WORKS", "STEP 3 · SDR IN PRACTICE", "STEP 4 · THREATS & DEFENCE", "STEP 5 · GNSS ALTERNATIVES", "STEP 6 · TOOLS"],
+    ja: ["", "STEP 0 · GNSSとは", "STEP 1 · 基礎", "STEP 2 · GNSSのしくみ", "STEP 3 · SDR実践", "STEP 4 · 脅威と対策", "STEP 5 · GNSSの代替", "STEP 6 · ツール", "付録"],
+    en: ["", "STEP 0 · WHAT IS GNSS", "STEP 1 · BASICS", "STEP 2 · HOW GNSS WORKS", "STEP 3 · SDR IN PRACTICE", "STEP 4 · THREATS & DEFENCE", "STEP 5 · GNSS ALTERNATIVES", "STEP 6 · TOOLS", "APPENDIX"],
   };
   var BRAND = "GNSS Study";
 
@@ -78,10 +79,11 @@
         aside.appendChild(el("div", "grp", GRPS[isEn ? "en" : "ja"][p.grp]));
       }
       lastGrp = p.grp;
+      var showNum = p.grp > 0 && !p.nonum;
       var a = el("a", "mi" + (p.grp === 0 ? " home" : ""));
       a.href = encodeURI(href);
-      if (p.grp > 0) num++;
-      a.appendChild(el("span", "no", p.grp > 0 ? String(num).padStart(2, "0") : ""));
+      if (showNum) num++;
+      a.appendChild(el("span", "no", showNum ? String(num).padStart(2, "0") : ""));
       a.appendChild(document.createTextNode(label));
       if (href === file) { a.classList.add("active"); current = p; }
       aside.appendChild(a);
