@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* first-visit language routing (see layout.js for the manual toggle) */(function(){try{var p=location.pathname,en=/\/en\//.test(p),cur=en?"en":"ja";var s=localStorage.getItem("gnss_lang");if(s)return;var L=navigator.languages||[navigator.language||""];var ja=L.some(function(x){return /^ja/i.test(x);});var w=ja?"ja":"en";localStorage.setItem("gnss_lang",w);if(w===cur)return;var t;if(en){t=p.replace(/\/en\//,"/");}else{var i=p.lastIndexOf("/");t=p.slice(0,i+1)+"en/"+p.slice(i+1);}location.replace(t+location.search+location.hash);}catch(e){}})();</script>
+<link rel="stylesheet" href="layout.css">
+<script defer src="layout.js"></script>
+<title>座標系 — LLH・ECEF・ENU・RTN | GNSS Study</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GNSS Study">
+<meta property="og:title" content="座標系 — LLH・ECEF・ENU・RTN | GNSS Study">
+<meta property="og:description" content="測地座標(LLH)・WGS84 ECEF・局地座標(ENU/NED)・軌道座標(RTN)を図と表で整理。GNSSとLEOで使う座標系リファレンス。">
+<meta property="og:image" content="https://gnss-study.com/icon.png">
+<meta property="og:url" content="https://gnss-study.com/coord-systems.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="座標系 — LLH・ECEF・ENU・RTN | GNSS Study">
+<meta name="twitter:description" content="測地座標(LLH)・WGS84 ECEF・局地座標(ENU/NED)・軌道座標(RTN)を図と表で整理。">
+<meta name="twitter:image" content="https://gnss-study.com/icon.png">
+<style>
+  :root {
+    --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+    --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; --scope-bg: #0a1210;
+    --ecef: #38bdf8; --enu: #f59e0b; --rtn: #c084fc; --llh: #34d399;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  }
+  :root[data-theme="dark"] { --bg: #0d1514; --surface: #141f1e; --surface2: #1a2624;
+      --text: #e6eeec; --muted: #8fa3a0; --accent: #2dd4bf; --border: #24312f; }
+  :root[data-theme="light"] { --bg: #f4f7f6; --surface: #ffffff; --surface2: #eef3f2;
+      --text: #16211f; --muted: #5a6b68; --accent: #0e8a80; --border: #dce4e2; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif; line-height: 1.6; }
+  main { max-width: 1060px; margin: 0 auto; padding: 20px 16px 64px; display: flex; flex-direction: column; gap: 16px; }
+  header.top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 4px 2px; }
+  header.top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .02em; }
+  header.top p { margin: 0; color: var(--muted); font-size: .85rem; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: .82rem; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  .panel > p { font-size: .9rem; margin: 0 0 10px; }
+  .panel > p:last-child { margin-bottom: 0; }
+  .panel a { color: var(--accent); }
+  canvas.dark { width: 100%; display: block; background: var(--scope-bg); border-radius: 6px; }
+  .cap { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .85em; }
+
+  .over { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .over div { border: 1px solid var(--border); border-left: 4px solid var(--sc, var(--accent)); border-radius: 10px; padding: 10px 13px; background: var(--surface2); }
+  .over h4 { margin: 0 0 3px; font-size: .92rem; }
+  .over h4 b { font-family: ui-monospace, Consolas, monospace; color: var(--sc, var(--accent)); }
+  .over p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: .78rem; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+
+  .frame { border-left: 4px solid var(--sc, var(--accent)); }
+  .frame h3 { color: var(--sc, var(--accent)); }
+  .axes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 8px; }
+  @media (max-width: 560px) { .axes { grid-template-columns: 1fr; } }
+  .axes div { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: .82rem; }
+  .axes b { font-family: ui-monospace, Consolas, monospace; color: var(--sc, var(--accent)); }
+  .aka { display: flex; flex-wrap: wrap; gap: 5px; margin: 2px 0 8px; align-items: center; }
+  .aka .eq { color: var(--muted); font-size: .78rem; }
+  .aka span.a { font-size: .76rem; color: var(--sc, var(--accent)); background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: 1px 9px; }
+
+  table.cmp { border-collapse: collapse; font-size: .8rem; width: 100%; }
+  table.cmp th, table.cmp td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface2); font-weight: 600; white-space: nowrap; }
+  table.cmp td.sys { font-weight: 700; white-space: nowrap; }
+  table.cmp td.sys i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+  .tw { overflow-x: auto; }
+
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .82rem; }
+  .flow .box { border: 1px solid var(--border); border-radius: 8px; padding: 6px 11px; background: var(--surface2); font-weight: 600; }
+  .flow .box b { font-family: ui-monospace, Consolas, monospace; color: var(--accent); }
+  .flow .ar { color: var(--muted); font-family: ui-monospace, Consolas, monospace; }
+  .flow .lbl { color: var(--muted); font-size: .74rem; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>座標系 — LLH・ECEF・ENU・RTN</h1>
+    <p>「どこか」を数字で表す枠組み。GNSSとLEOで使う代表的な座標系と、その使い分け・変換</p>
+  </header>
+
+  <div class="panel">
+    <h3>座標系は「原点と軸の取り決め」</h3>
+    <p>同じ場所でも、<strong>どこを原点に、どの向きを軸にするか</strong>で数字は変わります。GNSSでは目的に応じて座標系を使い分け、必要に応じて<strong>変換</strong>します。大きく4種類を押さえれば十分です。</p>
+    <div class="over">
+      <div style="--sc: var(--llh)"><h4><b>LLH</b> 測地座標</h4><p>緯度・経度・高さ。地図やGNSSが出力する“人間向け”の表現。楕円体（WGS84）が基準。</p></div>
+      <div style="--sc: var(--ecef)"><h4><b>ECEF</b> 地球中心直交</h4><p>地球の中心を原点にしたX/Y/Zの直交座標。GNSSの計算の土台。地球と一緒に回る。</p></div>
+      <div style="--sc: var(--enu)"><h4><b>ENU</b> 局地座標</h4><p>地表の一点を原点に、東・北・上。方位や仰角、「東に何m」を扱う。</p></div>
+      <div style="--sc: var(--rtn)"><h4><b>RTN</b> 軌道座標</h4><p>衛星を原点に、動径・進行方向・軌道面法線。軌道誤差や衛星の相対運動の記述に。</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>4つの座標系を1枚で</h3>
+    <canvas class="dark" id="scene" aria-label="地球・ECEF軸・地表点のENU三脚・衛星のRTN三脚を示した3D模式図"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--ecef)"></i>ECEF（地球中心 X/Y/Z）</span>
+      <span><i style="background:var(--enu)"></i>ENU（地表点 東/北/上）</span>
+      <span><i style="background:var(--rtn)"></i>RTN（衛星 動径/進行/法線）</span>
+    </div>
+    <p class="cap">ECEFは地球中心の1つ。ENUは地表の各点ごとに向きが変わる。RTNは衛星に貼りつき、衛星と一緒に動く（軌道に沿って三脚が回っていく様子に注目）。図は模式で、縮尺・軌道高度は実際とは異なります。</p>
+  </div>
+
+  <div class="panel frame" style="--sc: var(--llh)">
+    <h3>① 測地座標 LLH — 緯度・経度・楕円体高</h3>
+    <div class="aka"><span class="eq">別名 ＝</span><span class="a">測地座標</span><span class="a">緯度経度高</span><span class="a">geodetic (φ, λ, h)</span><span class="a">BLH</span></div>
+    <div class="axes">
+      <div><b>φ 緯度</b> 楕円体の法線が赤道面となす角（地心緯度とは別）</div>
+      <div><b>λ 経度</b> 本初子午線からの東西の角</div>
+      <div><b>h 高さ</b> 楕円体からの高さ（＝楕円体高）</div>
+    </div>
+    <p style="font-size:.86rem;margin:0">GNSSが最終的に出力し、地図が使う“人間向け”の座標。基準は回転楕円体 <strong>WGS84</strong>（長半径 <code>a=6,378,137 m</code>、扁平率 <code>1/f=298.257223563</code>）。注意点は<strong>高さ</strong>で、LLHの h は楕円体高であり、私たちが言う「標高（平均海面＝ジオイド基準）」とはずれます（→ <a href="coord-lab.html">座標と高さの基礎</a>）。</p>
+  </div>
+
+  <div class="panel frame" style="--sc: var(--ecef)">
+    <h3>② ECEF — 地球中心・地球固定の直交座標（WGS84）</h3>
+    <div class="aka"><span class="eq">別名 ＝</span><span class="a">地球中心地球固定座標</span><span class="a">ECEF (X, Y, Z)</span><span class="a">ECR</span></div>
+    <div class="axes">
+      <div><b>X</b> 赤道面内・本初子午線の向き（緯度0,経度0）</div>
+      <div><b>Z</b> 自転軸（北極）の向き</div>
+      <div><b>Y</b> 右手系を完成させる向き（経度90°E）</div>
+    </div>
+    <p style="font-size:.86rem;margin:0 0 8px">原点は地球の重心。<strong>地球と一緒に回る</strong>ので、地上の建物は常に同じX/Y/Zになります。GNSSは衛星の位置も受信機の解も、まずこの<strong>ECEFで計算</strong>します。最後にLLHへ変換して表示します。</p>
+    <div class="flow">
+      <span class="box"><b>LLH</b></span><span class="ar">→（公式で一発）→</span><span class="box"><b>ECEF</b></span>
+      <span class="ar">→（Bowring等の反復）→</span><span class="box"><b>LLH</b></span>
+    </div>
+    <p class="cap">LLH→ECEFは閉じた式で計算でき、ECEF→LLHは反復（または近似式）で求めます。※<strong>ECI</strong>（地球中心・慣性系。自転しない）とは別物。軌道計算はECIで行い、時刻と地球回転角でECEFへ変換します。</p>
+  </div>
+
+  <div class="panel frame" style="--sc: var(--enu)">
+    <h3>③ ENU — 地表の一点を原点にした局地座標</h3>
+    <div class="aka"><span class="eq">別名・仲間 ＝</span><span class="a">局地水平座標</span><span class="a">East-North-Up</span><span class="a">NED（北・東・下）</span><span class="a">NEU（北・東・上）</span><span class="a">局地接平面</span></div>
+    <div class="axes">
+      <div><b>E</b> 東（East）</div>
+      <div><b>N</b> 北（North）</div>
+      <div><b>U</b> 上（Up＝その点の鉛直・楕円体法線）</div>
+    </div>
+    <p style="font-size:.86rem;margin:0">地表の基準点を原点に、その場の<strong>東・北・上</strong >を軸にとる座標。人にとって直感的で、<strong>衛星の方位角・仰角</strong>、「基準点から東に何m・北に何m」、局地的な誤差の表現に使います。ECEFのベクトルを、基準点の緯度・経度で決まる<strong>回転行列</strong>で回すとENUになります。分野で軸の並びが違い、航空・ロボットでは<strong>NED</strong>（北・東・下）、ご指定の<strong>NEU</strong>（北・東・上）も同じ局地座標の並べ替えです。</p>
+  </div>
+
+  <div class="panel frame" style="--sc: var(--rtn)">
+    <h3>④ RTN — 衛星を原点にした軌道座標（LEOで活躍）</h3>
+    <div class="aka"><span class="eq">別名・ほぼ同義 ＝</span><span class="a">Radial-Tangential-Normal</span><span class="a">RSW</span><span class="a">RIC（Radial-In track-Cross track）</span><span class="a">LVLH系</span></div>
+    <div class="axes">
+      <div><b>R</b> 動径（Radial）＝地球中心から衛星への向き</div>
+      <div><b>T</b> 進行方向（Tangential／In-track）＝軌道に沿う向き（≒速度）</div>
+      <div><b>N</b> 法線（Normal／Cross-track）＝軌道面に垂直（角運動量の向き）</div>
+    </div>
+    <p style="font-size:.86rem;margin:0 0 6px">衛星に貼りついた座標。位置ベクトル <code>r</code> と速度 <code>v</code> から <code>R=r/|r|</code>、<code>N=(r×v)/|r×v|</code>、<code>T=N×R</code> で作ります。<strong>軌道誤差や衛星どうしの相対運動</strong>を「動径方向・進行方向・軌道面外」に分けて見るのに最適で、<a href="leo-pnt.html">LEO-PNT</a>や精密軌道決定、編隊飛行で多用されます。</p>
+    <p class="cap">豆知識: 測距（擬似距離）に効くのは主に<strong>動径方向(R)</strong>の軌道誤差で、進行方向(T)や軌道面外(N)の誤差は幾何的に効きにくい――誤差をRTNで分けると「どの成分が測位に効くか」が見通せます。呼び方はRSW・RICなどほぼ同義（軸の定義が少しずつ違う流儀あり）。</p>
+  </div>
+
+  <div class="panel">
+    <h3>変換の地図</h3>
+    <div class="flow" style="margin-bottom:8px">
+      <span class="box"><b>LLH</b> 緯度経度高</span>
+      <span class="ar">⇄</span>
+      <span class="box"><b>ECEF</b> 地球中心直交</span>
+      <span class="ar">⇄</span>
+      <span class="box"><b>ENU</b> 局地</span>
+      <span class="lbl">（基準点の φ, λ で回転）</span>
+    </div>
+    <div class="flow">
+      <span class="box"><b>ECI</b> 慣性系</span>
+      <span class="ar">⇄</span>
+      <span class="box"><b>ECEF</b></span>
+      <span class="lbl">（時刻・地球回転角）</span>
+      <span class="ar">／</span>
+      <span class="box"><b>軌道 r,v</b></span>
+      <span class="ar">→</span>
+      <span class="box"><b>RTN</b> 衛星</span>
+    </div>
+    <p class="cap">GNSSの中身では、衛星軌道は慣性系ECIで解き→ECEFへ、受信機の解はECEFで求め→LLHで表示、ユーザ向けの方位・仰角はENUで、というように座標系を渡り歩いています。</p>
+  </div>
+
+  <div class="panel">
+    <h3>早見表</h3>
+    <div class="tw">
+      <table class="cmp">
+        <tr><th>座標系</th><th>原点</th><th>軸</th><th>主な用途</th><th>GNSS/LEOでの登場</th></tr>
+        <tr><td class="sys"><i style="background:var(--llh)"></i>LLH</td><td>—（楕円体基準）</td><td>φ・λ・h</td><td>地図表示・人間向けの位置</td><td>受信機の最終出力</td></tr>
+        <tr><td class="sys"><i style="background:var(--ecef)"></i>ECEF</td><td>地球重心</td><td>X・Y・Z（地球固定）</td><td>位置計算の土台</td><td>衛星位置・測位解の計算</td></tr>
+        <tr><td class="sys"><i style="background:var(--enu)"></i>ENU/NED</td><td>地表の基準点</td><td>東・北・上（下）</td><td>方位・仰角・局地の変位</td><td>可視衛星の見え方、誤差の表現</td></tr>
+        <tr><td class="sys"><i style="background:var(--rtn)"></i>RTN</td><td>衛星</td><td>動径・進行・法線</td><td>軌道誤差・相対運動</td><td>精密軌道決定、LEOの編隊・幾何</td></tr>
+      </table>
+    </div>
+    <p class="cap">用語のまとめは <a href="glossary.html">用語集</a> にも。高さ（楕円体高と標高）の詳しい話は <a href="coord-lab.html">座標と高さの基礎</a> へ。</p>
+  </div>
+</main>
+
+<script>
+(function () {
+  const cv = document.getElementById("scene");
+  const ctx = cv.getContext("2d");
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const css = getComputedStyle(document.documentElement);
+  const col = (v) => css.getPropertyValue(v).trim() || "#888";
+  const D2R = Math.PI / 180;
+
+  // camera basis (orthographic)
+  const AZ = -38 * D2R, EL = 16 * D2R;
+  const RGT = [-Math.sin(AZ), Math.cos(AZ), 0];
+  const UPV = [-Math.cos(AZ) * Math.sin(EL), -Math.sin(AZ) * Math.sin(EL), Math.cos(EL)];
+
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const norm = (a) => { const m = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / m, a[1] / m, a[2] / m]; };
+  const add = (a, b, s) => [a[0] + b[0] * s, a[1] + b[1] * s, a[2] + b[2] * s];
+
+  let cx, cy, s, t = 0;
+
+  function fit() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = Math.round(w * 0.62);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.height = h + "px";
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cx = w / 2; cy = h / 2; s = Math.min(w, h * 1.55) * 0.155;
+    return { w, h };
+  }
+  const P = (v) => [cx + s * dot(v, RGT), cy - s * dot(v, UPV)];
+
+  function arrow(from, to, color, label, lw) {
+    const a = P(from), b = P(to);
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw || 2;
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), hl = 7;
+    ctx.beginPath(); ctx.moveTo(b[0], b[1]);
+    ctx.lineTo(b[0] - hl * Math.cos(ang - 0.4), b[1] - hl * Math.sin(ang - 0.4));
+    ctx.lineTo(b[0] - hl * Math.cos(ang + 0.4), b[1] - hl * Math.sin(ang + 0.4));
+    ctx.closePath(); ctx.fill();
+    if (label) {
+      ctx.font = "bold 12px ui-monospace, Consolas, monospace";
+      ctx.fillText(label, b[0] + 4 * Math.cos(ang) + (b[0] < a[0] ? -12 : 2), b[1] + 4 * Math.sin(ang) + (b[1] < a[1] ? -3 : 11));
+    }
+  }
+
+  function draw() {
+    const { w, h } = fit();
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#0a1210"; ctx.fillRect(0, 0, w, h);
+
+    // stars
+    ctx.fillStyle = "rgba(200,220,214,.3)";
+    for (let i = 0; i < 34; i++) {
+      const sx = (Math.sin(i * 3.1 + 1) * 0.5 + 0.5) * w, sy = (Math.cos(i * 2.3 + i) * 0.5 + 0.5) * h;
+      ctx.globalAlpha = .15 + (i % 5) * .09; ctx.fillRect(sx, sy, 1.3, 1.3);
+    }
+    ctx.globalAlpha = 1;
+
+    // Earth (sphere -> circle) with gradient
+    const c = P([0, 0, 0]);
+    const g = ctx.createRadialGradient(c[0] - s * .35, c[1] - s * .35, s * .2, c[0], c[1], s);
+    g.addColorStop(0, "#2a6d8a"); g.addColorStop(1, "#0e3547");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c[0], c[1], s, 0, 2 * Math.PI); ctx.fill();
+    // equator ellipse
+    ctx.strokeStyle = "rgba(160,200,220,.28)"; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let k = 0; k <= 60; k++) { const a = k / 60 * 2 * Math.PI; const p = P([Math.cos(a), Math.sin(a), 0]); k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+    ctx.stroke();
+
+    // ECEF axes
+    const AX = 1.55;
+    arrow([0, 0, 0], [AX, 0, 0], col("--ecef"), "X", 2);
+    arrow([0, 0, 0], [0, AX, 0], col("--ecef"), "Y", 2);
+    arrow([0, 0, 0], [0, 0, AX], col("--ecef"), "Z", 2);
+    const ez = P([0, 0, AX]); ctx.fillStyle = col("--ecef"); ctx.font = "10px ui-monospace"; ctx.fillText("(北極)", ez[0] + 6, ez[1] + 2);
+
+    // surface point + ENU triad
+    const plat = 34 * D2R, plon = 8 * D2R;
+    const Pp = [Math.cos(plat) * Math.cos(plon), Math.cos(plat) * Math.sin(plon), Math.sin(plat)];
+    const Up = Pp;
+    const Np = [-Math.sin(plat) * Math.cos(plon), -Math.sin(plat) * Math.sin(plon), Math.cos(plat)];
+    const Ep = [-Math.sin(plon), Math.cos(plon), 0];
+    const pp = P(Pp); ctx.fillStyle = "#e6eeec"; ctx.beginPath(); ctx.arc(pp[0], pp[1], 3.2, 0, 2 * Math.PI); ctx.fill();
+    const L = 0.5;
+    arrow(Pp, add(Pp, Ep, L), col("--enu"), "E", 1.8);
+    arrow(Pp, add(Pp, Np, L), col("--enu"), "N", 1.8);
+    arrow(Pp, add(Pp, Up, L), col("--enu"), "U", 1.8);
+
+    // satellite orbit + RTN
+    const Rsat = 1.8, inc = 58 * D2R, raan = 26 * D2R;
+    const b1 = [Math.cos(raan), Math.sin(raan), 0];
+    const b2 = [-Math.cos(inc) * Math.sin(raan), Math.cos(inc) * Math.cos(raan), Math.sin(inc)];
+    // orbit path
+    ctx.strokeStyle = "rgba(192,132,252,.45)"; ctx.lineWidth = 1.3; ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    for (let k = 0; k <= 80; k++) { const u = k / 80 * 2 * Math.PI; const r = [Rsat * (b1[0] * Math.cos(u) + b2[0] * Math.sin(u)), Rsat * (b1[1] * Math.cos(u) + b2[1] * Math.sin(u)), Rsat * (b1[2] * Math.cos(u) + b2[2] * Math.sin(u))]; const p = P(r); k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+    ctx.stroke(); ctx.setLineDash([]);
+    // satellite position
+    const u = reduced ? 0.7 : (0.7 + t * 0.28);
+    const r = [Rsat * (b1[0] * Math.cos(u) + b2[0] * Math.sin(u)), Rsat * (b1[1] * Math.cos(u) + b2[1] * Math.sin(u)), Rsat * (b1[2] * Math.cos(u) + b2[2] * Math.sin(u))];
+    const vd = [-b1[0] * Math.sin(u) + b2[0] * Math.cos(u), -b1[1] * Math.sin(u) + b2[1] * Math.cos(u), -b1[2] * Math.sin(u) + b2[2] * Math.cos(u)];
+    const R = norm(r), N = norm(cross(r, vd)), T = cross(N, R);
+    // faint radial line
+    ctx.strokeStyle = "rgba(230,238,236,.18)"; ctx.lineWidth = 1;
+    const o = P([0, 0, 0]), ps = P(r); ctx.beginPath(); ctx.moveTo(o[0], o[1]); ctx.lineTo(ps[0], ps[1]); ctx.stroke();
+    ctx.fillStyle = col("--rtn"); ctx.beginPath(); ctx.arc(ps[0], ps[1], 4.5, 0, 2 * Math.PI); ctx.fill();
+    const LR = 0.55;
+    arrow(r, add(r, R, LR), col("--rtn"), "R", 1.8);
+    arrow(r, add(r, T, LR), col("--rtn"), "T", 1.8);
+    arrow(r, add(r, N, LR), col("--rtn"), "N", 1.8);
+  }
+
+  fit(); draw();
+  window.addEventListener("resize", draw);
+  if (window.ResizeObserver) new ResizeObserver(draw).observe(cv);
+  if (!reduced) {
+    let last = performance.now();
+    (function loop(now) { t += Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now; draw(); requestAnimationFrame(loop); })(performance.now());
+  }
+})();
+</script>
+</body>
+</html>

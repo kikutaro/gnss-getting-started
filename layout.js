@@ -43,6 +43,7 @@
     { ja: "vps-mapmatch.html",  en: "vps-mapmatch.html", tja: "環境標定(VPS)",      ten: "Vision/Map (VPS)",      grp: 6 },
     { ja: "soop.html",          en: "soop.html",        tja: "信号機会測位",       ten: "Signals of Opportunity", grp: 6 },
     { ja: "opensource.html",    en: "opensource.html",  tja: "測位系OSS",          ten: "Positioning OSS",       grp: 7 },
+    { ja: "coord-systems.html", en: "coord-systems.html", tja: "座標系",            ten: "Coordinate Frames",     grp: 8, nonum: true },
     { ja: "glossary.html",      en: "glossary.html",    tja: "用語集",             ten: "Glossary",              grp: 8, nonum: true },
   ];
   var GRPS = {
